@@ -135,7 +135,8 @@ Beyond the canary: in Claude Code, `/context` confirms the file is actually load
 
 Three guides, one split — pick the layer you need:
 
-- **Awesome Agents MD** — *this repo:* the base, tool-agnostic ruleset every agent imports (one `AGENTS.md`). Start here; the two below are optional layers on top.
+- **Awesome Agents MD** — *this repo:* the base, tool-agnostic ruleset every agent imports (one `AGENTS.md`). Start here; the layers below are optional on top.
+- [Awesome Agent Skills](https://github.com/khasky/awesome-agent-skills) — portable `SKILL.md` skills every agent loads: code review, debugging, security and leak audits, code and text cleanup.
 - [Agent MCP Integrations](https://github.com/khasky/agent-mcp-integrations) — MCP servers that connect agents to browsers, cloud, databases, infra, and domain APIs.
 - [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (RTK, LSP, Context7, `codebase-memory-mcp`, claude-mem, Caveman, Ponytail).
 - [Claude Code Security Audit](https://github.com/khasky/claude-code-security-audit) — the layered security-audit workflow (deep audit, continuous guardrails, scanners).
