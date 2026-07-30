@@ -1,0 +1,44 @@
+# Code review
+
+Read this when reviewing a diff/PR or preparing your own changes for review.
+
+## Requesting review
+
+- Package context precisely: BASE and HEAD commits, what the change claims to do, and the plan/requirements it implements — not the full session history.
+- PR description answers: what changed, why, risks, how it was tested, where reviewers should focus; UI changes include screenshots; note rollout or follow-up work.
+- Prefer small PRs with one coherent intent — split unrelated changes instead of bundling them.
+- Review is due before merging any major feature, after complex bug fixes, and before large refactors (to establish a baseline). Never skip it claiming the change is simple.
+
+## Reviewing (two axes)
+
+- Fatal blockers first (doesn't build, doesn't run, broken premise): if one exists, stop scoring details and lead the report with it.
+- Spec compliance: does the diff do exactly what was asked — nothing missing, nothing extra?
+- Standards: correctness, security, error handling, naming, test quality.
+- A diff that adds a trust boundary or data flow (new endpoint, file upload, external integration, queue consumer) or touches auth/payments escalates to security-focused review.
+- Tests with more mocking than logic exercise the mock, not the code — flag them. Mock external services only, never your own app.
+- Fix causes, not symptoms. A "simplification" that requires changing tests is a behavior change in disguise — flag it.
+- Label numbers as measured / estimated / unknown; never present an estimate as measured — unknown stays "unknown", not N/A.
+
+## Severity triage
+
+- CRITICAL (blocks merge): data loss, security, broken build — fix immediately.
+- HIGH: resolve before proceeding. MEDIUM: note for this cycle. LOW: optional polish.
+- Approve only with zero CRITICAL/HIGH findings.
+- Disputed feedback: evidence-based pushback only — re-check against the code first, then agree with evidence or object with reasoning.
+
+## Comment format
+
+- One line per finding: `file:line: <severity>: problem. fix.` — location, problem, concrete fix. No throat-clearing ("I noticed that…", "You might want to consider…").
+- Concrete fix over "consider refactoring"; exact symbols in backticks; add the why only when the fix isn't obvious from the problem.
+- Unsure whether it's a real problem → ask it as a question, never hedge with "perhaps"/"maybe"/"I think".
+- Praise once at the top of the review, not per comment.
+- Full-prose exceptions: security findings (complete explanation plus reference) and architectural disagreements (rationale, not a one-liner). Resume one-liners after.
+
+## Receiving review
+
+- Read all feedback without reacting; verify each claim against the codebase before implementing — reviewers can lack context, and bots miscount (check a bot's claimed finding count against what you actually fetched).
+- Any item unclear → stop and ask before implementing anything. Otherwise implement one item at a time, testing each.
+- YAGNI check on suggestions: confirm the suggested thing is actually used or needed before building it.
+- Process in severity order; never skip CRITICAL/HIGH without explicit approval. Every comment gets a reply: a fix, evidence-based pushback, or a question.
+- Functional fixes commit separately from cosmetic ones.
+- Acknowledge factually ("Fixed in <location>"), no thanks or praise; retract your own pushback the same way ("You were right — checked X, it does Y").

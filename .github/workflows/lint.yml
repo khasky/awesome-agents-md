@@ -1,0 +1,17 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  agents-md-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: core AGENTS.md stays under 200 lines
+        run: |
+          lines=$(wc -l < AGENTS.md)
+          echo "AGENTS.md: $lines lines (limit 200)"
+          [ "$lines" -le 200 ]

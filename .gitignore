@@ -1,0 +1,7 @@
+# Local agent/tool state and exported profiles — private, never publish.
+.claude/
+.codex/
+.gemini/
+.mcp/
+rtk/
+*.code-profile
