@@ -22,16 +22,16 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
     - [Per-project alternative (any agent)](#per-project-alternative-any-agent)
   - [Loaded-rules canary](#loaded-rules-canary)
   - [Related](#related)
+  - [Contributing](#contributing)
   - [License](#license)
 
 ## Repository layout
 
 ```text
 AGENTS.md    # the core ruleset — always loaded, kept under 200 lines (CI-enforced)
-rules/       # on-demand modules: markdown, refactoring, code comments,
-             # frontend design, code review, memory hygiene, backend security, web SEO,
-             # testing, monorepo, API contracts, database, observability, messaging,
-             # payments, containers, public API design, Astro/SSG, Next.js, git hooks
+rules/       # on-demand modules, read only when the task matches — the full list
+             # with trigger conditions is the last section of AGENTS.md, and CI
+             # fails if a module there is missing or a module here is unlisted
 README.md    # setup and optional tooling (this file)
 ```
 
@@ -140,6 +140,10 @@ Three guides, one split — pick the layer you need:
 - [Agent MCP Integrations](https://github.com/khasky/agent-mcp-integrations) — MCP servers that connect agents to browsers, cloud, databases, infra, and domain APIs.
 - [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (RTK, LSP, Context7, `codebase-memory-mcp`, claude-mem, Caveman, Ponytail).
 - [Claude Code Security Audit](https://github.com/khasky/claude-code-security-audit) — the layered security-audit workflow (deep audit, continuous guardrails, scanners).
+
+## Contributing
+
+A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 lines — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
 
 ## License
 

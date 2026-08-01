@@ -1,0 +1,43 @@
+# Awesome AGENTS.md
+
+> One tool-agnostic `AGENTS.md` that Claude Code, OpenAI Codex CLI, Gemini CLI and Cursor Agent all import, plus on-demand rule modules in `rules/` that an agent reads only when the task matches. The core file is always loaded and capped at 200 lines (CI-enforced); everything else is opt-in.
+
+## Core
+
+- [AGENTS.md](https://github.com/khasky/awesome-agents-md/blob/main/AGENTS.md): the always-loaded ruleset — boundaries, security, the verification gate, workflow, debugging, the lazy-senior-dev coding ladder, communication style, commit conventions.
+
+## Rule modules
+
+- [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): editing Markdown documents and articles.
+- [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring or cleanup passes, Chesterton's Fence, the rule of 500.
+- [rules/code-comments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-comments.md): full comment policy, including public-repo safety.
+- [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.
+- [rules/testing.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/testing.md): test placement ladder, fixtures, flakiness, fuzz and property tests.
+- [rules/frontend-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/frontend-design.md): UI craft, accessibility numbers, motion, animation performance.
+- [rules/web-seo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/web-seo.md): indexability, head tags, structured data, Core Web Vitals.
+- [rules/backend-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/backend-security.md): server and API code — auth, authorization, errors, queries, Node pitfalls.
+- [rules/crypto.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/crypto.md): hashing, encryption, tokens, JWT verification, key rotation.
+- [rules/database.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/database.md): schema, migrations, transactions, indexes, connection pooling.
+- [rules/api-contracts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/api-contracts.md): OpenAPI/GraphQL schemas, contract packages, generated clients.
+- [rules/public-api-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/public-api-design.md): versioning, cursor pagination, idempotency keys, ETags, deprecation.
+- [rules/messaging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/messaging.md): queues, event streams, outbox, idempotent consumers, webhooks.
+- [rules/payments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/payments.md): checkout, webhook verification, idempotent fulfillment, price integrity.
+- [rules/observability.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/observability.md): structured logging, health probes, metrics, graceful shutdown, env config.
+- [rules/incident-response.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/incident-response.md): a live production incident — preserve evidence, contain, postmortem discipline.
+- [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — action pinning, token scope, untrusted PR input.
+- [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.
+- [rules/containers.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/containers.md): Dockerfiles and Compose — multi-stage builds, non-root, image scanning, runtime hardening.
+- [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit gates with husky and lint-staged.
+- [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): pnpm/npm workspaces, Turborepo, Nx.
+- [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features — Rule of Two, indirect prompt injection, tool least privilege.
+- [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
+- [rules/mobile.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/mobile.md): Android and iOS — keystore storage, pinning, exported components, release hardening.
+- [rules/nextjs.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/nextjs.md): Next.js App Router — server/client boundary, Server Actions, route handlers.
+- [rules/astro-ssg.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/astro-ssg.md): Astro and static-site generators — islands, content collections, build-time data.
+- [rules/rtk.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/rtk.md): the RTK output-compression CLI, only when it is installed.
+
+## Docs
+
+- [README](https://github.com/khasky/awesome-agents-md/blob/main/README.md): per-agent install paths for Claude Code, Codex CLI, Gemini CLI and Cursor.
+- [CONTRIBUTING](https://github.com/khasky/awesome-agents-md/blob/main/CONTRIBUTING.md): the line test, the 200-line core budget, module format.
+- [LICENSE](https://github.com/khasky/awesome-agents-md/blob/main/LICENSE): MIT.

@@ -1,0 +1,16 @@
+# Live incident response
+
+Read this when a production system is currently broken, degraded, or suspected compromised — before the postmortem, while the fire is burning.
+
+<!-- Distilled from meirwah/awesome-incident-response, OTRF/ThreatHunter-Playbook (hypothesis-driven hunts), Cugu/awesome-forensics (evidence preservation), and Google SRE incident practice. -->
+
+- Preserve before you remediate. A restart destroys the state that explains the outage: capture logs, a heap/thread dump, process and connection state, queue depths, and the current config *first*. Five seconds of capture buys the root cause; skipping it usually costs a second incident.
+- Suspected compromise changes the order: isolate the host or rotate the credential before anything else, and do not power-cycle — memory is where the evidence lives.
+- Contain, then fix. Stop the bleeding (disable the feature flag, drain the node, revoke the token) before diagnosing. A mitigation that is not a fix is still the right first move.
+- One case record per incident with a running timestamped timeline — what was observed, what was changed, by whom. A chat thread is not a record; copy decisions into the case as they happen.
+- Every change during an incident is announced and reversible, one at a time. Two simultaneous fixes make the eventual explanation unprovable.
+- Match the evidence to the action before running it (core rule): a symptom that pattern-matches a known failure may have a different cause today. Say which signal justifies the restart, the rollback, or the scale-up.
+- Rotate any credential that was exposed, printed, or possibly read during the incident — including ones you only suspect (`rules/crypto.md`).
+- The postmortem records the hypotheses that were ruled out and the evidence that ruled them out, not only the final cause. A reader who cannot see what was eliminated cannot trust the conclusion, and repeats the search next time.
+- Close the loop with something executable: a regression test that fails on the old code, or an alert that would have fired earlier — and prove the new alert fires against the recorded incident data before trusting it (`rules/testing.md`, `rules/observability.md`).
+- Blameless: findings name systems, defaults, and missing guardrails — never a person. "The deploy path allowed an unreviewed config change" is actionable; "X pushed bad config" is not.

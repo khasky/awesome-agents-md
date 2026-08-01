@@ -15,6 +15,7 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - Spec compliance: does the diff do exactly what was asked — nothing missing, nothing extra?
 - Standards: correctness, security, error handling, naming, test quality.
 - A diff that adds a trust boundary or data flow (new endpoint, file upload, external integration, queue consumer) or touches auth/payments escalates to security-focused review.
+- A diff touching CI workflow files, lockfiles, or build scripts escalates to supply-chain review — those files execute with repository credentials, and they are the least-read code in the repo (`rules/ci-cd-security.md`, `rules/dependencies.md`).
 - Tests with more mocking than logic exercise the mock, not the code — flag them. Mock external services only, never your own app.
 - Fix causes, not symptoms. A "simplification" that requires changing tests is a behavior change in disguise — flag it.
 - Label numbers as measured / estimated / unknown; never present an estimate as measured — unknown stays "unknown", not N/A.

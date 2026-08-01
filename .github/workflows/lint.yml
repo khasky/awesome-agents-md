@@ -5,13 +5,54 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  agents-md-size:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
       - name: core AGENTS.md stays under 200 lines
         run: |
           lines=$(wc -l < AGENTS.md)
           echo "AGENTS.md: $lines lines (limit 200)"
           [ "$lines" -le 200 ]
+
+      - name: every rules module is listed in AGENTS.md
+        run: |
+          status=0
+          for f in rules/*.md; do
+            grep -qF "$f" AGENTS.md || { echo "orphan: $f is listed nowhere in AGENTS.md"; status=1; }
+          done
+          exit $status
+
+      - name: every referenced rules module exists
+        run: |
+          status=0
+          for f in $(grep -ohE 'rules/[a-z0-9-]+\.md' $(git ls-files '*.md') | sort -u); do
+            [ -f "$f" ] || { echo "dangling reference: $f"; status=1; }
+          done
+          exit $status
+
+      - name: relative links resolve
+        run: |
+          status=0
+          for src in $(git ls-files '*.md'); do
+            dir=$(dirname "$src")
+            for target in $(grep -ohE '\]\([^)]+\)' "$src" | sed 's/^](//; s/)$//; s/#.*$//'); do
+              case "$target" in http*|mailto:*|'') continue ;; esac
+              [ -e "$dir/$target" ] || { echo "$src: broken link -> $target"; status=1; }
+            done
+          done
+          exit $status
+
+      - name: code fences are balanced
+        run: |
+          status=0
+          for f in $(git ls-files '*.md'); do
+            n=$(grep -c '^```' "$f" || true)
+            [ $((n % 2)) -eq 0 ] || { echo "$f: unbalanced code fences ($n)"; status=1; }
+          done
+          exit $status

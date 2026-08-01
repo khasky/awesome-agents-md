@@ -184,6 +184,10 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, deprecation.
 - `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/containers.md` — Docker/Compose: multi-stage, non-root, secret-safe images, healthcheck gating.
 - `rules/astro-ssg.md` — Astro/SSG: islands, content collections, build-time data. `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
+- `rules/ci-cd-security.md` — CI workflows and release automation: action pinning, token scope, untrusted PR input. `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
+- `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
+- `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening. `rules/incident-response.md` — a live production incident: preserve evidence, contain, postmortem discipline.
+- `rules/rtk.md` — the RTK output-compression CLI, only when `rtk --version` succeeds.
 
 ---
 

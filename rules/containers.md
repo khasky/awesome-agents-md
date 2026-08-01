@@ -13,3 +13,7 @@ Read this when writing a Dockerfile, a Compose file, or container build/run conf
 - Compose gates dependent startup on real readiness: a `healthcheck` (`pg_isready`, an HTTP probe) plus `depends_on: condition: service_healthy` — not bare `depends_on`, which only waits for start, not ready.
 - Run schema migrations as a start step before the app process (`migrate deploy && start`) or as a separate init job — not lazily inside request handling.
 - One process concern per container; log to stdout; keep the container stateless (uploads/sessions/cache go to external stores).
+- Reproducible builds pin the base image by digest (`node:20-alpine@sha256:…`), not by tag alone — a tag is remutable upstream.
+- Scan the built image in CI (Trivy, Grype) and fail the build on fixable critical/high findings; publish an SBOM alongside the image so a later CVE can be matched to what actually shipped (`rules/dependencies.md`).
+- Run with a read-only root filesystem plus explicit writable mounts (`tmpfs` for scratch), drop all Linux capabilities and add back only what the process needs, and set `no-new-privileges`.
+- Never mount the Docker socket into an application container: socket access is root on the host.

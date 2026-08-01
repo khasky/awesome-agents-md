@@ -15,3 +15,5 @@ Read this when writing or restructuring tests, or deciding what kind of test a c
 - CI-aware knobs gated on `process.env.CI`: `forbidOnly`, a small retry count, single worker, trace/video on first retry — so CI catches a stray `.only` and a flake leaves a trace, while local stays fast.
 - Provide dummy env fallbacks in CI (a throwaway API key, a fake signing secret) so lint/typecheck/build/unit run without real secrets; real credentials gate only the jobs that truly need them.
 - Deterministic pure functions (seeded RNG, no wall-clock) are the cheapest thing to unit-test — assert same input produces same output.
+- Anything that parses untrusted bytes — a parser, deserializer, codec, upload handler, protocol reader — earns a property or coverage-guided fuzz test, with the seed corpus committed as fixtures so a found crash stays covered.
+- Keep a standing hostile-input fixture set (oversized, empty, unicode and RTL, null bytes, deeply nested, duplicate keys) rather than inventing edge cases per test; a crash found by fuzzing is triaged to root cause, never deduplicated away by stack trace (`rules/backend-security.md`).
