@@ -28,6 +28,14 @@ jobs:
           done
           exit $status
 
+      - name: every rules module opens with its trigger line
+        run: |
+          status=0
+          for f in rules/*.md; do
+            head -n 5 "$f" | grep -q '^Read this when ' || { echo "$f: missing 'Read this when' trigger line in the first 5 lines"; status=1; }
+          done
+          exit $status
+
       - name: llms.txt stays in sync with rules/
         run: |
           status=0

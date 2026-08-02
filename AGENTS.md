@@ -182,7 +182,9 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/api-contracts.md` — repos with machine-readable API schemas, contract packages, or generated clients.
 - `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM). `rules/messaging.md` — queues, event streams, pub/sub, in/outbound webhooks: outbox, idempotent consumers, retries/DLQ.
 - `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, response caching, deprecation.
-- `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/containers.md` — Docker/Compose: multi-stage, non-root, secret-safe images, healthcheck gating.
+- `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/containers.md` — Docker/Compose/Kubernetes: multi-stage, non-root, secret-safe images, probes and limits.
+- `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture. `rules/resilience.md` — cross-service calls: timeouts, circuit breakers, retries, sagas, bounded queues.
+- `rules/caching.md` — adding or reviewing a cache: cache-aside, TTL and invalidation, Redis anti-patterns, stampedes. `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
 - `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
 - `rules/ci-cd-security.md` — CI workflows and release automation: action pinning, token scope, untrusted PR input. `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
 - `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.

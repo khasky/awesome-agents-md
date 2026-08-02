@@ -26,7 +26,11 @@
 - [rules/incident-response.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/incident-response.md): a live production incident — preserve evidence, contain, postmortem discipline.
 - [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — action pinning, token scope, untrusted PR input.
 - [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.
-- [rules/containers.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/containers.md): Docker/Compose — multi-stage builds, non-root, secret-safe images, healthcheck gating.
+- [rules/containers.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/containers.md): Docker/Compose/Kubernetes — multi-stage builds, non-root, secret-safe images, probes and resource limits.
+- [rules/design-patterns.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/design-patterns.md): choosing design patterns — composition over inheritance, no Singleton, language-native over GoF machinery, architecture weight.
+- [rules/resilience.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/resilience.md): cross-service calls — timeouts with circuit breakers, retry budgets, sagas, bulkheads, bounded queues.
+- [rules/caching.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/caching.md): caches — cache-aside, TTL and event invalidation, Redis anti-patterns, stampede protection.
+- [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
 - [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit gates with husky and lint-staged.
 - [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): pnpm/npm workspaces, Turborepo, Nx.
 - [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features — Rule of Two, indirect prompt injection, tool least privilege.

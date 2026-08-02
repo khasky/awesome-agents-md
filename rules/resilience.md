@@ -1,0 +1,17 @@
+# Cross-service resilience
+
+Read this when a service calls other services — HTTP/RPC clients, retries, timeouts, cross-service transactions, or deciding failure behavior under a slow or dead dependency.
+
+<!-- Distilled from the Azure Architecture Center cloud design patterns, microservices.io (Chris Richardson), Reactive Design Patterns (Kuhn), Enterprise Integration Patterns (Hohpe/Woolf), and Mark Richards' "Microservices Antipatterns and Pitfalls". -->
+
+- A timeout alone is not resilience. Every synchronous cross-service call gets an explicit timeout, a circuit breaker, and a named fallback — cached value, default, degraded feature, or a clean fast failure surfaced to the caller.
+- Retry only transient failures (timeouts, 5xx, connection resets) with jittered backoff and a capped total budget — never 4xx, never unbounded (`rules/backend-security.md` for the outbound retry contract). The circuit breaker is what stops retrying a persistently dead dependency.
+- Retrying a non-idempotent call requires an idempotency key; without one a retry is a duplicate side-effect, not resilience.
+- Cross-service consistency is a saga: local transactions plus compensating actions. Never a distributed transaction/2PC across service boundaries.
+- Multi-step workflows run in a state machine/orchestrator with explicit per-step compensation — not chained calls inside one request handler, where step 3's failure leaves steps 1–2 committed and invisible.
+- Database-per-service is a boundary, not a suggestion: never query or report from another service's tables. Cross-service reads go through its API, a CQRS read model, or consumed events.
+- Put a queue between a bursty producer and a rate-limited consumer (load leveling) before scaling either side; scale consumers on queue depth.
+- Every queue is bounded with a declared overflow policy — backpressure (pull), drop, or throttle. An unbounded in-memory queue is a deferred crash. Broker-side delivery, DLQ, and idempotent-consumer rules: `rules/messaging.md`.
+- Bulkhead: isolate connection pools and concurrency limits per downstream dependency, so one slow dependency saturates its own pool instead of the shared one.
+- A shared internal library that couples services (shared domain models, shared DB-access helpers) version-locks its consumers into deploying together — share contracts and truly stable primitives, duplicate the rest.
+- Correlation id on every request and message end to end (`rules/observability.md`); never order cross-node events by wall-clock timestamps — use sequence numbers or per-key serial processing (`rules/messaging.md`).
