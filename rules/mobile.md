@@ -1,4 +1,4 @@
-# Mobile apps (Android and iOS)
+# Mobile release hardening (Android and iOS)
 
 Read this when writing or reviewing native or cross-platform mobile code: storage, network, auth, release builds.
 

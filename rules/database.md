@@ -25,7 +25,7 @@ Read this when writing schema, migrations, queries, or data-access code — raw 
 - Destructive schema change = expand/contract: add the new shape, backfill, switch reads, then drop the old column in a later migration — never rename-in-place on a live table.
 - Before a destructive migration or a bulk data change, confirm the restore path exists and has actually been exercised — a backup nobody has restored is a hypothesis (core Boundaries rule). Know the retention window and the point-in-time-recovery granularity of the environment being touched before, not after.
 - Seed data lives in a committed, idempotent script (`… IF NOT EXISTS`, upserts) that can run repeatedly without duplicating rows.
-- Run migrations as a deploy step before the app boots (container entrypoint or a release phase), not lazily on first request.
+- Run migrations as a dedicated release phase before the new code deploys — not in the serving container's entrypoint and not lazily on first request; rollout ordering and one-version-back compatibility live in `rules/deployment.md`.
 - Type JSON columns to a named shape and write through a builder, not untyped blobs. Give URL-exposed rows an opaque public id (`cuid`/`uuid`) so the sequential primary key never leaks (`rules/backend-security.md`).
 - Gate query logging by env (`error`/`warn` in dev, `error` only in prod); never log query parameters that carry PII or secrets.
 

@@ -2,7 +2,7 @@
 
 Read this when writing or changing CI workflows, release automation, or anything that runs with repository credentials. Written against GitHub Actions: the trust-boundary rules carry to GitLab CI and Azure Pipelines, the syntax and the variable names do not.
 
-<!-- Distilled from TupleType/awesome-cicd-attacks (poisoned pipeline execution, dependency confusion, runner compromise), GitHub's hardening guide for Actions, and zizmor/actionlint rule sets. -->
+<!-- Distilled from TupleType/awesome-cicd-attacks (poisoned pipeline execution, dependency confusion, runner compromise), GitHub's hardening guide for Actions, zizmor/actionlint rule sets, and Trail of Bits' research on auditing AI-agent workflows in CI. -->
 
 - Pin every third-party action to a full commit SHA (`uses: owner/action@a1b2c3…`), never a tag or branch — a tag is mutable and repointing it is the documented supply-chain vector. Keep the human-readable version in a trailing comment and let the bot bump both.
 - `pull_request_target` and `workflow_run` execute with repository secrets and write scope against the *base* repo: never check out or run PR-head code inside them. A fork PR that genuinely needs a secret goes through a gated `environment` with a required reviewer.
@@ -15,7 +15,11 @@ Read this when writing or changing CI workflows, release automation, or anything
 - Lint the workflow YAML itself in CI (`zizmor`, `actionlint`) — these files are the least-reviewed executable code in most repos.
 - `GITHUB_ENV` and `GITHUB_OUTPUT` are files one step writes and the next step trusts: an untrusted value containing a newline injects a variable into the following step. Route untrusted content through neither, or write it with a random heredoc delimiter.
 - Reusable workflows and composite actions run with the caller's secrets and token — pin them by SHA like any other action, and treat one owned by another org as third-party code holding write access to this repo.
-- Release artifacts carry provenance: attest at build time (`actions/attest-build-provenance`, sigstore/cosign) and make the consumer verify before install or deploy. An unsigned artifact in a registry is indistinguishable from one an attacker pushed.
+- Release artifacts carry provenance: attest at build time (`actions/attest-build-provenance`, sigstore/cosign) and make the consumer verify before install or deploy. An unsigned artifact in a registry is indistinguishable from one an attacker pushed. Rollout strategy and rollback for what those artifacts ship: `rules/deployment.md`.
 - Review the lockfile diff on every PR: a new transitive package, a changed integrity hash, or a rewritten registry URL is a supply-chain event, not noise (`rules/dependencies.md`).
 - Secrets are never printed, echoed, or written to an artifact for debugging; a masked value still leaks through base64, reversal, or a crash dump.
+- An AI-agent step (a Claude, Gemini, or Codex action) is an injection sink, not just a tool: issue and PR text, review comments, error logs, and env values all reach its prompt as attacker-controlled input. A prompt with no `${{ }}` in it proves nothing when the payload arrives through an env var or a `gh issue view` the agent runs itself.
+- Agent output is untrusted code: never pipe it into `eval`, a shell, or an auto-merged commit. It gets the same review gate as PR-head code before anything executes it with repository credentials.
+- Scope what the agent may run: no wildcard tool allowlists, no full-access or auto-approve sandbox flags in CI. Allowlist argument shapes, not bare tool names — `echo $(env)` exfiltrates through an allowed `echo`.
+- Sandbox and permission weaknesses do not exploit themselves, they amplify: a permissive agent config turns an otherwise-contained prompt injection into repository write access, so rate the two findings together, not separately.
 - The gates that block a merge run in CI, not only in a git hook — hooks are bypassable by design (`rules/git-hooks.md`).

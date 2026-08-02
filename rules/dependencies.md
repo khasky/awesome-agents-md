@@ -14,6 +14,7 @@ Read this when adding, upgrading, or auditing third-party packages in any ecosys
 - License is a shipping constraint, not a preference: check a new package and the transitive packages it drags in against what this project may ship — copyleft in a distributed binary, network-copyleft in a hosted service. A license that changes on upgrade is a breaking change and an "ask first" decision (core Boundaries rule).
 - Emit an SBOM as a build artifact (`syft`, CycloneDX, SPDX) and keep it with the release, so "are we affected by this CVE" is a query against a file rather than an archaeology project (`rules/ci-cd-security.md`).
 - Maintenance status is a security property: an unmaintained package with zero CVEs is still a finding — no upstream means no patch on the day one lands.
+- The maintainer is part of the attack surface: a single anonymous maintainer, no security contact or disclosure policy, and high-risk features (install scripts, FFI, deserialization) compound into takeover risk no CVE scan shows — weigh them when choosing between otherwise-equal packages.
 - Report a vulnerability with its dependency path and whether it is direct or transitive (`express > send > mime`); the fix differs.
 - No fix available → check whether the vulnerable code path is reachable from your code before escalating or accepting; an unreachable CVE in a dev-only dependency is not a release blocker, and saying so is part of the finding.
 - Automated advisory and PoC feeds are leads, not verdicts — confirm against the actual installed version and call path before acting.

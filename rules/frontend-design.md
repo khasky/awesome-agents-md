@@ -19,7 +19,7 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - Touch targets ≥44×44px with ≥8px gaps; extend the hit area beyond a smaller visual icon.
 - Body text ≥16px (avoids iOS auto-zoom), line-height ~1.5, 65–75 characters per line.
 - Spacing on a 4/8px scale; z-index from a defined scale (0/10/20/40/100); no arbitrary values.
-- Motion: 150–300ms micro-interactions, ≤400ms transitions; ease-out on enter, ease-in on exit (exit ~70% of enter); stagger lists 30–50ms per item; animate `transform`/`opacity` only; honor `prefers-reduced-motion`; animations interruptible, never input-blocking; no `transition: all`.
+- Motion: 150–300ms micro-interactions, ≤400ms transitions; ease-out on enter, ease-in on exit (exit ~70% of enter); stagger lists 30–50ms per item; animate `transform`/`opacity` by default (exceptions: the cost ladder under Animation performance); honor `prefers-reduced-motion`; animations interruptible, never input-blocking; no `transition: all`.
 - Icons: SVG from one family with one stroke width (Lucide, Heroicons) — never emoji; don't mix filled and outline at the same hierarchy level.
 - `tabular-nums` for numbers in columns (prices, timers, data).
 
@@ -33,7 +33,7 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - `dvh` over `vh` for full-height layouts.
 - Forms: never block paste; correct `type`/`inputmode` per field; labels clickable; validate on blur, not keystroke; errors inline naming the fix, focus the first invalid field; submit stays enabled until the request starts, then shows progress; warn before navigating away with unsaved changes.
 - Destructive actions need confirm or undo — never immediate.
-- URL reflects state: filters, tabs, pagination deep-linkable; back restores scroll and state.
+- URL reflects state: filters, tabs, pagination deep-linkable; back restores scroll and state (canon: the ownership ladder in `rules/state-management.md`, repeated here because it is a design decision too).
 - Loading: skeleton for operations >1s; visible tap feedback within 100ms.
 - Content resilience: design for short, average, and very long content; `truncate`/`line-clamp`/`break-words`; flex children need `min-width: 0`; handle empty states.
 - Images get explicit width/height; reserve layout space for any injected UI (banners, consent bars, embeds) — nothing shifts content when it loads. Lazy-load below the fold; virtualize lists >50 items.

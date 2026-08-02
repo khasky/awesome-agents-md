@@ -169,7 +169,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/markdown.md` — editing Markdown documents and articles. `rules/code-comments.md` — full comment policy, including public-repo safety.
 - `rules/refactoring.md` — dedicated refactoring or cleanup tasks. `rules/debugging.md` — the full debug escalation ladder when fixes keep failing.
 - `rules/code-review.md` — reviewing a diff/PR or preparing changes for review. `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
-- `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state: ownership ladder, persistence hygiene, SSR store lifetimes.
+- `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state in JS/TS store/query libraries: ownership ladder, persistence hygiene, SSR store lifetimes.
 - `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV. `rules/i18n.md` — multi-language or multi-locale UI: catalogs, plurals, RTL, locale formatting.
 - `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, Node pitfalls. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
 - `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM). `rules/caching.md` — adding or reviewing a cache: write strategies, TTL and invalidation, stampedes, Redis anti-patterns.
