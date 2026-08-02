@@ -5,7 +5,7 @@ Read this when the repo has a machine-readable API schema (OpenAPI or similar), 
 <!-- Distilled from khasky/backend-architecture-playbook and khasky/frontend-architecture-playbook. -->
 
 - The schema is the source of truth: change the spec, re-run codegen. Never hand-edit generated files — they are build output and the next run overwrites them.
-- Before hand-writing a DTO or request/response type, look for an existing contract package or codegen setup (openapi-typescript, Hey API, Orval); duplicating shapes by hand is how client and server drift.
+- Before hand-writing a DTO or request/response type, look for an existing contract package or your ecosystem's schema-to-client generator; duplicating shapes by hand is how client and server drift.
 - Schema change → regenerate in the same change and fix all consumers; a stale generated client compiles but lies.
 - The error envelope is part of the contract: clients parse the documented shape (`code`, `message`, `request_id`) in one shared helper, not per endpoint.
 - Generate the schema from the route/handler definitions and treat it as the single source of truth; export it in CI (a headless script that boots the app and writes the spec) to feed downstream SDK/client generation.

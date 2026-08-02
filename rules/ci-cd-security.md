@@ -1,6 +1,6 @@
 # CI/CD pipeline security
 
-Read this when writing or changing CI workflows, release automation, or anything that runs with repository credentials (GitHub Actions, GitLab CI, Azure Pipelines).
+Read this when writing or changing CI workflows, release automation, or anything that runs with repository credentials. Written against GitHub Actions: the trust-boundary rules carry to GitLab CI and Azure Pipelines, the syntax and the variable names do not.
 
 <!-- Distilled from TupleType/awesome-cicd-attacks (poisoned pipeline execution, dependency confusion, runner compromise), GitHub's hardening guide for Actions, and zizmor/actionlint rule sets. -->
 

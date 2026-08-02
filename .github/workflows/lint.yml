@@ -20,6 +20,15 @@ jobs:
           echo "AGENTS.md: $lines lines (limit 200)"
           [ "$lines" -le 200 ]
 
+      - name: core AGENTS.md names no framework, library, or non-baseline CLI
+        run: |
+          # Everything from the module index down is trigger text — that is where tool
+          # names belong. gitleaks and commitlint are absent from the list on purpose:
+          # both appear inside an explicit presence check, which CONTRIBUTING allows.
+          core=$(sed '/^## On-demand rule modules/,$d' AGENTS.md | sed 's/<!--.*-->//')
+          hits=$(printf '%s\n' "$core" | grep -nEio '\b(ripgrep|rg --no-ignore|npm|pnpm|yarn|npx|vitest|jest|playwright|prisma|drizzle|zod|eslint|prettier|biome|webpack|django|rails|pytest|ponytail)\b' || true)
+          [ -z "$hits" ] || { echo "core names a tool outside a presence check:"; printf '%s\n' "$hits"; exit 1; }
+
       - name: every rules module is listed in AGENTS.md
         run: |
           status=0

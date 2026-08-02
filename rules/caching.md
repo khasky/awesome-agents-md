@@ -1,6 +1,6 @@
 # Caching
 
-Read this when adding or reviewing a cache — in-process, Redis/Memcached, or a cached computation. HTTP/CDN response caching lives in `rules/public-api-design.md`.
+Read this when adding or reviewing a cache — in-process, a shared cache server, or a cached computation; the server-side examples are Redis. HTTP/CDN response caching lives in `rules/public-api-design.md`.
 
 <!-- Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice. -->
 

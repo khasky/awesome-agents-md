@@ -1,6 +1,6 @@
 # Git hooks and pre-commit gates
 
-Read this when setting up or changing pre-commit/pre-push automation (husky, lint-staged, pre-commit, lefthook).
+Read this when setting up or changing pre-commit/pre-push automation. Written against husky + lint-staged in a JS/TS repo: the gate rules carry to `pre-commit` and lefthook, the commands do not.
 
 <!-- Distilled from the husky and lint-staged docs and pre-commit-hook practice; cross-checked against production reference implementations. -->
 

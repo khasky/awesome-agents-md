@@ -1,6 +1,6 @@
 # Client state management
 
-Read this when writing or reviewing client-side state in a web app — component state, global stores, persisted state, or a server-cache layer (TanStack Query, SWR, Pinia, Zustand) — any framework.
+Read this when writing or reviewing client-side state in a JS/TS web app that uses a store or server-cache library (TanStack Query, SWR, Zustand, Pinia): component state, global stores, persisted state, route state. The ownership ladder and the persistence rules carry to any client framework; the named hooks and options do not.
 
 <!-- Distilled from the react-zustand, vue-pinia, tanstack-query/router, and nextjs-tanstack-query rule files in PatrickJS/awesome-cursorrules. -->
 

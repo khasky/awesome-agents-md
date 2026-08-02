@@ -1,6 +1,6 @@
 # Frontend design and UI craft
 
-Read this when building, styling, or reviewing UI: pages, components, dashboards.
+Read this when building, styling, or reviewing web UI: pages, components, dashboards. The craft and accessibility numbers hold for any UI; the CSS and DOM APIs are web-only.
 
 <!-- Distilled from vercel-labs/web-interface-guidelines, nextlevelbuilder/ui-ux-pro-max-skill, anthropics/skills frontend-design, and khasky/marketing-and-seo-playbook (permission prompts, layout reservation). -->
 

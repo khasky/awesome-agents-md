@@ -1,10 +1,10 @@
 # Database and ORM
 
-Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM (Prisma, Drizzle, TypeORM).
+Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples are PostgreSQL and the ORM examples Prisma/Drizzle.
 
 <!-- Distilled from the Twelve-Factor App (config, backing services), Prisma and Drizzle docs, use-the-index-luke.com, the expand/contract migration pattern, GitHub's replication-lag throttling practice (freno), the sqlcheck SQL anti-pattern catalog (jarulraj), and Azure's SaaS tenancy pattern matrix; cross-checked against production reference implementations. -->
 
-- Client/pool is one long-lived instance: in dev with hot-reload, cache it on `globalThis` guarded by `NODE_ENV` so reloads don't open a new pool each time and exhaust connections. Serverless: cap the pool (often `max: 1`) and reuse it across invocations.
+- Client/pool is one long-lived instance shared by the process, never created per request or per module reload — a runtime that re-executes modules on hot-reload opens a new pool each time and exhausts connections. Serverless: cap the pool (often `max: 1`) and reuse it across invocations.
 - Size the pool against the database's connection limit, not the app's concurrency: connections summed across every instance, worker, and migration job stay under `max_connections` with headroom for an admin session. A pool wider than the work the database can actually run in parallel adds queueing, not throughput — put a pooler (PgBouncer, RDS Proxy) in front instead of raising the number.
 - One datasource selected by env (`DATABASE_URL`), one documented switch point between local (SQLite/container) and production (Postgres) — no per-file connection strings.
 - Multi-row invariants run in one transaction: interactive callback (`tx => …`) for dependent writes that read each other, array/batch form for independent writes. Side-effects (email, queue publish) happen after commit, never inside the transaction.
@@ -14,17 +14,22 @@ Read this when writing schema, migrations, queries, or data-access code — raw 
 - Name columns explicitly in production queries — no `SELECT *`: it breaks consumers on schema change, drags unread bytes, and defeats covering indexes.
 - Multi-tenant schema: choose the tenancy model at design time — database-per-tenant vs shared schema with tenant scoping — and in a shared or sharded schema `tenant_id` leads every composite key and index, and every query filters on it; a missing tenant filter is an IDOR (`rules/backend-security.md`).
 - Index every foreign key and every hot query's filter/sort columns; add a composite index for each `(filter, sort)` pair — equality columns first, then the sort column: `(a, b)` serves `WHERE a = ? ORDER BY b`, not `WHERE b = ?`. Unindexed FKs make joins and cascade deletes scan; a leading-wildcard `LIKE '%x'` can't use a btree index — that search wants full-text or trigram. Each extra index taxes every write: add for measured queries, drop ones the stats say are unused.
-- N+1 is a design defect, not a micro-optimization: a loop that queries once per row turns one request into hundreds. Fetch with a join or a batched `IN (…)` (`include`/`with` in an ORM) and assert the query count in a test on the hot paths — the symptom is invisible on seed data and obvious in production.
+- N+1 is a design defect, not a micro-optimization: a loop that queries once per row turns one request into hundreds. Fetch with a join or a batched `IN (…)` — the ORM's eager-load option — and assert the query count in a test on the hot paths — the symptom is invisible on seed data and obvious in production.
 - Name the isolation level whenever the default is wrong for the invariant: read-committed will not stop the phantom that `SELECT … FOR UPDATE` or a serializable retry loop catches. Acquire locks in one documented order across the codebase — two transactions taking the same rows in opposite order deadlock under load and never in tests — and set `lock_timeout`/`statement_timeout` so a stuck transaction fails fast instead of pinning the pool.
 - Reads go to a replica only where staleness is acceptable, and the replication lag is measured rather than assumed. Anything reading its own write — the redirect after a create, a confirmation screen — reads the primary, or the user is shown a row that does not exist yet.
 - Bulk writes and backfills throttle on measured replication lag — pause when lag crosses a threshold, resume when it drains. A migration that saturates the primary makes every replica reader stale at once.
 - Concurrent updates to the same row get a strategy named at design time: a `version` column checked on write (optimistic locking — `0 rows updated` means conflict, surfaced to the caller, never silently retried as last-write-wins) or `SELECT … FOR UPDATE` where contention is the norm.
 - For "at most one" invariants — one active subscription per user, one job per key — a `UNIQUE` (partial) index is the mutex: `INSERT … ON CONFLICT` in one statement. Check-then-insert in app code loses to parallel requests.
 - Parameterize always — bound parameters or the ORM's query builder, never string-concatenated SQL, even for `LIKE`/full-text (`rules/backend-security.md`).
-- Migrations are versioned, committed, and forward-only in production (`migrate deploy`); `db push`/schema-sync is for local prototyping only. Never edit an applied migration — add a new one.
+- Migrations are versioned, committed, and forward-only in production; a schema-sync/push command that diffs the model straight onto the database is for local prototyping only. Never edit an applied migration — add a new one.
 - Destructive schema change = expand/contract: add the new shape, backfill, switch reads, then drop the old column in a later migration — never rename-in-place on a live table.
 - Before a destructive migration or a bulk data change, confirm the restore path exists and has actually been exercised — a backup nobody has restored is a hypothesis (core Boundaries rule). Know the retention window and the point-in-time-recovery granularity of the environment being touched before, not after.
 - Seed data lives in a committed, idempotent script (`… IF NOT EXISTS`, upserts) that can run repeatedly without duplicating rows.
 - Run migrations as a deploy step before the app boots (container entrypoint or a release phase), not lazily on first request.
 - Type JSON columns to a named shape and write through a builder, not untyped blobs. Give URL-exposed rows an opaque public id (`cuid`/`uuid`) so the sequential primary key never leaks (`rules/backend-security.md`).
 - Gate query logging by env (`error`/`warn` in dev, `error` only in prod); never log query parameters that carry PII or secrets.
+
+## JS/TS ORM specifics
+
+- Dev hot-reload re-executes modules: cache the client on `globalThis` guarded by `NODE_ENV` so each reload reuses one pool instead of opening another.
+- Prisma: `migrate deploy` in production, `db push` local-only; eager-load with `include` (Prisma) or `with` (Drizzle) to kill an N+1.
