@@ -28,6 +28,17 @@ jobs:
           done
           exit $status
 
+      - name: llms.txt stays in sync with rules/
+        run: |
+          status=0
+          for f in rules/*.md; do
+            grep -qF "$f" llms.txt || { echo "missing from llms.txt: $f"; status=1; }
+          done
+          for f in $(grep -ohE 'rules/[a-z0-9-]+\.md' llms.txt | sort -u); do
+            [ -f "$f" ] || { echo "stale llms.txt entry: $f"; status=1; }
+          done
+          exit $status
+
       - name: every referenced rules module exists
         run: |
           status=0

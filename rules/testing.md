@@ -2,7 +2,7 @@
 
 Read this when writing or restructuring tests, or deciding what kind of test a change needs.
 
-<!-- Distilled from khasky/testing-strategy-playbook and khasky/backend-architecture-playbook. -->
+<!-- Distilled from khasky/testing-strategy-playbook and khasky/backend-architecture-playbook; load-testing practice from Slack engineering's continuous load testing. -->
 
 - Placement ladder: unit tests for pure logic, transformations, and policy decisions; integration tests where systems meet (database, queue, cache, HTTP handlers) — against real infrastructure in containers where practical; E2E for a handful of business-critical paths only, never the default answer to a coverage gap.
 - Mock external services only, never your own app; a test with more mocking than logic verifies the mock (shared rule with `rules/code-review.md`).
@@ -18,5 +18,6 @@ Read this when writing or restructuring tests, or deciding what kind of test a c
 - Freeze time and pin the timezone wherever a test touches dates: inject a clock or use the runner's fake timers, and set `TZ=UTC` for the suite. A test that passes only in your timezone, or only before midnight, is a flake with a schedule.
 - Database-backed tests isolate per test, not per suite: a transaction rolled back at teardown, or a schema/database per worker. Shared rows plus parallel workers produce failures that depend on execution order and vanish on re-run — the exact signature that gets misread as infrastructure noise.
 - A bug fix ships with a test that fails without the fix and passes with it — run it both ways and report both (core Verification rule). A regression test that was green on its very first run has proven nothing yet.
+- A "ready for load" or latency claim needs a load test at realistic concurrency against production-like infrastructure, measuring p95/p99 — never the average. Re-run it on a schedule or in CI, not once before launch: capacity regressions arrive with ordinary commits.
 - Anything that parses untrusted bytes — a parser, deserializer, codec, upload handler, protocol reader — earns a property or coverage-guided fuzz test, with the seed corpus committed as fixtures so a found crash stays covered.
 - Keep a standing hostile-input fixture set (oversized, empty, unicode and RTL, null bytes, deeply nested, duplicate keys) rather than inventing edge cases per test; a crash found by fuzzing is triaged to root cause, never deduplicated away by stack trace (`rules/backend-security.md`).

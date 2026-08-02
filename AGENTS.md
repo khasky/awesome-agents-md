@@ -179,11 +179,11 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV.
 - `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
 - `rules/monorepo.md` — working in a workspace/monorepo: pnpm/npm workspaces, Turborepo, Nx.
-- `rules/api-contracts.md` — repos with OpenAPI/GraphQL schemas, contract packages, or generated clients.
+- `rules/api-contracts.md` — repos with machine-readable API schemas, contract packages, or generated clients.
 - `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM). `rules/messaging.md` — queues, event streams, pub/sub, in/outbound webhooks: outbox, idempotent consumers, retries/DLQ.
-- `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, deprecation.
+- `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, response caching, deprecation.
 - `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/containers.md` — Docker/Compose: multi-stage, non-root, secret-safe images, healthcheck gating.
-- `rules/astro-ssg.md` — Astro/SSG: islands, content collections, build-time data. `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
+- `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
 - `rules/ci-cd-security.md` — CI workflows and release automation: action pinning, token scope, untrusted PR input. `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
 - `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
 - `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening. `rules/incident-response.md` — a live production incident: preserve evidence, contain, postmortem discipline.

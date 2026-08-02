@@ -1,13 +1,13 @@
 # API contracts and generated clients
 
-Read this when the repo has an OpenAPI/GraphQL schema, a contract package, or generated API clients — or before hand-writing types for API data.
+Read this when the repo has a machine-readable API schema (OpenAPI or similar), a contract package, or generated API clients — or before hand-writing types for API data.
 
 <!-- Distilled from khasky/backend-architecture-playbook and khasky/frontend-architecture-playbook. -->
 
 - The schema is the source of truth: change the spec, re-run codegen. Never hand-edit generated files — they are build output and the next run overwrites them.
-- Before hand-writing a DTO or request/response type, look for an existing contract package or codegen setup (openapi-typescript, Hey API, Orval, graphql-codegen output); duplicating shapes by hand is how client and server drift.
+- Before hand-writing a DTO or request/response type, look for an existing contract package or codegen setup (openapi-typescript, Hey API, Orval); duplicating shapes by hand is how client and server drift.
 - Schema change → regenerate in the same change and fix all consumers; a stale generated client compiles but lies.
 - The error envelope is part of the contract: clients parse the documented shape (`code`, `message`, `request_id`) in one shared helper, not per endpoint.
-- Generate the OpenAPI/GraphQL schema from the route/resolver definitions and treat it as the single source of truth; export it in CI (a headless script that boots the app and writes the spec) to feed downstream SDK/client generation.
+- Generate the schema from the route/handler definitions and treat it as the single source of truth; export it in CI (a headless script that boots the app and writes the spec) to feed downstream SDK/client generation.
 - The response shape is part of the contract: define and serialize responses through the schema so undocumented internal fields never ship (`rules/backend-security.md`).
 - Contract changes are public API changes — the core "Ask first" rule applies. Evolving a public HTTP surface (versioning, pagination, deprecation): `rules/public-api-design.md`.
