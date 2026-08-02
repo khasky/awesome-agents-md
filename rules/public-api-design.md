@@ -6,6 +6,7 @@ Read this when designing or evolving an HTTP API that external clients consume: 
 
 - Version in the URL path (`/v1`, `/v2`) as independent route trees with their own schemas. Additive changes go in place; a breaking change only ever creates a new version — an existing version's response shape never changes under clients.
 - Publish a breaking-vs-non-breaking taxonomy so consumers know what's safe: adding a field or optional param is non-breaking; removing/renaming a field, tightening validation, or changing a type is breaking.
+- Evolve by layering, never by forced migration: a redesigned abstraction ships as a new version or resource beside the old one, and existing integrations keep working until their owners move — migration is announced through the deprecation lifecycle below, never imposed by an in-place change.
 - Paginate with opaque cursors, not offset: base64url-encode the `(sort_key, id)` tuple over a covering index — stable under concurrent inserts, no skipped or duplicated rows. Return a `{ object: "list", data, has_more, next_cursor }` envelope.
 - Idempotency for unsafe methods: accept an `Idempotency-Key`, store the first response keyed by it, replay the stored response on repeat, and 409 if the same key arrives with a different body. Never cache a 5xx (it must stay retryable).
 - Optimistic concurrency with ETags: return a weak ETag; honor `If-None-Match` → 304 on reads and `If-Match` → 409 `version_mismatch` on writes, returning the current version so the client can rebase.

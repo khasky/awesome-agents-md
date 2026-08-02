@@ -30,8 +30,14 @@
 - [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.
 - [rules/containers.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/containers.md): Docker/Compose/Kubernetes — multi-stage builds, non-root, secret-safe images, probes and resource limits.
 - [rules/design-patterns.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/design-patterns.md): choosing design patterns — composition over inheritance, no Singleton, language-native over GoF machinery, architecture weight.
-- [rules/resilience.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/resilience.md): cross-service calls — timeouts with circuit breakers, retry budgets, sagas, bulkheads, bounded queues.
-- [rules/caching.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/caching.md): caches — cache-aside, TTL and event invalidation, Redis anti-patterns, stampede protection.
+- [rules/resilience.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/resilience.md): cross-service calls — timeouts and deadline propagation, circuit breakers, retry budgets, sagas, fencing tokens, load shedding.
+- [rules/rate-limiting.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/rate-limiting.md): rate limiters and quotas — algorithm choice, shared counters across instances, fail-open vs fail-closed, limit keying.
+- [rules/caching.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/caching.md): caches — write-strategy selection, TTL and event invalidation, eviction policy, Redis anti-patterns, stampede protection.
+- [rules/deployment.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/deployment.md): shipping to a running environment — deploy vs release, rollout strategy, feature-flag lifecycle, migration ordering.
+- [rules/jobs.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/jobs.md): cron and batch work — single execution across replicas, overlap policy, idempotent reruns, missed-run policy.
+- [rules/iac.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/iac.md): infrastructure as code — remote state and locking, plan review, destructive applies, drift.
+- [rules/i18n.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/i18n.md): internationalization — message catalogs, plurals, RTL, locale-aware formatting and collation.
+- [rules/privacy.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/privacy.md): personal data — deletion propagation, retention enforcement, PII classification, export rigor.
 - [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
 - [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit gates with husky and lint-staged.
 - [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): pnpm/npm workspaces, Turborepo, Nx.

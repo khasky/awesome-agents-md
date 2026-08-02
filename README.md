@@ -4,7 +4,7 @@
 
 One `AGENTS.md` to import, with shared rules for AI coding agents: Claude Code, OpenAI Codex CLI, Gemini CLI, Cursor Agent — plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
 
-The ruleset covers: concise token-efficient communication, a "lazy senior dev" coding discipline (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, refactoring and comment rules, Conventional Commits, and Markdown editorial rules.
+The always-loaded core covers: concise token-efficient communication, a "lazy senior dev" coding discipline (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, Conventional Commits. On-demand modules in `rules/` extend it across the stack — backend security, databases, caching, resilience, deployment, infrastructure as code, payments, and more.
 
 No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install. Agent tooling lives in sibling repos: [agent-mcp-integrations](https://github.com/khasky/agent-mcp-integrations) for the MCP integration servers (browsers, cloud, databases, infra, domain APIs) and [claude-code-token-optimization](https://github.com/khasky/claude-code-token-optimization) for the token-efficiency layers (RTK, LSP, Context7, memory plugins, Caveman, Ponytail).
 

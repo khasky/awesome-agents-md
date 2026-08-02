@@ -166,26 +166,26 @@ NO AI TRACES IN COMMITS — no `Co-Authored-By` trailers, no "Generated with", n
 
 Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient.
 
-- `rules/markdown.md` — editing Markdown documents and articles.
+- `rules/markdown.md` — editing Markdown documents and articles. `rules/code-comments.md` — full comment policy, including public-repo safety.
 - `rules/refactoring.md` — dedicated refactoring or cleanup tasks. `rules/debugging.md` — the full debug escalation ladder when fixes keep failing.
-- `rules/code-comments.md` — full comment policy, including public-repo safety.
+- `rules/code-review.md` — reviewing a diff/PR or preparing changes for review. `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
 - `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state: ownership ladder, persistence hygiene, SSR store lifetimes.
-- `rules/code-review.md` — reviewing a diff/PR or preparing changes for review.
-- `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory).
-- `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, Node pitfalls.
-- `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV.
-- `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
-- `rules/monorepo.md` — working in a workspace/monorepo: pnpm/npm workspaces, Turborepo, Nx.
-- `rules/api-contracts.md` — repos with machine-readable API schemas, contract packages, or generated clients.
-- `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM). `rules/messaging.md` — queues, event streams, pub/sub, in/outbound webhooks: outbox, idempotent consumers, retries/DLQ.
-- `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, response caching, deprecation.
-- `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/containers.md` — Docker/Compose/Kubernetes: multi-stage, non-root, secret-safe images, probes and limits.
-- `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture. `rules/resilience.md` — cross-service calls: timeouts, circuit breakers, retries, sagas, bounded queues.
-- `rules/caching.md` — adding or reviewing a cache: cache-aside, TTL and invalidation, Redis anti-patterns, stampedes. `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
-- `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
+- `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV. `rules/i18n.md` — multi-language or multi-locale UI: catalogs, plurals, RTL, locale formatting.
+- `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, Node pitfalls. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
+- `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM). `rules/caching.md` — adding or reviewing a cache: write strategies, TTL and invalidation, stampedes, Redis anti-patterns.
+- `rules/messaging.md` — queues, event streams, pub/sub, in/outbound webhooks: outbox, idempotent consumers, retries/DLQ. `rules/jobs.md` — cron and batch work: single execution, overlap policy, idempotent reruns.
+- `rules/observability.md` — logging, health/readiness probes, metrics, graceful shutdown, env-config validation. `rules/incident-response.md` — a live production incident: preserve evidence, contain, postmortem discipline.
+- `rules/public-api-design.md` — versioning, cursor pagination, idempotency keys, ETag concurrency, response caching, deprecation. `rules/api-contracts.md` — repos with machine-readable API schemas, contract packages, or generated clients.
+- `rules/resilience.md` — cross-service calls: timeouts and deadlines, circuit breakers, retries, sagas, load shedding. `rules/rate-limiting.md` — designing limiters and quotas: algorithm choice, shared counters, fail-open vs fail-closed.
+- `rules/deployment.md` — shipping to a running environment: deploy vs release, rollout, feature flags, migration ordering. `rules/containers.md` — Docker/Compose/Kubernetes: multi-stage, non-root, secret-safe images, probes and limits.
+- `rules/iac.md` — Terraform/Pulumi/CDK: remote state, plan review, destructive applies. `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
 - `rules/ci-cd-security.md` — CI workflows and release automation: action pinning, token scope, untrusted PR input. `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
-- `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
-- `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening. `rules/incident-response.md` — a live production incident: preserve evidence, contain, postmortem discipline.
+- `rules/git-hooks.md` — pre-commit gates: husky, lint-staged. `rules/monorepo.md` — working in a workspace/monorepo: pnpm/npm workspaces, Turborepo, Nx.
+- `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory).
+- `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/privacy.md` — personal data: deletion propagation, retention windows, PII classification.
+- `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture.
+- `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers.
+- `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
 - `rules/rtk.md` — the RTK output-compression CLI, only when `rtk --version` succeeds.
 
 ---

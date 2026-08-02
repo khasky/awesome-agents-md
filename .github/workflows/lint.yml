@@ -29,11 +29,14 @@ jobs:
           hits=$(printf '%s\n' "$core" | grep -nEio '\b(ripgrep|rg --no-ignore|npm|pnpm|yarn|npx|vitest|jest|playwright|prisma|drizzle|zod|eslint|prettier|biome|webpack|django|rails|pytest|ponytail)\b' || true)
           [ -z "$hits" ] || { echo "core names a tool outside a presence check:"; printf '%s\n' "$hits"; exit 1; }
 
-      - name: every rules module is listed in AGENTS.md
+      - name: every rules module is listed in the AGENTS.md module index
         run: |
+          # Scoped to the index section: a module referenced only in the body of
+          # AGENTS.md is still unlisted for a reader scanning the index.
           status=0
+          index=$(sed -n '/^## On-demand rule modules/,$p' AGENTS.md)
           for f in rules/*.md; do
-            grep -qF "$f" AGENTS.md || { echo "orphan: $f is listed nowhere in AGENTS.md"; status=1; }
+            printf '%s\n' "$index" | grep -qF "$f" || { echo "orphan: $f is not in the On-demand module index of AGENTS.md"; status=1; }
           done
           exit $status
 
@@ -53,6 +56,16 @@ jobs:
           done
           for f in $(grep -ohE 'rules/[a-z0-9-]+\.md' llms.txt | sort -u); do
             [ -f "$f" ] || { echo "stale llms.txt entry: $f"; status=1; }
+          done
+          exit $status
+
+      - name: llms.txt links point at files that exist
+        run: |
+          # llms.txt uses absolute URLs by spec, so the markdown relative-link
+          # gate never sees it; map each blob URL back to a repo path instead.
+          status=0
+          for p in $(grep -ohE 'blob/main/[^)]+' llms.txt | sed 's|^blob/main/||' | sort -u); do
+            [ -f "$p" ] || { echo "llms.txt links to a missing file: $p"; status=1; }
           done
           exit $status
 

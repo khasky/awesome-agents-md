@@ -1,6 +1,6 @@
 # Backend and API security
 
-Read this when writing or reviewing server-side code: HTTP APIs, auth, database access, background jobs.
+Read this when writing or reviewing server-side code: HTTP APIs, auth, database access. Scheduled and background jobs: `rules/jobs.md`.
 
 <!-- Distilled in own words from goldbergyoni/nodebestpractices (CC BY-SA 4.0), jesusprubio/strong-node (archived), ryanmcdermott/clean-code-javascript and airbnb/javascript; auth, caching, error-envelope, and runtime additions from the khasky/*-playbook suite. -->
 
@@ -37,10 +37,10 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 - Validate uploads by content, not by filename or the client's `Content-Type`: sniff magic bytes, allowlist only the types actually handled, assign a server-side name, store outside the web root or in object storage, and serve back with a fixed content type and `Content-Disposition: attachment`.
 - Log hygiene: raw user input never enters logs unsanitized (log injection); secrets and PII never at all. Destination, format, and redaction list are one deployment-level decision, never a hardcoded file transport in a handler (`rules/observability.md`).
 - Event/message payloads are objects, not raw values — extensible without touching every handler.
-- Keep server processes stateless: no module-level caches, sessions, or uploads held in process memory; externalize to a store.
-- Cache keys encode scope — tenant, user, locale, schema version; permission- or billing-sensitive data never under a shared key.
-- TTL is a guardrail, not invalidation: name the domain event that makes a cached value wrong and invalidate on it.
-- Calling external APIs: never retry 4xx (fix input or credentials); retry 429 per `Retry-After` with jitter, 5xx with capped exponential backoff (3–5 attempts); state-mutating retries need an idempotency key; mid-stream (SSE) errors are terminal — restart, don't resume; log the provider's request ID.
+- Keep server processes stateless: no module-level caches, sessions, or uploads held in process memory; externalize to a store. The one narrow exception — a small, bounded, safe-to-lose in-process cache — is defined in `rules/caching.md`.
+- Cache keys encode scope — tenant, user, locale, schema version; permission- or billing-sensitive data never under a shared key. Repeated from `rules/caching.md` because a mis-scoped key is a cross-tenant data leak, not a staleness bug.
+- TTL is a guardrail, not invalidation: name the domain event that makes a cached value wrong and invalidate on it (canonical caching rules: `rules/caching.md`).
+- Calling external APIs: never retry 4xx (fix input or credentials); retry 429 per `Retry-After` with jitter, 5xx with capped exponential backoff (3–5 attempts); state-mutating retries need an idempotency key; mid-stream (SSE) errors are terminal — restart, don't resume; log the provider's request ID. This is the canonical outbound-retry contract — `rules/resilience.md` and `rules/messaging.md` defer here.
 
 ## Node.js specifics
 

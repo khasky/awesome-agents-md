@@ -20,5 +20,7 @@ Read this when writing a Dockerfile, a Compose file, Kubernetes manifests, or co
 - PID 1 must handle signals: run the process in exec form (or under an init like `tini`) — a shell-form entrypoint swallows `SIGTERM`, so every stop is a 30s hang plus `SIGKILL` and orphaned children (`rules/observability.md` graceful shutdown).
 - Kubernetes: no bare pods — a Deployment/StatefulSet/Job owns every container so restart, rollout, and placement stay declarative; change by manifest, never `kubectl edit`.
 - Every k8s workload declares resource requests and limits and both probes: readiness gates traffic, liveness restarts. Point liveness at the process's own health only, never at downstream dependencies — or a slow dependency restart-loops healthy pods.
-- k8s Jobs/CronJobs set `backoffLimit` and `activeDeadlineSeconds`: a fast-failing Job without limits is a restart hot loop that floods logs and bills.
+- k8s Jobs/CronJobs set `backoffLimit` and `activeDeadlineSeconds`: a fast-failing Job without limits is a restart hot loop that floods logs and bills (`rules/jobs.md` for scheduling semantics).
+- A safe rollout needs a PodDisruptionBudget and `maxUnavailable`/`maxSurge` tuned to real capacity — the defaults evict enough replicas to brown out a small deployment during a node drain.
+- Autoscale on the signal that actually saturates: queue depth or consumer lag for workers, in-flight requests or a latency percentile for services — CPU only when CPU is the real ceiling (`rules/resilience.md` load leveling).
 - Per-environment config comes from ConfigMaps/Secrets injected at deploy, not per-environment images — one image is built once and promoted through environments.

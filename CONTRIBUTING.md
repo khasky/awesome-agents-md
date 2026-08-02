@@ -66,7 +66,9 @@ CI runs the same checks locally in a few seconds:
 
 - `wc -l AGENTS.md` ≤ 200.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist grep, so a tool name that belongs inside a presence check is added to the exception list in the workflow, never waved through.
-- Every `rules/*.md` appears in `AGENTS.md`, and every module referenced anywhere exists.
+- Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.
+- Every module opens with its `Read this when` trigger line.
+- `llms.txt` lists every module, carries no stale entry, and every file it links exists.
 - Relative links resolve and code fences are balanced.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
