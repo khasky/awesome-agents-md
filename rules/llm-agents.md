@@ -10,7 +10,7 @@ Read this when the code you write calls an LLM, builds an agent, exposes tools t
 - Model output is untrusted input the moment it reaches a sink: SQL, shell, `eval`, the DOM, a file path, or a tool call. Validate and constrain it at that boundary exactly as you would a request body (`rules/backend-security.md`).
 - Tools follow least privilege: scoped short-lived credentials per tool, destructive tools behind explicit approval, no admin token in agent context, and a kill switch that stops a running loop.
 - Isolate per user and tenant: prompt caches, embeddings, vector stores, and conversation memory are keyed by user+tenant so one user's content cannot surface in another's retrieval or context (`rules/database.md` for the cache-key rule).
-- Cost is an attack surface: per-user token and request caps, a hard timeout per completion, and a global circuit breaker. An unauthenticated endpoint that triggers a model call is a denial-of-wallet primitive.
+- Cost is an attack surface: per-user token and request caps, a hard timeout per completion, and a global circuit breaker. An unauthenticated endpoint that triggers a model call is a denial-of-wallet primitive. Count tokens before a batch job, and prefer the cheaper task-specific endpoint over general completion where it covers the task.
 - Never place credentials, authorization logic, or private business rules in a system prompt — assume it is extractable verbatim.
 - Pin and allowlist MCP servers, plugins, and tool manifests by version; re-read a tool description on update as you would review a dependency bump (`rules/dependencies.md`).
 - Model-generated code executes only in a sandbox with no ambient credentials and no network by default; agent-to-agent messages are authenticated, since a compromised agent otherwise propagates instructions across the fleet.
@@ -19,4 +19,6 @@ Read this when the code you write calls an LLM, builds an agent, exposes tools t
 - Minimize before sending: strip or tokenize the PII the task does not need, and keep the provider's retention window and training opt-out in configuration where a reviewer sees it, not in a wiki page.
 - Retrieved chunks carry provenance — source id, version, and permission scope — through to the answer, so a citation can be checked and a document the user is not entitled to read never reaches their context (`rules/backend-security.md`).
 - Log the prompt/response pair with secrets and PII redacted, plus a correlation id, so an incident can be reconstructed (`rules/observability.md`).
+- Agent state holds references, not content: ids, paths, and keys in session state; documents and binaries in an artifact store. Document the stable state keys — an undocumented ad-hoc key set becomes an unqueryable junk drawer that every prompt change reshapes.
+- Tool-call economy in agent loops: reuse a prior tool result within the run instead of re-calling for the same data, and trust the runtime's live tool list over any cached documentation of it.
 - Evaluate with adversarial cases, not happy paths: a fixture set of injection payloads that must fail closed, run in CI like any other regression suite (`rules/testing.md`).

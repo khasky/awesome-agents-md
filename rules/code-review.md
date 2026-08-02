@@ -17,6 +17,9 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - A diff that adds a trust boundary or data flow (new endpoint, file upload, external integration, queue consumer) or touches auth/payments escalates to security-focused review.
 - A diff touching CI workflow files, lockfiles, or build scripts escalates to supply-chain review — those files execute with repository credentials, and they are the least-read code in the repo (`rules/ci-cd-security.md`, `rules/dependencies.md`).
 - Tests with more mocking than logic exercise the mock, not the code — flag them. Mock external services only, never your own app.
+- A test's existence proves nothing — review what its assertions would catch: an assertion that survives the regression it claims to guard is decoration.
+- Architecture findings get names: boundary drift (UI reaching into DB, domain types leaking transport shapes) and one-way doors (schema choices, public API shapes, persisted formats — anything expensive to reverse) are called out explicitly, reversibility stated.
+- Diff touches a cache → check the key encodes every variable the value depends on; a cache key missing one input serves user A's data to user B (`rules/caching.md`).
 - Fix causes, not symptoms. A "simplification" that requires changing tests is a behavior change in disguise — flag it.
 - An agent-authored diff earns a plausibility pass a human's would not: confirm every cited file, symbol, flag, and API actually exists, that a claimed verification run really happened and its output says what the summary claims, and that no unrequested file was touched. Fluent prose is not evidence (core Verification gate).
 - Label numbers as measured / estimated / unknown; never present an estimate as measured — unknown stays "unknown", not N/A.

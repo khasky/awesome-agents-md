@@ -76,15 +76,11 @@ When stuck (same error twice, or blocked on a decision): stop repeating. Either 
 
 ## Debugging
 
-When a fix fails twice or the same approach repeats:
+When a fix fails twice or the same approach repeats, stop and switch method (full ladder: `rules/debugging.md`):
 
-- Read the exact error message; check logs/output before guessing.
-- Form 3 different hypotheses; test the most likely first — and design the check that would disprove it, not confirm it. Reverse the assumption too: "problem is in A" → test "problem is NOT in A".
+- Read the exact error message; form 3 different hypotheses; test the most likely first — with a check designed to disprove it, not confirm it.
 - Trace backward to where the bad value originates, not where it surfaces; diff against the nearest working case.
-- Escalation ladder: 2nd failure → change methodology, not parameters; 3+ failed fixes → question the architecture, not the code.
-- "Tried everything" requires listing the attempts; fewer than 3 distinct approaches = not exhausted.
-- Use available tools instead of asking the user to debug manually; no "environment issue" claims without evidence.
-- Close the loop: re-run the original failing scenario and show it passing.
+- Escalation: 2nd failure → change methodology, not parameters; 3+ failed fixes → question the architecture. Close the loop: re-run the original failing scenario and show it passing.
 
 ## Coding
 
@@ -164,15 +160,16 @@ NO AI TRACES IN COMMITS — no `Co-Authored-By` trailers, no "Generated with", n
 
 - When the user corrects the same behavior a second time, propose a one-line addition to this file (don't edit it yourself unless asked).
 - The line test governs both admission and retention: would the agent err without this line? No → it doesn't belong. A rule the agent already follows untold is a prune candidate.
+- A recurring bug or vulnerability class is a rule trigger: after the second incident of the same class, propose the line that would have prevented it.
 
 ## On-demand rule modules
 
 Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient.
 
 - `rules/markdown.md` — editing Markdown documents and articles.
-- `rules/refactoring.md` — dedicated refactoring or cleanup tasks.
+- `rules/refactoring.md` — dedicated refactoring or cleanup tasks. `rules/debugging.md` — the full debug escalation ladder when fixes keep failing.
 - `rules/code-comments.md` — full comment policy, including public-repo safety.
-- `rules/frontend-design.md` — building or styling UI: visual craft, a11y, motion, anti-generic-design.
+- `rules/frontend-design.md` — building or styling UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state: ownership ladder, persistence hygiene, SSR store lifetimes.
 - `rules/code-review.md` — reviewing a diff/PR or preparing changes for review.
 - `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory).
 - `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, Node pitfalls.

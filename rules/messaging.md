@@ -13,3 +13,4 @@ Read this when building async messaging: message queues, event streams, pub/sub,
 - Message payloads are versioned objects with a type discriminator, not bare values — a new field can't break existing consumers.
 - Redis pub/sub needs a dedicated subscriber connection (`.duplicate()`): a subscribed connection can't run normal commands. Guard the message parse and drop malformed messages instead of crashing the loop.
 - Ordering isn't guaranteed across partitions/consumers. If order matters, key by entity and process one key serially, or carry a sequence number the consumer checks.
+- Idempotent also means order-independent: a redelivered, delayed, or backfilled message must not clobber newer state — merge on the entity's version/timestamp carried in the payload, never on arrival order. Last-write-wins by arrival silently undoes the newest write during any replay.

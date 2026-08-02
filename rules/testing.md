@@ -9,7 +9,9 @@ Read this when writing or restructuring tests, or deciding what kind of test a c
 - Assert behavior, not implementation trivia: a test that breaks on a rename without a behavior change tests the wrong thing.
 - Test data: factories/builders for readable setup; small fixtures with clear intent; seed data owned by the test — no shared mutable state across suites.
 - A flaky test is a defect: report and quarantine it visibly; never silently re-run until green and call it passing (core Verification rule — repeated here because tests are where it bites).
-- Coverage is a weak signal for spotting untested areas, never a target; fewer tests with strong assertions beat high coverage with shallow checks.
+- Coverage is a weak signal for spotting untested areas, never a target; fewer tests with strong assertions beat high coverage with shallow checks. Budget generated tests: 3–5 focused cases per unit (valid, invalid, edge) — more only for a named risk, never padding.
+- When mocking an outbound call, assert the request too, not only the canned response: an intercepted request's body/params carry the serialization bugs a mocked response hides.
+- Validate API responses against a schema (the contract's or a zod/Ajv shape) instead of property-by-property assertions — a structural check catches the field nobody thought to assert (`rules/api-contracts.md`).
 - One test runner per package: extend the incumbent (Vitest in new TS, Jest where established) — never introduce a second runner without a migration plan.
 - E2E harness boots its own servers: let the runner start the app (Playwright `webServer`) and wait on a real readiness URL (`/healthz`) before tests — never a fixed `sleep`. `reuseExistingServer: !CI` keeps local runs fast.
 - CI-aware knobs gated on `process.env.CI`: `forbidOnly`, a small retry count, single worker, trace/video on first retry — so CI catches a stray `.only` and a flake leaves a trace, while local stays fast.

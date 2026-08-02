@@ -33,6 +33,8 @@ rules/       # on-demand modules, read only when the task matches — the full l
              # with trigger conditions is the last section of AGENTS.md, and CI
              # fails if a module there is missing or a module here is unlisted
 README.md    # setup and optional tooling (this file)
+llms.txt     # index of the core and every module for LLM consumption —
+             # CI keeps it two-way synced with rules/
 ```
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.

@@ -10,10 +10,12 @@
 
 - [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): editing Markdown documents and articles.
 - [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring or cleanup passes, Chesterton's Fence, the rule of 500.
+- [rules/debugging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/debugging.md): the full debug escalation ladder — hypotheses, disproving checks, when to question the architecture.
 - [rules/code-comments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-comments.md): full comment policy, including public-repo safety.
 - [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.
 - [rules/testing.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/testing.md): test placement ladder, fixtures, flakiness, fuzz and property tests.
 - [rules/frontend-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/frontend-design.md): UI craft, accessibility numbers, motion, animation performance.
+- [rules/state-management.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/state-management.md): client-side state — ownership ladder, persistence hygiene, SSR store lifetimes.
 - [rules/web-seo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/web-seo.md): indexability, head tags, structured data, Core Web Vitals.
 - [rules/backend-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/backend-security.md): server and API code — auth, authorization, errors, queries, Node pitfalls.
 - [rules/crypto.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/crypto.md): hashing, encryption, tokens, JWT verification, key rotation.

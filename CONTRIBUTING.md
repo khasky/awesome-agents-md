@@ -35,9 +35,17 @@ Read this when <the exact trigger — a task type, not a technology fan club>.
 
 - Every bullet states a decision, a threshold, or a boundary. "Be careful with X" is not a rule; "X is atomic — a read, then a decision, then a write loses to parallel requests" is.
 - Cross-reference sibling modules inline as `` (`rules/<sibling>.md`) `` instead of repeating their content. Repeat a rule across modules only when its absence at that moment would cause the mistake, and say why it is repeated.
-- Cite where non-obvious material came from in the HTML comment under the heading. Distil in your own words; do not paste licensed text.
+- Cite where non-obvious material came from in the HTML comment under the heading. Distil in your own words; do not paste licensed text. The comment is optional — a module written from first principles has nothing to cite; never invent a source to fill the slot.
 - Modules stay stack-agnostic where they can. A framework-specific module is fine (`rules/nextjs.md`) as long as it is gated by its trigger line.
 - Nothing tool-specific belongs in the core `AGENTS.md`. A module for a specific CLI is acceptable only if its trigger gates it on that tool being installed.
+
+Rule shapes that outperform prose — prefer them when the material allows:
+
+- A correct/wrong pair with the failure mode named ("`getSession()` compiles but trusts an unverified cookie — use `getUser()`") beats an abstract warning.
+- A numeric threshold beats an adjective: "nesting ≤ 2, function ≤ 50 lines" is enforceable; "keep it small" is not.
+- Version-migration knowledge as old → new pairs (`useFormState` → `useActionState`), not narrative history.
+- Where a rule can be checked mechanically, name the command that checks it (a grep, a lint rule, a CI step) — a rule that ships its own enforcement stops being advisory.
+- For framework modules, list the APIs and package names models reliably hallucinate or that changed shape in a major version — that blocklist prevents more bugs than another style rule.
 
 ## Style
 

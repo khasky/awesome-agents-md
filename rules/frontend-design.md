@@ -54,4 +54,4 @@ Read this when building, styling, or reviewing UI: pages, components, dashboards
 
 ## Review output
 
-When reviewing UI against these rules, report terse `file:line — finding` grouped by file; "✓ pass" when clean. Each finding needs the violated rule, proof it applies to that surface, and one required change; try to falsify each before reporting; cap at three findings ordered by impact.
+When reviewing UI against these rules, use the comment format from `rules/code-review.md` (`file:line: <severity>: problem. fix.`); "✓ pass" when clean. Each finding names the violated rule and proof it applies to that surface; try to falsify each before reporting; order by impact.
