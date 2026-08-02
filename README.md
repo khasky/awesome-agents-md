@@ -141,6 +141,8 @@ Three guides, one split — pick the layer you need:
 - [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (RTK, LSP, Context7, `codebase-memory-mcp`, claude-mem, Caveman, Ponytail).
 - [Claude Code Security Audit](https://github.com/khasky/claude-code-security-audit) — the layered security-audit workflow (deep audit, continuous guardrails, scanners).
 
+**A rule or a skill?** A rule is a standing constraint the agent honors without being asked; a skill is a procedure you invoke, with phases and an output contract. The two layers overlap on purpose: `rules/code-review.md` here sets the bar every review must meet, and the `awesome-code-review` skill runs the review and produces the report. Install both — rules keep everyday work in line, skills handle the jobs you name.
+
 ## Contributing
 
 A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 lines — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.

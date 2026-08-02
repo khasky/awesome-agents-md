@@ -11,6 +11,11 @@ Read this when editing Markdown documents: docs, articles, READMEs.
 - Return concise diff summaries. Do not add generic praise.
 - Quoted examples and cited text stay byte-identical — even when they contain patterns banned below.
 - Consistency pass: uniform terminology, heading capitalization, and number style across the document.
+- One H1 per document; heading levels descend without skipping (never H2 straight to H4), and heading text is unique within the file so generated anchors don't collide.
+- Every code fence declares a language after the opening backticks (`ts`, `bash`, `json`) — highlighting, copy buttons, and downstream tooling all key off it; use `text` when the block has no language.
+- Links to files inside the same repository are relative (`rules/testing.md`), not absolute URLs to the hosting provider — a relative link survives forks, mirrors, and an org rename.
+- Images and diagrams carry alt text describing what a reader who cannot see them would otherwise miss, never the filename.
+- Never hard-wrap prose to a column limit: one paragraph is one line and the renderer wraps it. Reflowing turns a one-word edit into a whole-paragraph diff (core rule against wrapping to satisfy a character count).
 - Editing feedback names the location and the concrete fix ("'it' in §2 is ambiguous — name the subject"), never bare adjectives ("unclear").
 - At most two em-dashes per paragraph. Mix sentence lengths deliberately; flag sentences over ~30 words.
 - Merge bullet lists where 3+ items share the same opening words or rhythm. Compress fillers: "in order to" → "to", "due to the fact that" → "because".

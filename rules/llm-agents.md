@@ -14,5 +14,9 @@ Read this when the code you write calls an LLM, builds an agent, exposes tools t
 - Never place credentials, authorization logic, or private business rules in a system prompt — assume it is extractable verbatim.
 - Pin and allowlist MCP servers, plugins, and tool manifests by version; re-read a tool description on update as you would review a dependency bump (`rules/dependencies.md`).
 - Model-generated code executes only in a sandbox with no ambient credentials and no network by default; agent-to-agent messages are authenticated, since a compromised agent otherwise propagates instructions across the fleet.
+- Pin the model id and version, and treat an upgrade as a dependency bump: re-run the eval suite before switching, because output shape, refusal boundaries, and prompt sensitivity all move between versions (`rules/dependencies.md`).
+- Force the output shape at the API boundary — structured output, a tool-call schema, a JSON schema — and validate what comes back; never parse a prose completion with a regex. Handle refusal and truncation-at-max-tokens explicitly: both return a well-formed response that is not an answer.
+- Minimize before sending: strip or tokenize the PII the task does not need, and keep the provider's retention window and training opt-out in configuration where a reviewer sees it, not in a wiki page.
+- Retrieved chunks carry provenance — source id, version, and permission scope — through to the answer, so a citation can be checked and a document the user is not entitled to read never reaches their context (`rules/backend-security.md`).
 - Log the prompt/response pair with secrets and PII redacted, plus a correlation id, so an incident can be reconstructed (`rules/observability.md`).
 - Evaluate with adversarial cases, not happy paths: a fixture set of injection payloads that must fail closed, run in CI like any other regression suite (`rules/testing.md`).

@@ -13,4 +13,3 @@ Read this when building an Astro site — the same architecture principles apply
 - Namespace ids inside inline SVG/`<defs>` before injecting many onto one page — duplicate `id="…"`/`url(#…)` across instances collide and break gradients/filters.
 - Optimize images through the framework's pipeline (`astro:assets` / `<Image>`): explicit dimensions to prevent CLS, modern formats, responsive `srcset` (`rules/web-seo.md`).
 - Keep runtime and type-resolution path aliases (`@/…`) in sync across the build config and `tsconfig.json`.
-- One lockfile per repo matching the declared package manager; never commit `package-lock.json` and `pnpm-lock.yaml` together.

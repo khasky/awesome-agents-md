@@ -12,6 +12,8 @@ Read this when code hashes, encrypts, signs, or generates anything security-bear
 - Encrypt with an AEAD (XChaCha20-Poly1305, AES-GCM) so ciphertext is authenticated; if you ever hand-compose, it is encrypt-then-MAC, never MAC-then-encrypt. A unique nonce per message is a correctness requirement, not a suggestion.
 - JWT: pin the expected algorithm on verify and reject `alg: none` and any algorithm switch (HS/RS confusion is a full auth bypass); verify `exp`, `iss`, and `aud`, not just the signature. Prefer an opaque session id over a JWT when you control both ends.
 - Design key rotation in from the start: a key id travels with the ciphertext/token so old material decrypts while new material is written under the new key. A scheme with no rotation path becomes unrotatable exactly when it is compromised.
+- Encrypt data at rest with envelope encryption: a KMS or HSM holds the key-encryption key and never hands it out, the service requests a per-record data key, and only the wrapped data key is stored next to the ciphertext. Rotation then re-wraps data keys instead of re-encrypting the whole table.
 - Keys live in a secrets manager or env, never in source, and never in the same store as the data they protect (core Security rule).
 - Store token *hashes*, not tokens (`rules/backend-security.md`); a leaked table then yields nothing replayable.
 - TLS is the transport floor: 1.2 minimum, certificate validation never disabled "for local dev" in shared code — gate it behind an explicit local-only flag or fix the local trust store.
+- Certificate pinning is a client-side control that needs a rotation path shipped before the pin, or renewal day becomes an outage (`rules/mobile.md`).

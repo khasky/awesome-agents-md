@@ -13,6 +13,9 @@ Read this when writing or changing CI workflows, release automation, or anything
 - Untrusted and trusted jobs never share a cache key or an artifact: a fork-writable cache restored into a release job, or an artifact uploaded by a PR job and consumed by a signing job, is code execution across the trust boundary.
 - Self-hosted runners never serve public-fork PRs, and are ephemeral (one job per instance) — a persistent runner leaks the previous job's state to the next.
 - Lint the workflow YAML itself in CI (`zizmor`, `actionlint`) — these files are the least-reviewed executable code in most repos.
+- `GITHUB_ENV` and `GITHUB_OUTPUT` are files one step writes and the next step trusts: an untrusted value containing a newline injects a variable into the following step. Route untrusted content through neither, or write it with a random heredoc delimiter.
+- Reusable workflows and composite actions run with the caller's secrets and token — pin them by SHA like any other action, and treat one owned by another org as third-party code holding write access to this repo.
+- Release artifacts carry provenance: attest at build time (`actions/attest-build-provenance`, sigstore/cosign) and make the consumer verify before install or deploy. An unsigned artifact in a registry is indistinguishable from one an attacker pushed.
 - Review the lockfile diff on every PR: a new transitive package, a changed integrity hash, or a rewritten registry URL is a supply-chain event, not noise (`rules/dependencies.md`).
 - Secrets are never printed, echoed, or written to an artifact for debugging; a masked value still leaks through base64, reversal, or a crash dump.
 - The gates that block a merge run in CI, not only in a git hook — hooks are bypassable by design (`rules/git-hooks.md`).

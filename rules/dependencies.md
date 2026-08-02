@@ -10,9 +10,14 @@ Read this when adding, upgrading, or auditing third-party packages in any ecosys
 - Dependency confusion: internal package names are scoped (`@company/pkg`) and the registry is pinned in `.npmrc`/`pip.conf`/equivalent with no implicit fallback to the public index. An internal name that resolves publicly is a takeover waiting to happen.
 - Check a new name for typosquats before installing it: transposed characters, hyphen/underscore swaps, and a plausible-but-wrong scope are the standard trick.
 - Verify provenance where the registry supports it (`npm audit signatures`, sigstore attestations); prefer packages that publish from a traceable build.
+- License is a shipping constraint, not a preference: check a new package and the transitive packages it drags in against what this project may ship — copyleft in a distributed binary, network-copyleft in a hosted service. A license that changes on upgrade is a breaking change and an "ask first" decision (core Boundaries rule).
+- Emit an SBOM as a build artifact (`syft`, CycloneDX, SPDX) and keep it with the release, so "are we affected by this CVE" is a query against a file rather than an archaeology project (`rules/ci-cd-security.md`).
 - Maintenance status is a security property: an unmaintained package with zero CVEs is still a finding — no upstream means no patch on the day one lands.
 - Report a vulnerability with its dependency path and whether it is direct or transitive (`express > send > mime`); the fix differs.
 - No fix available → check whether the vulnerable code path is reachable from your code before escalating or accepting; an unreachable CVE in a dev-only dependency is not a release blocker, and saying so is part of the finding.
 - Automated advisory and PoC feeds are leads, not verdicts — confirm against the actual installed version and call path before acting.
+- An unpatched transitive vulnerability gets pinned with `overrides`/`resolutions`/`constraints` plus a comment naming the CVE and the condition for removing the pin — never left to a range that quietly resolves back to the vulnerable version.
+- Removing a dependency belongs to the change that stopped using it: an import deleted without the package leaves install weight, lockfile entries, and attack surface behind (core Coding rule on orphans).
+- Update bots run on a stated cadence with a stated automerge policy — patch and lockfile-only updates may automerge behind green CI, a major version is a human decision. An open bot PR queue nobody reads is worse than no bot: it converts every real advisory into noise.
 - Pin exact versions for anything that executes at build time (build plugins, codegen, CI tooling); ranges are acceptable only where a lockfile freezes them.
 - Upgrades land as their own commit, separate from feature work, so a regression bisects cleanly (`rules/code-review.md`).

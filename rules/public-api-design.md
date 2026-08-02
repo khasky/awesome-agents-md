@@ -12,4 +12,6 @@ Read this when designing or evolving an HTTP API that external clients consume: 
 - Stable error envelope across the whole API (RFC 9457 `type`/`title`/`status`/`detail`, or a `{ code, message, request_id }` shape) parsed by one shared client helper (`rules/api-contracts.md`).
 - Standard rate-limit headers (`RateLimit-Limit`/`Remaining`/`Reset`, `Retry-After`) so clients self-throttle; key limits by API key, then IP.
 - Deprecation lifecycle by header: `Deprecation` + `Sunset` + `Link rel="successor-version"`, a minimum removal window (commonly 12 months), then `410 Gone`. Announce; don't silently break.
+- Authentication and scopes are part of the published contract: name the scheme (API key, OAuth 2 bearer, mTLS), define scopes as verbs over resource families, and on denial return 403 naming the scope that was missing. A credential that can do everything is not a scope model (`rules/backend-security.md`).
+- Outbound webhooks are a public surface of this API, not an implementation detail — subscription management, signed payloads, redelivery, and payload versioning carry the same contract discipline as endpoints (`rules/messaging.md`).
 - Every resource response carries a type discriminator and a stable, sortable id (prefixed ULID / `obj_…`) so clients can route polymorphic payloads.
