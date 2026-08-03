@@ -186,7 +186,6 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture.
 - `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers.
 - `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
-- `rules/rtk.md` — the RTK output-compression CLI, only when `rtk --version` succeeds.
 
 ---
 

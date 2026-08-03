@@ -45,7 +45,6 @@
 - [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
 - [rules/mobile.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/mobile.md): Android and iOS — keystore storage, pinning, exported components, release hardening.
 - [rules/nextjs.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/nextjs.md): Next.js App Router — server/client boundary, Server Actions, route handlers.
-- [rules/rtk.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/rtk.md): the RTK output-compression CLI, only when it is installed.
 
 ## Docs
 

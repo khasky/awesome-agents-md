@@ -6,7 +6,7 @@ One `AGENTS.md` to import, with shared rules for AI coding agents: Claude Code, 
 
 The always-loaded core covers: concise token-efficient communication, a "lazy senior dev" coding discipline (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, Conventional Commits. On-demand modules in `rules/` extend it across the stack — backend security, databases, caching, resilience, deployment, infrastructure as code, payments, and more.
 
-No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install. Agent tooling lives in sibling repos: [agent-mcp-integrations](https://github.com/khasky/agent-mcp-integrations) for the MCP integration servers (browsers, cloud, databases, infra, domain APIs) and [claude-code-token-optimization](https://github.com/khasky/claude-code-token-optimization) for the token-efficiency layers (RTK, LSP, Context7, memory plugins, Caveman, Ponytail).
+No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install. Agent tooling lives in sibling repos: [agent-mcp-integrations](https://github.com/khasky/agent-mcp-integrations) for the MCP integration servers (browsers, cloud, databases, infra, domain APIs) and [claude-code-token-optimization](https://github.com/khasky/claude-code-token-optimization) for the token-efficiency layers (LSP, `codebase-memory-mcp`, ast-grep, Context7, Caveman, Ponytail).
 
 ## Contents
 
@@ -140,7 +140,7 @@ Three guides, one split — pick the layer you need:
 - **Awesome Agents MD** — *this repo:* the base, tool-agnostic ruleset every agent imports (one `AGENTS.md`). Start here; the layers below are optional on top.
 - [Awesome Agent Skills](https://github.com/khasky/awesome-agent-skills) — portable `SKILL.md` skills every agent loads: code review, debugging, security and leak audits, code and text cleanup.
 - [Agent MCP Integrations](https://github.com/khasky/agent-mcp-integrations) — MCP servers that connect agents to browsers, cloud, databases, infra, and domain APIs.
-- [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (RTK, LSP, Context7, `codebase-memory-mcp`, claude-mem, Caveman, Ponytail).
+- [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (LSP, `codebase-memory-mcp`, ast-grep, Context7, Caveman, Ponytail).
 - [Claude Code Security Audit](https://github.com/khasky/claude-code-security-audit) — the layered security-audit workflow (deep audit, continuous guardrails, scanners).
 
 **A rule or a skill?** A rule is a standing constraint the agent honors without being asked; a skill is a procedure you invoke, with phases and an output contract. The two layers overlap on purpose: `rules/code-review.md` here sets the bar every review must meet, and the `awesome-code-review` skill runs the review and produces the report. Install both — rules keep everyday work in line, skills handle the jobs you name.
