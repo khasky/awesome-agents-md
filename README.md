@@ -1,6 +1,6 @@
 # Awesome AGENTS.md
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Web Reactions](https://api.webreactions.app/badge/github/khasky/awesome-agents-md.svg)](https://webreactions.app/?utm_source=github&utm_channel=repository&utm_medium=awesome-agents-md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Emojery](https://api.emojery.app/badge/github/khasky/awesome-agents-md.svg)](https://emojery.app/react?t=github/khasky/awesome-agents-md)
 
 One `AGENTS.md` to import, with shared rules for AI coding agents: Claude Code, OpenAI Codex CLI, Gemini CLI, Cursor Agent — plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
 
