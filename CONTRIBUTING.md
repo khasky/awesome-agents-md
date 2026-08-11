@@ -11,7 +11,7 @@ The same test prunes. When a model generation stops making a mistake, the line t
 
 ## Where a rule goes
 
-`AGENTS.md` is the always-loaded core and is capped at **200 lines**, enforced in CI. That cap is the whole design: frontier models follow roughly 150–200 instructions reliably and the agent's own system prompt already spends some of them. Adding to the core means removing from the core.
+`AGENTS.md` is the always-loaded core and is capped at **200 lines**, enforced in CI. That cap is the whole design: frontier models follow roughly 150–200 instructions reliably ([IFScale](https://arxiv.org/abs/2507.11538)) and the agent's own system prompt already spends some of them. Adding to the core means removing from the core.
 
 Everything conditional goes to `rules/` — a module is read only when the task matches, so it costs nothing until it is needed. A new module needs:
 

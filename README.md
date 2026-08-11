@@ -39,7 +39,7 @@ llms.txt     # index of the core and every module for LLM consumption —
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
 
-The 200-line cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably, and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter.
+The 200-line cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably (measured by [IFScale](https://arxiv.org/abs/2507.11538)), and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter.
 
 ## Prerequisites
 
@@ -80,6 +80,8 @@ Each agent has a global instructions file. Add one import line to it (create the
 
 Claude Code resolves `@path` imports natively; forward slashes work on Windows. Approve the import when prompted.
 
+Never copy `rules/` into `.claude/rules/` (project-level or `~/.claude/rules/`): Claude Code loads every file in that directory unconditionally at session start, which turns the on-demand modules into ~33k always-on tokens per request. The single import line above is the whole install.
+
 Verify inside Claude Code: run `/memory` — the imported `AGENTS.md` should be listed.
 
 Optional but recommended: `"includeCoAuthoredBy": false` in `%USERPROFILE%\.claude\settings.json` stops Claude Code from appending its default `Co-Authored-By` trailer — a mechanical backstop for the ruleset's no-AI-traces commit rule.
@@ -92,7 +94,7 @@ Optional but recommended: `"includeCoAuthoredBy": false` in `%USERPROFILE%\.clau
 @C:/repos/awesome-agents-md/AGENTS.md
 ```
 
-Codex loads the global `AGENTS.md` and follows the reference to the shared file. If you prefer zero indirection, paste the full contents of `AGENTS.md` into that file instead.
+Codex has no import syntax: the `@` line is plain text, and the model follows it by reading the shared file — reliable in practice, but not enforced by the CLI. For guaranteed loading, paste the full contents of `AGENTS.md` into that file instead; Codex stops adding instruction files once their combined size reaches `project_doc_max_bytes` (32 KiB by default, configurable in `~/.codex/config.toml`).
 
 Verify:
 
