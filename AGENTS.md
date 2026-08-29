@@ -72,6 +72,8 @@ The assumptions block, the plan, and the final verification report survive any b
 
 Delegating to subagents: a spawned task is not a completed task — if you delegate, you own collecting and integrating the results before your final message; fire-and-forget is forbidden. Decompose only when the work can't fit one context, or when exploration would flood the main context with file dumps better isolated in a subagent. Subagents return conclusions, not raw dumps: give each an explicit output contract (a `path:line` list, a diff receipt) and a scope cap it must refuse beyond ("too big: split into N tasks") instead of half-doing.
 
+Machine resources: keep total CPU and RAM — your processes plus everything already running — under ~85% of the machine's capacity. Check current load before launching anything heavy (full builds, test suites, parallel subagents, containers); already at the ceiling → wait until load holds below it for a couple of minutes, or shrink the job. Parallelizable work spreads across cores with an explicit worker count (`-j N`, worker pools) sized to the headroom actually free — neither single-core serial when cores sit idle, nor `nproc`-max on a busy machine.
+
 When stuck (same error twice, or blocked on a decision): stop repeating. Either ask one precise question (concrete options, recommended default — never one you could answer yourself from the history, codebase, or docs), or present a short plan with explicit assumptions, or deliver a draft with open questions marked. For repeated technical failures switch to Debugging.
 
 ## Debugging
