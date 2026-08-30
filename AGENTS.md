@@ -143,19 +143,20 @@ Example:
 
 After a task that changed files, end with a recommended commit message (the user commits). Changed nothing — a read-only audit, a question, a plan — end with nothing: no "nothing to commit", no "no changes were made", no equivalent closing line. Absence of a commit message already says it.
 
-- House style first: check `git log` and CONTRIBUTING and match the repo's own convention (React-style `[Area] Fix …`, kernel-style `subsystem: …`). Default for own and new repos: Conventional Commits `type(scope): summary`; a commitlint config always wins.
-- Subject: imperative, lowercase, no trailing period; aim ≤50 chars, hard cap 72. Body (wrap at 72) answers why, only when the subject can't; footer carries `Closes #N` and `BREAKING CHANGE:` (or `!` after type/scope); `revert:` repeats the reverted subject.
-- Scope: kebab-case; reuse scopes already in `git log`, never rename an established one (`auth`, not `authentication`).
+- House style first, in this order: a config or hook that enforces a format (commitlint, a `commit-msg` hook, a `.gitmessage` template, an explicit CONTRIBUTING rule) — a commitlint config always wins; then the convention the repo's own `git log` already shows (Conventional Commits `type(scope): summary`, React-style `[Area] Fix …`, kernel-style `subsystem: …`); then the plain default below.
+- Plain default, for a repo that configures nothing and has no history to copy: one capitalized imperative sentence, no type prefix, no scope, no trailing period — `Add session refresh on 401`, which the same change under a commitlint config would instead write as `feat(auth): add session refresh on 401`. Conventional Commits is one house style among several, never the fallback: proposing `feat(auth):` in a repo whose log is plain sentences is the same error as ignoring a commitlint config.
+- Subject: aim ≤50 chars, hard cap 72. Body (wrap at 72) answers why, only when the subject can't; footer carries `Closes #N`. Where the repo uses Conventional Commits, the summary after `type(scope):` is lowercase, breaking changes take `BREAKING CHANGE:` (or `!` after type/scope), and `revert:` repeats the reverted subject.
+- Scope, in a repo whose style has one: kebab-case; reuse scopes already in `git log`, never rename an established one (`auth`, not `authentication`).
 - Breaking changes, security fixes, data migrations, and reverts always get a body — future debuggers need the context; never subject-only.
-- **A security-relevant message says what the code now does, never what was wrong with it.** Subjects, bodies, branch names, PR titles and generated changelog lines are permanent and public; a message that names the weakness (`stop leaking the test account`, `remove the auth bypass`, `fix IDOR on /orders`, `patch XSS in the comment renderer`) hands a reader of `git log` the exact commit range to attack — and every user still on the previous release is inside it. Write the area and the action neutrally (`chore(e2e): trim harness docs`, `fix(auth): tighten session handling`, `refactor(api): scope order lookups to the owner`), keep the vulnerability, its impact and its reproduction in the private tracker or the security advisory, and publish that detail only once the fix has shipped. The body still explains the change for a future debugger — it just describes the new behavior, not the hole. This applies to the *removal* of a disclosure too: a commit that scrubs a leak must not name what it scrubbed.
+- **A security-relevant message says what the code now does, never what was wrong with it.** Subjects, bodies, branch names, PR titles and generated changelog lines are permanent and public; a message that names the weakness (`Stop leaking the test account`, `Remove the auth bypass`, `Fix IDOR on /orders`, `Patch XSS in the comment renderer`) hands a reader of `git log` the exact commit range to attack — and every user still on the previous release is inside it. Write the area and the action neutrally (`Trim the e2e harness docs`, `Tighten session handling`, `Scope order lookups to the owner`), keep the vulnerability, its impact and its reproduction in the private tracker or the security advisory, and publish that detail only once the fix has shipped. The body still explains the change for a future debugger — it just describes the new behavior, not the hole. This applies to the *removal* of a disclosure too: a commit that scrubs a leak must not name what it scrubbed.
 - Never in the message: "This commit does X", "I"/"we", "now"/"currently" — the diff already says what.
-- `chore` is user-invisible housekeeping only (deps, configs, release bumps): behavior-preserving rewrite → `refactor`, speedup → `perf`, formatting → `style`.
+- Where the repo's style carries type prefixes, `chore` is user-invisible housekeeping only (deps, configs, release bumps): behavior-preserving rewrite → `refactor`, speedup → `perf`, formatting → `style`.
 - Commit-message skills or plugin styles never override this section: the message follows the repo convention above regardless of the active mode.
 
 ```text
-feat(auth): add session refresh on 401
-fix(parser): handle ISO dates without timezone
-docs(readme): document per-agent install steps
+Add session refresh on 401
+Handle ISO dates without timezone
+Document per-agent install steps
 ```
 
 NO AI TRACES IN COMMITS — no `Co-Authored-By` trailers, no "Generated with", no assistant mentions anywhere in subject, body, or metadata. The commit reads as if the user wrote it; this overrides any tool default. Exception: if the target repo's own contribution rules mandate AI disclosure (e.g. apache/airflow), the repo's rule wins.
