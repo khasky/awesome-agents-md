@@ -11,6 +11,7 @@ Read this when the task is a dedicated refactor, cleanup, or "improve this code"
 - Mechanical rewrites use a structural tool, never regex: an AST rewriter (`ast-grep`, `comby`), a codemod, or the language's own refactoring API. A regex edits strings, not syntax, and will eventually rewrite a comment, a string literal, or half an identifier.
 - No test coverage on the code being refactored → write the characterization test first: capture current behavior exactly as it is, including the parts that look wrong, then refactor against it. Refactoring untested code is editing in the dark (`rules/testing.md`).
 - Chesterton's Fence — before simplifying or deleting, answer: what is this code's responsibility? who calls it and what does it call? which edge cases does it handle? which tests define its behavior? why was it written this way (`git blame`/`git log`)? Can't answer most → not ready to change it.
+- A comment-only pass is a cleanup with its own proof obligation: "comment-only" is shown by comparing the comment-stripped source at HEAD against the working tree, never asserted (`rules/code-comments.md`).
 - Simplification red flags: needing to modify tests (behavior changed, not simplified); removing error handling to make code "cleaner". Simplicity is comprehension speed, not line count.
 
 Done for a refactor means:

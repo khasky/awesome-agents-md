@@ -21,6 +21,7 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - Architecture findings get names: boundary drift (UI reaching into DB, domain types leaking transport shapes) and one-way doors (schema choices, public API shapes, persisted formats — anything expensive to reverse) are called out explicitly, reversibility stated.
 - Diff touches a cache → check the key encodes every variable the value depends on; a cache key missing one input serves user A's data to user B (`rules/caching.md`).
 - Fix causes, not symptoms. A "simplification" that requires changing tests is a behavior change in disguise — flag it.
+- A comment in the diff is a claim: check it against the code it sits on. One that no longer describes that code is a defect, not a nit, and the machine-written tells (identifiers in backticks, mirrored "X, not Y", figures from one measurement) are findings of their own (`rules/code-comments.md`).
 - History is review context: `git log -L <start>,<end>:<file>` on the lines being changed says what the replaced code was for. A line introduced by a commit naming a bug, CVE, or incident is a guard — its removal is a regression until the author says why the cause is gone; a file that keeps appearing in fix commits is a hotspot worth reading whole.
 - A confirmed defect is a class, not an instance: before closing the finding, search for the same shape elsewhere — the same sink with another caller, the same missing check on sibling routes, the same pattern copy-pasted into a second module — and report every location as one finding. Fixing the one place the review named leaves the siblings live (core Coding rule on grepping every caller).
 - An agent-authored diff earns a plausibility pass a human's would not: confirm every cited file, symbol, flag, and API actually exists, that a claimed verification run really happened and its output says what the summary claims, and that no unrequested file was touched. Fluent prose is not evidence (core Verification gate).
@@ -33,7 +34,7 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - Approve only with zero CRITICAL/HIGH findings.
 - Disputed feedback: evidence-based pushback only — re-check against the code first, then agree with evidence or object with reasoning.
 
-## Comment format
+## Review comment format
 
 - One line per finding: `file:line: <severity>: problem. fix.` — location, problem, concrete fix. No throat-clearing ("I noticed that…", "You might want to consider…").
 - Concrete fix over "consider refactoring"; exact symbols in backticks; add the why only when the fix isn't obvious from the problem.
