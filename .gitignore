@@ -1,4 +1,4 @@
-# Local agent/tool state and exported profiles — private, never publish.
+.playwright-mcp/
 .claude/
 .codex/
 .gemini/
