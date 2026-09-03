@@ -7,13 +7,14 @@ Everything here governs comment text: `//`, `/* */`, `/** */`, CSS and JSX comme
 ## What survives
 
 - The code is authoritative. A comment earns its line only where the logic cannot be traced without it: a non-obvious why, a platform or third-party quirk, an invariant, a safety boundary.
-- Delete on sight: restatement of the code or narration of control flow ("check if...", "loop through..."), "this function..." / "this component..." where the name already says it, JSDoc that repeats the signature, step narration inside tests (the test title carries it), any comment defending or praising the design, a bare section label (`// Executor.`), and a cross-reference that resolves to nothing — a deleted planning doc, a dead item number.
+- Delete on sight: restatement of the code or narration of control flow ("check if...", "loop through..."), "this function..." / "this component..." where the name already says it, JSDoc that repeats the signature, step narration inside tests (the test title carries it), any comment defending or praising the design, a bare section label (`// Executor.`), and a cross-reference that resolves to nothing — a deleted planning doc, a dead item number. A comment documenting temporary debugging leaves with the scaffold it describes; where it is a TODO or FIXME, flag it and leave it standing.
 - The marker on an intentional simplification survives: a comment naming the known ceiling and the upgrade path ("naive linear scan, index it if the list outgrows a page") is a required annotation, not a comment defending the design (core Coding rule).
 - A block over 2 lines is a condense candidate: ask what it tells a reader that the code does not, keep that in 1-2 lines, drop the scene-setting, the history lesson, and the enumerated rejected alternatives. Knowledge that cannot be re-derived from the code — a browser behavior, the reason a workaround exists — survives as one sentence.
 - Every checkable claim is verified against the code before it is written or reworded, and a claim you have not confirmed is never written. A redundant comment is noise; a stale one is a lie, and the stale ones a pass uncovers are its most valuable output.
 - Name code after the observable role or contract it owns (`apiFetch`, `buildVoteRequestBody`, `retryVoteOrDropAfterLimit`) rather than private infrastructure, implementation mechanics, or internal processing steps.
 - Record load-bearing invariants on the type or contract, not only in prose: annotate the field or parameter that must hold the constraint (`// must be square (w === h) for seamless tiling`) where a consumer sees it, so the invariant travels with the code that depends on it.
-- In public repos, no comment describes private backend behavior, request-processing internals, abuse-prevention mechanics, operational topology, hidden threat-model assumptions, or how a payload is handled after it leaves the client. A deliberately vague comment stays vague, and a reword never introduces a private repo name, auth mechanics, or a live third-party URL or handle.
+- In public repos, no comment describes private backend behavior, request-processing internals, abuse-prevention mechanics, operational topology, hidden threat-model assumptions, or how a payload is handled after it leaves the client. The calls and data shapes the public code already shows are not the concern; a comment adding internal detail on top of them is. A deliberately vague comment stays vague, and a reword never introduces a private repo name, auth mechanics, or a live third-party URL or handle.
+- When touching existing files, leave the comment style better than you found it: remove obsolete or over-specific comments in the edited area, and rename a helper or local variable when that is the cleaner way to preserve readability.
 
 ## How a comment reads
 
@@ -39,7 +40,6 @@ Everything here governs comment text: `//`, `/* */`, `/** */`, CSS and JSX comme
 - TODO and FIXME. Flag one that looks obsolete; do not resolve or delete it as part of a comment pass.
 - A comment inside a string that is injected as code (an in-page evaluation body, a generated file's template): its prose may be fixed under these rules, but never a line of its code and never a value the surrounding code interpolates. A comment in a template that emits a generated file needs the generator re-run, so leave it.
 - Line width — never reflow to satisfy a character limit (core rule); the repo's formatter config governs. If a rewrite leaves a ragged short line inside an already-wrapped block, re-wrap that block's own lines and re-read it afterwards to confirm no word was dropped.
-- When touching existing files, leave the comment style better than you found it: fix obsolete or over-specific comments in the edited area, and rename a helper or local variable when that is the cleaner way to preserve readability.
 
 ## Proving a pass changed nothing
 
