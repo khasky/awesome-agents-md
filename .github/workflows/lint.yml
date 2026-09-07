@@ -29,6 +29,31 @@ jobs:
           hits=$(printf '%s\n' "$core" | grep -nEio '\b(ripgrep|rg --no-ignore|npm|pnpm|yarn|npx|vitest|jest|playwright|prisma|drizzle|zod|eslint|prettier|biome|webpack|django|rails|pytest|ponytail)\b' || true)
           [ -z "$hits" ] || { echo "core names a tool outside a presence check:"; printf '%s\n' "$hits"; exit 1; }
 
+      - name: ungated modules name stacks only under a specifics heading or as marked examples
+        run: |
+          # CONTRIBUTING's fourth stack-agnostic test, mechanized. Stack-gated
+          # modules (trigger locks the whole file to the stack) are exempt, as is
+          # dependencies.md — the cross-ecosystem exemplar where package-manager
+          # names appear beside their siblings by design. In every other module a
+          # blocklisted name may appear only below a "## <Stack> specifics"
+          # heading, on the trigger line, or on a line marked as an example
+          # (e.g. / or equivalent / a labeled "(Stripe" parenthetical). Curated
+          # like the core blocklist: a name that belongs elsewhere joins the
+          # exception filters here, never waved through.
+          status=0
+          exempt='containers|dependencies|git-hooks|iac|mobile|monorepo|nextjs|shell-scripts|web-seo'
+          for f in rules/*.md; do
+            base=$(basename "$f" .md)
+            echo "$base" | grep -qE "^($exempt)$" && continue
+            hits=$(sed 's/<!--.*-->//' "$f" \
+              | sed '/^Read this when /d' \
+              | awk '/^## /{insec = ($0 ~ /specifics$/)} !insec' \
+              | grep -vE 'e\.g\.|equivalent|\(Stripe' \
+              | grep -Eo '\b(Next\.js|Nuxt|React|Vue|Angular|Svelte|Zustand|Pinia|TanStack|SWR|Redis|Prisma|Drizzle|husky|lint-staged|Turborepo|Kubernetes|Dockerfile|Terraform|Pulumi|Vitest|Jest|Playwright|Express|Fastify|npm|pnpm|yarn|npx|Stripe|GitHub Actions)\b' || true)
+            [ -z "$hits" ] || { echo "$f names a stack outside a specifics heading or a marked example:"; printf '%s\n' "$hits" | sed "s|^|  $f: |"; status=1; }
+          done
+          exit $status
+
       - name: every rules module is listed in the AGENTS.md module index
         run: |
           # Scoped to the index section: a module referenced only in the body of
