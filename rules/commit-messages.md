@@ -1,6 +1,6 @@
 # Commit message prose
 
-Read this when composing a commit message that carries a body, planning or rebuilding a commit series, or reviewing commit messages. The always-loaded core carries the baseline: house-style detection, subject shape and length, per-commit file lists and file-bounded splits, footers, security-neutral wording, no AI traces. This module governs the prose itself — when a body exists and what may stand in one. Every rule here is style-agnostic: whether the repo dresses subjects as `type(scope): summary` or as a plain capitalized sentence changes nothing below, and the same body text serves both.
+Read this when composing a commit message that carries a body, planning or rebuilding a commit series, or reviewing commit messages. The always-loaded core carries the baseline: house-style detection, subject shape and length, per-commit file lists, file-bounded splits ordered by dependency, footers, security-neutral wording, no AI traces. This module governs the prose itself — when a body exists and what may stand in one. Every rule here is style-agnostic: whether the repo dresses subjects as `type(scope): summary` or as a plain capitalized sentence changes nothing below, and the same body text serves both.
 
 ## When a body is written at all
 
