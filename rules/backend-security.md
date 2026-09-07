@@ -9,9 +9,9 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 - Error responses: never send `err.message`, stack traces, or internal details to the client — log them server-side, return a generic message (with a correlation ID if the stack has one).
 - One global error handler maps domain errors to statuses — services never speak HTTP codes. Stable error JSON (`code`, `message`, `request_id`); pick 400 vs 422 once per API.
 - Crash policy: operational errors (bad input, timeouts, unavailable dependencies) → handle, respond, stay up. Programmer errors (unknown state) → log and exit; let the runtime restart the process. Don't catch-all-and-continue, and don't crash on malformed user input.
-- Authorization data comes from trusted sources only: take the acting user's ID from the session or token claims, never from `req.params`/body (IDOR).
+- Authorization data comes from trusted sources only: take the acting user's ID from the session or token claims, never from route params or the request body (IDOR).
 - Authentication is not authorization: a handler over a specific resource verifies the acting principal's access to that resource and tenant — a valid session or role alone is not enough.
-- Auth responses are uniform ("Invalid login", not "User not found") and constant-time (`crypto.timingSafeEqual` or equivalent) — no user enumeration, no timing oracle.
+- Auth responses are uniform ("Invalid login", not "User not found") and constant-time (per-ecosystem APIs: `rules/crypto.md`) — no user enumeration, no timing oracle.
 - Rate-limit auth endpoints: consecutive failures per user+IP, plus per-IP volume over time. Regenerate the session ID after login or privilege change.
 - Browser auth default: httpOnly-cookie session; access/refresh tokens in `localStorage` only as an explicit, documented architecture decision — never as the reflex.
 - CORS is an allowlist of exact origins — never a reflected `Origin`, and never `*` together with credentials. Enumerate the allowed methods and headers instead of wildcarding them; a reflected origin plus `Allow-Credentials` is a cross-origin read of authenticated responses.
@@ -30,7 +30,7 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 - Whitelist the response too, not just input: serialize responses through an explicit schema/DTO so internal columns (password hashes, internal flags) can't leak by accident.
 - Expose opaque public ids (uuid/cuid) for resources in URLs; a sequential primary key leaks row counts and invites enumeration (`rules/database.md`).
 - Database: parameterized queries only — never concatenate or template values into SQL.
-- Regex on user input: don't hand-roll (nested quantifiers → ReDoS pins a CPU for seconds, and on a single-threaded runtime stalls every other request); use proven validators or vetted patterns.
+- Regex on user input: don't hand-roll (nested quantifiers → ReDoS pins a CPU for seconds, and on a runtime with a single-threaded event loop stalls every other request); use proven validators or vetted patterns.
 - Path traversal containment: resolve the user segment against a fixed root, normalize the result, then verify it still sits under that root — reject if it escaped. Never concatenate a user path onto a base directory and trust it.
 - An outbound request to a user-supplied URL is SSRF until proven otherwise: resolve the hostname first, then reject loopback, private, link-local, and cloud-metadata ranges *after* resolution, re-check on every redirect hop, refuse scheme changes, and prefer an allowlist of destinations over a denylist of addresses.
 - Bound every input dimension explicitly — body size, upload size, field count, array length, JSON nesting depth, multipart parts. A parser with no limit is a denial-of-service primitive that no rate limiter catches.
