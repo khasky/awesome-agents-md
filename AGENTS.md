@@ -175,8 +175,7 @@ NO AI TRACES IN COMMITS — no `Co-Authored-By` trailers, no "Generated with", n
 
 Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient.
 
-- `rules/markdown.md` — editing Markdown documents and articles. `rules/code-comments.md` — full comment policy, including public-repo safety.
-- `rules/commit-messages.md` — composing a commit body, planning a commit series, or reviewing commit messages.
+- `rules/markdown.md` — editing Markdown documents and articles. `rules/code-comments.md` — full comment policy, including public-repo safety. `rules/commit-messages.md` — composing a commit body, planning a commit series, or reviewing commit messages.
 - `rules/refactoring.md` — dedicated refactoring or cleanup tasks. `rules/debugging.md` — the full debug escalation ladder when fixes keep failing.
 - `rules/code-review.md` — reviewing a diff/PR or preparing changes for review. `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
 - `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state in JS/TS store/query libraries: ownership ladder, persistence hygiene, SSR store lifetimes.
@@ -194,8 +193,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory).
 - `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/privacy.md` — personal data: deletion propagation, retention windows, PII classification.
 - `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture.
-- `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers.
-- `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
+- `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
 
 ---
 
