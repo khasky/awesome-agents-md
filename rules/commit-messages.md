@@ -1,12 +1,13 @@
 # Commit message prose
 
-Read this when composing a commit message that carries a body, planning or rebuilding a commit series, or reviewing commit messages. The always-loaded core carries the baseline: house-style detection, subject shape and length, footers, security-neutral wording, no AI traces. This module governs the prose itself — when a body exists and what may stand in one. Every rule here is style-agnostic: whether the repo dresses subjects as `type(scope): summary` or as a plain capitalized sentence changes nothing below, and the same body text serves both.
+Read this when composing a commit message that carries a body, planning or rebuilding a commit series, or reviewing commit messages. The always-loaded core carries the baseline: house-style detection, subject shape and length, per-commit file lists and file-bounded splits, footers, security-neutral wording, no AI traces. This module governs the prose itself — when a body exists and what may stand in one. Every rule here is style-agnostic: whether the repo dresses subjects as `type(scope): summary` or as a plain capitalized sentence changes nothing below, and the same body text serves both.
 
 ## When a body is written at all
 
 - Default: none. In repos at the scale of vue, vite, and nest, roughly seven commits in ten carry no body — the subject and the diff are the whole message.
 - A body earns its place only by carrying what a competent reader cannot derive from the diff: an outside constraint (a platform behaves badly, an API answers ambiguously), a decision that looks wrong without the explanation, an incident the change prevents from happening again, or a policy the code cannot state (what is deliberately left alone, what is never undone).
 - Scaffolding, configuration, icons, translations, and documents get no body, and neither does anything whose subject already says everything.
+- One case earns a body regardless of the default: a staged file carrying changes beyond the task's own (a parallel session, the user's edits) whose subject stays task-scoped gets one line naming the extra changes — what changed, never which tool or session changed it. Widening the subject to cover the file's whole diff removes the need.
 - Shape: at most four paragraphs, wrapped under 80 columns, ordered problem, mechanism, decision. The bodies the core requires (breaking change, security fix, data migration, revert) follow the same shape.
 
 ## What never stands in a body
@@ -38,6 +39,7 @@ Every rule above removes text; this section wins on contact. A body anchored to 
 - A constant with its reason: "200 commits, far enough back to catch a long-wrong identity and short enough to stay instant" — the code enforces the number and the clause says what it buys.
 - A wire-format note: field names or spellings shared with data already on disk — nothing in the diff says they cannot be renamed.
 - A security boundary: why a check runs before the response is written, why a listener binds both address families.
+- The bundled-change line: one sentence naming edits a staged file carries beyond the task's own — derivable from the diff, kept anyway, because it marks what the subject deliberately does not claim.
 - Never write a claim into a message to satisfy a rule here: everything stated is confirmed against the code first (core Verification gate). A rewritten sentence that no longer matches the code is a worse defect than the wordiness it replaced.
 
 ## Rhythm
