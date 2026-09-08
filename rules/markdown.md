@@ -20,6 +20,12 @@ Read this when editing Markdown documents: docs, articles, READMEs.
 - At most two em-dashes per paragraph. Mix sentence lengths deliberately; flag sentences over ~30 words.
 - Merge bullet lists where 3+ items share the same opening words or rhythm. Compress fillers: "in order to" → "to", "due to the fact that" → "because".
 - Not every claim needs a "however" — drop performative balance.
+- A heading is followed by content, never by a sentence restating the heading. `## Performance` then `Speed matters.` then the real point: delete the middle line, which is a rhetorical warm-up that reads as padding.
+- A document describes what the thing is, not what changed about it. Cut prose narrating its own last revision ("has been updated to", "now uses", "previously") outside the genres that are version-scoped by definition: changelogs, release notes, migration guides.
+- No aphorism formulas — "X is the Y of Z", "the language of", "the currency of", "the architecture of", "X becomes a trap". They dress an ordinary claim as a maxim without adding precision. State the claim the formula is gesturing at.
+- One short sentence for emphasis is fine; three or more clipped fragments in a row is manufactured drama. Break the run by restoring a full clause, not by shortening the neighbours.
+- Hyphenate a compound only where it sits before the noun: `a high-quality report`, `a data-driven decision`, but `the report is high quality`, `the decision is data driven`. Uniform hyphenation in both positions is a machine tell; the attributive-only rule is what people actually write.
+- Headings default to sentence case. Title Case On Every Heading is a tell in prose documents; follow the repo's existing convention where it has one, and never switch conventions inside a document.
 
 Avoid these patterns unless the document's house style requires them:
 
@@ -37,3 +43,12 @@ Avoid these patterns unless the document's house style requires them:
 - forced groups of three
 - "not only X but also Y"
 - tiny tables that should be prose
+
+Not a violation — leave these alone:
+
+- A quoted source, a cited title, or a fixture that contains a banned phrase. Quoted text is evidence and stays byte-identical; the ban covers what the document says in its own voice.
+- Em-dashes and long sentences in prose the repository publishes as writing rather than as reference: an essay, a post, a personal README. The two-per-paragraph bar is for documentation.
+- A sentence fragment used deliberately in marketing copy or a pull-quote. Ask the author before normalizing a register they chose.
+- A table whose rows genuinely carry parallel fields. "Tiny tables that should be prose" targets a table of one column, not a short table of real data.
+- Title Case inside a proper name, a product name, a book or paper title, or a heading the project's existing house style already sets that way.
+- A repeated word where the alternative is a synonym the reader has to map back. Term consistency outranks variety in reference documents.

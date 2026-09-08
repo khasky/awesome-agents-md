@@ -14,6 +14,15 @@ Read this when the task is a dedicated refactor, cleanup, or "improve this code"
 - A comment-only pass is a cleanup with its own proof obligation: "comment-only" is shown by comparing the comment-stripped source at HEAD against the working tree, never asserted (`rules/code-comments.md`).
 - Simplification red flags: needing to modify tests (behavior changed, not simplified); removing error handling to make code "cleaner". Simplicity is comprehension speed, not line count.
 
+Not a violation — leave these alone:
+
+- Two copies of similar logic. The helper is earned on the third occurrence or by a shared invariant (core Coding rule); extracting at two couples call sites that only look alike, and a wrong shared function costs more than the duplicate did.
+- A long function that is a flat sequence of steps with no branching. Length alone is not complexity, and splitting it into single-caller helpers makes the reader jump between definitions to follow one story.
+- Validation and error handling at a trust boundary. It looks defensive because it is: the core rule bans runtime type-guards on internal calls, never checks on input the process does not control.
+- A branch that looks wrong and is pinned by a passing test. Treat it as documented behavior until someone proves otherwise — Chesterton's Fence covers logic, not only the code that is obviously load-bearing.
+- Naming, layout, or an abstraction that departs from your preference and matches the surrounding file. Repository style outranks generic best practice, and a consistency-only diff spends review attention it did not earn.
+- Dead code you did not create. Report it; deleting it is its own task with its own blast radius (core Coding rule).
+
 Done for a refactor means:
 
 - The diff is smaller or clearer than before; behavior is preserved.

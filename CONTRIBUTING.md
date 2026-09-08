@@ -43,6 +43,7 @@ Rule shapes that outperform prose — prefer them when the material allows:
 - A numeric threshold beats an adjective: "nesting ≤ 2, function ≤ 50 lines" is enforceable; "keep it small" is not.
 - Version-migration knowledge as old → new pairs (`useFormState` → `useActionState`), not narrative history.
 - Where a rule can be checked mechanically, name the command that checks it (a grep, a lint rule, a CI step) — a rule that ships its own enforcement stops being advisory.
+- A module whose rules get over-applied ends with a `Not a violation — leave these alone:` block naming what looks like a breach of its own rules and is not. Over-application is a real failure mode with a real cost: an agent that deletes a deliberate duplicate, flattens a chosen register, or optimizes a path nobody waits on has followed the module and damaged the repository. The same line test admits each carve-out — would an agent get this wrong without it? A carve-out that merely restates the rule's scope does not earn a line.
 - For framework modules, list the APIs and package names models reliably hallucinate or that changed shape in a major version — that blocklist prevents more bugs than another style rule.
 
 ## Stack-agnostic, and what that permits

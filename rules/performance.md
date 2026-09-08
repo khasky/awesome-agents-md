@@ -14,3 +14,12 @@ Read this when writing or reviewing performance-sensitive code, or when asked to
 - Concurrency answers measured saturation, never a hunch: I/O-bound work wants batching or async multiplexing; CPU-bound work wants parallel workers sized to the cores actually free (core Machine resources rule). Parallelizing an unmeasured path buys coordination cost and race surface.
 - Where speed is a requirement, set a budget — a latency target, a memory cap, the input size the code must handle — and leave the check runnable: a timed test on a fixed input, or the repo's benchmark harness. "Fast" without a number regresses silently.
 - Optimizations expire: a workaround for a runtime or hardware bottleneck carries a comment naming the condition for removing it (core simplification-marker rule) — the next engine version often turns it into dead weight or a pessimization.
+
+Not a violation — leave these alone:
+
+- Work that is slow by design: a password hashing cost factor, a rate limiter's delay, a retry backoff, a constant-time comparison. Speeding these up removes the property they exist to provide (`rules/crypto.md`, `rules/rate-limiting.md`).
+- A quadratic loop over a bounded collection whose size the code controls — a config file's keys, a fixed enum, a handful of CLI flags. Complexity class decides where N grows; naming the bound beats rewriting the loop.
+- Readable code on a cold path: startup, migrations, build scripts, an admin screen opened twice a month. Optimizing there spends clarity on time nobody waits for.
+- A path with no measurement behind the suspicion. "This looks slow" is a reason to profile, never a reason to rewrite; an unprofiled optimization is a style change that also carries new bugs.
+- Allocation and copying outside a hot loop. Reuse and preallocation are hot-path techniques, and applying them everywhere trades readability for nothing measurable.
+- A cache deliberately absent because invalidation would cost more than the recomputation. Recomputing a cheap pure value is a decision (`rules/caching.md`).
