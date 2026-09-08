@@ -122,3 +122,61 @@ jobs:
             [ $((n % 2)) -eq 0 ] || { echo "$f: unbalanced code fences ($n)"; status=1; }
           done
           exit $status
+
+      # The ruleset obeys the rule it publishes. The blocklist is read out of
+      # rules/markdown.md rather than copied here, so adding a phrase there
+      # extends this gate in the same edit and no second list can drift.
+      # markdown.md itself is skipped: there the phrases are the list.
+      - name: the repo's own prose obeys rules/markdown.md
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, subprocess, sys
+
+          # Conditional entries a literal grep cannot decide: the bans that hold
+          # only for the figurative sense, and "complete", which markdown.md
+          # names as the recommended replacement. They stay review checks.
+          # Curated like the blocklists above: a phrase joins this set only when
+          # a grep genuinely cannot rule on it, never to wave a hit through.
+          CONDITIONAL = {"navigate", "landscape", "realm", "leverage", "complete"}
+
+          md = pathlib.Path("rules/markdown.md").read_text(encoding="utf-8")
+          block = md.split("Avoid these patterns unless the document's house style requires them:")[1]
+          phrases = []
+          for line in block.splitlines():
+              # The blocklist ends at the first prose line after it — the carve-out
+              # block below it is bullets too, and its quoted text names phrases
+              # rather than banning them.
+              if not line.startswith("- "):
+                  if line.strip():
+                      break
+                  continue
+              phrases += [p for p in re.findall(r'"([^"]+)"', line)
+                          if p.lower() not in CONDITIONAL and "X but also Y" not in p]
+          if not phrases:
+              raise SystemExit("no phrases parsed out of rules/markdown.md — the list moved or changed shape")
+
+          # markdown.md exempts quoted examples and cited text, so the gate reads
+          # prose only: source-citation comments, fences, inline code and quoted
+          # spans are where a banned phrase is named rather than used.
+          def prose(text):
+              text = re.sub(r"<!--.*?-->", " ", text, flags=re.S)
+              text = re.sub(r"```.*?```", " ", text, flags=re.S)
+              text = re.sub(r"`[^`\n]*`", " ", text)
+              text = re.sub(r"\"[^\"\n]*\"", " ", text)
+              return text
+
+          files = [f for f in subprocess.run(["git", "ls-files", "*.md"], capture_output=True,
+                                             text=True).stdout.split() if f != "rules/markdown.md"]
+          fail = []
+          for f in files:
+              for i, line in enumerate(prose(pathlib.Path(f).read_text(encoding="utf-8")).splitlines(), 1):
+                  for p in phrases:
+                      if re.search(rf"(?<!\w){re.escape(p)}", line, re.I):
+                          fail.append(f"{f}:{i}: {p!r} is on this repo's own blocklist")
+                  if re.search(r"not only\b.{0,80}?\bbut also\b", line, re.I):
+                      fail.append(f"{f}:{i}: 'not only X but also Y' is on this repo's own blocklist")
+
+          print("\n".join(fail) if fail
+                else f"self-application OK ({len(files)} files, {len(phrases)} phrases)")
+          sys.exit(1 if fail else 0)
+          PY
