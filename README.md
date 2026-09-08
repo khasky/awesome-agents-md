@@ -84,7 +84,7 @@ Never copy `rules/` into `.claude/rules/` (project-level or `~/.claude/rules/`):
 
 Verify inside Claude Code: run `/memory` — the imported `AGENTS.md` should be listed.
 
-Optional but recommended: `"includeCoAuthoredBy": false` in `%USERPROFILE%\.claude\settings.json` stops Claude Code from appending its default `Co-Authored-By` trailer — a mechanical backstop for the ruleset's no-AI-traces commit rule.
+Optional but recommended: `"attribution": { "commit": "", "pr": "" }` in `%USERPROFILE%\.claude\settings.json` (older builds: `"includeCoAuthoredBy": false`) empties the commit and PR attribution Claude Code appends by default. That is a soft backstop for the ruleset's no-AI-traces rule: a session can still be handed an attribution instruction at run time, and one that names a `Claude-Session` trailer has reached a session whose settings already carried the empty strings. The hard backstop is a `commit-msg` hook rejecting any message that matches `Co-Authored-By|Claude-Session|claude\.ai/code/session`.
 
 ### OpenAI Codex CLI
 
