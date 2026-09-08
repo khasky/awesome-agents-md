@@ -22,6 +22,7 @@ Read this when editing Markdown documents: docs, articles, READMEs.
 - Not every claim needs a "however" — drop performative balance.
 - A heading is followed by content, never by a sentence restating the heading. `## Performance` then `Speed matters.` then the real point: delete the middle line, which is a rhetorical warm-up that reads as padding.
 - A document describes what the thing is, not what changed about it. Cut prose narrating its own last revision ("has been updated to", "now uses", "previously") outside the genres that are version-scoped by definition: changelogs, release notes, migration guides.
+- No word claiming a choice was intended — "deliberately", "intentionally", "on purpose", "by design" about the document's own subject. The reason is what shows the intent: "The marker is deliberate: it proves the import chain works" → "The marker proves the import chain works" (`rules/code-comments.md` carries the same rule for code comments).
 - No aphorism formulas — "X is the Y of Z", "the language of", "the currency of", "the architecture of", "X becomes a trap". They dress an ordinary claim as a maxim without adding precision. State the claim the formula is gesturing at.
 - One short sentence for emphasis is fine; three or more clipped fragments in a row is manufactured drama. Break the run by restoring a full clause, not by shortening the neighbours.
 - Hyphenate a compound only where it sits before the noun: `a high-quality report`, `a data-driven decision`, but `the report is high quality`, `the decision is data driven`. Uniform hyphenation in both positions is a machine tell; the attributive-only rule is what people actually write.
@@ -51,4 +52,5 @@ Not a violation — leave these alone:
 - A sentence fragment used deliberately in marketing copy or a pull-quote. Ask the author before normalizing a register they chose.
 - A table whose rows genuinely carry parallel fields. "Tiny tables that should be prose" targets a table of one column, not a short table of real data.
 - Title Case inside a proper name, a product name, a book or paper title, or a heading the project's existing house style already sets that way.
+- "deliberately", "by design" and their siblings describing something the document did not choose: a platform's behavior ("hooks are bypassable by design"), a register another author picked, an adverb of manner in an instruction ("mix sentence lengths deliberately"). The ban covers a document defending its own decisions.
 - A repeated word where the alternative is a synonym the reader has to map back. Term consistency outranks variety in reference documents.

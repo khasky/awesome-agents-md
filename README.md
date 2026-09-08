@@ -131,7 +131,7 @@ Copy `AGENTS.md` into a repository root. Codex and Claude Code pick up a project
 
 ## Loaded-rules canary
 
-The first rule in `AGENTS.md` makes the agent end every response with `✓ awesome-agents-md`. That is deliberate: if you see the marker, the import chain works. Once confirmed (or if you find it noisy), delete that line in your clone.
+The first rule in `AGENTS.md` makes the agent end every response with `✓ awesome-agents-md`: if you see the marker, the import chain works. Once confirmed (or if you find it noisy), delete that line in your clone.
 
 Beyond the canary: in Claude Code, `/context` confirms the file is actually loaded and `/doctor` suggests trims; a model-agnostic check is prompting "Summarize the instructions you loaded." If a specific rule keeps being ignored, the usual cause is file length — prune before rephrasing.
 
@@ -145,7 +145,7 @@ Three guides, one split — pick the layer you need:
 - [Claude Code Token Optimization](https://github.com/khasky/claude-code-token-optimization) — the token-efficiency layer (LSP, `codebase-memory-mcp`, ast-grep, Context7, Caveman, Ponytail).
 - [Claude Code Security Audit](https://github.com/khasky/claude-code-security-audit) — the layered security-audit workflow (deep audit, continuous guardrails, scanners).
 
-**A rule or a skill?** A rule is a standing constraint the agent honors without being asked; a skill is a procedure you invoke, with phases and an output contract. The two layers overlap on purpose: `rules/code-review.md` here sets the bar every review must meet, and the `awesome-code-review` skill runs the review and produces the report. Install both — rules keep everyday work in line, skills handle the jobs you name.
+**A rule or a skill?** A rule is a standing constraint the agent honors without being asked; a skill is a procedure you invoke, with phases and an output contract. The two layers overlap: `rules/code-review.md` here sets the bar every review must meet, and the `awesome-code-review` skill runs the review and produces the report. Install both — rules keep everyday work in line, skills handle the jobs you name.
 
 ## Contributing
 
