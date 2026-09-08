@@ -1,0 +1,21 @@
+# Long-running and unattended agent runs
+
+Read this when the agent works unattended across many iterations: a loop, a scheduled routine, a daemon-driven session, or work handed from one session to the next.
+
+<!-- Distilled from the loop engine of MaxMiksa/Auto-Company (state validation, soft timeout, quota-vs-error branching, self-mutation guard) and standard supervisor practice for restart backoff and log rotation. -->
+
+- One state file carries everything between iterations, with a fixed section skeleton the next iteration can rely on. An iteration that ends without rewriting it produced nothing its successor can use.
+- Each iteration starts from an empty context: no decision, dead end, or open question survives except what the state file records. Anything worth not rediscovering goes in the file, including the options already ruled out and why.
+- Judge the iteration on the state file, not the exit code. A zero exit over a state file missing its required sections is a failed iteration, and a runner that reads only exit codes reports progress nobody made.
+- Snapshot the state file before the iteration and restore it when the iteration fails hard, so a crash cannot leave a half-written baton for the next one to build on.
+- A kill by timeout counts as progress when the state file is valid and changed, and as failure otherwise. Discarding a timed-out iteration that did record its work pays for that work twice.
+- Quota exhaustion and agent error are separate branches: a rate-limit, credit, or overload response is a wait that resets the failure counter, while an error increments it toward a stop threshold. Counting quota waits as errors trips the breaker on a healthy agent.
+- Stop after a fixed number of consecutive failures (5 is a workable default) and cool down before resuming, instead of retrying at full speed against a condition that is not going to change this second.
+- The same next action two iterations running is a stall, not an error: change direction, narrow the scope, or ship what exists. Repeated from the core When-stuck rule because a loop stalls without ever producing the error that rule keys on.
+- Past the exploration phase every iteration leaves an artifact: a file, a commit, a deployment. An iteration that only deliberated spent budget and moved nothing, and nothing in the loop notices unless the rule is stated.
+- Declare the budget before the first iteration in two numbers, per iteration and total, and record actual spend per iteration in the log (core rule for open-ended work). Unattended runs bill for every iteration, including the ones that produced nothing.
+- Guard what the loop itself reads: the prompt, the state skeleton, ignore rules, gate configuration. Snapshot them, compare after each iteration, restore and log on change. Repeated from core Boundaries because an unattended agent edits its own constraints with nobody in the room to notice.
+- Preload the state into the prompt and say that it is preloaded, so the iteration spends no tool call re-reading a file the runner already holds.
+- Fail at startup when a required binary, engine, or credential is missing, and never substitute a different one. A silent fallback changes what ran without changing what the log says ran.
+- Keep per-iteration logs, rotated by both count and size, so a failure from days ago is still readable when someone finally looks (`rules/observability.md`).
+- Treat the loop's own outward actions under core Boundaries: an unattended iteration proposes commits, publishes, and outward messages behind the same gates an interactive one does, and an approval given once is not an approval for every later iteration (`rules/llm-agents.md` for tool least privilege and the kill switch).

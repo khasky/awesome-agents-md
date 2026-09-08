@@ -18,7 +18,7 @@ Never, unless the user explicitly asked for exactly that:
 
 - Delete files, rewrite git history, force-push, drop data, run migrations, or run destructive commands.
 - Run `git commit` or `git push` — propose a commit message instead; the user commits.
-- Edit generated/build/cache files.
+- Edit generated/build/cache files, or the files that constrain you — `AGENTS.md`/`CLAUDE.md`, agent settings, hooks, `.gitignore`, gate configs. Changing your own guardrails is its own task, never a side effect of the one you were given.
 - Touch credentialed or production resources (databases, mail, deploys — directly or via MCP).
 - Store secrets, tokens, credentials, or private data in agent memory.
 - Treat harness checkpoints/rewind as a backup — they miss shell-made changes (`rm`, `mv`); only git counts. Reach a committable state before risky operations.
@@ -75,7 +75,7 @@ Delegating to subagents: a spawned task is not a completed task — if you deleg
 
 Machine resources: keep total CPU and RAM — your processes plus everything already running — under ~85% of the machine's capacity. Check current load before launching anything heavy (full builds, test suites, parallel subagents, containers); already at the ceiling → wait until load holds below it for a couple of minutes, or shrink the job. Parallelizable work spreads across cores with an explicit worker count (`-j N`, worker pools) sized to the headroom actually free — neither single-core serial when cores sit idle, nor `nproc`-max on a busy machine.
 
-When stuck (same error twice, or blocked on a decision): stop repeating. Either ask one precise question (concrete options, recommended default — never one you could answer yourself from the history, codebase, or docs), or present a short plan with explicit assumptions, or deliver a draft with open questions marked. For repeated technical failures switch to Debugging.
+When stuck (same error twice, no state change after two iterations, or blocked on a decision): stop repeating. Either ask one precise question (concrete options, recommended default — never one you could answer yourself from the history, codebase, or docs), or present a short plan with explicit assumptions, or deliver a draft with open questions marked. For repeated technical failures switch to Debugging.
 
 ## Debugging
 
@@ -177,7 +177,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 
 - `rules/markdown.md` — editing Markdown documents and articles. `rules/code-comments.md` — full comment policy, including public-repo safety. `rules/commit-messages.md` — composing a commit body, planning a commit series, or reviewing commit messages.
 - `rules/refactoring.md` — dedicated refactoring or cleanup tasks. `rules/debugging.md` — the full debug escalation ladder when fixes keep failing.
-- `rules/code-review.md` — reviewing a diff/PR or preparing changes for review. `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage.
+- `rules/code-review.md` — reviewing a diff/PR or preparing changes for review. `rules/testing.md` — writing or restructuring tests: placement, fixtures, flakiness, coverage. `rules/evidence-gates.md` — turning a verification rule into an enforced gate: run-bound receipts, placeholder rejection, unavailable-not-pass.
 - `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design. `rules/state-management.md` — client-side state: ownership ladder, persistence hygiene, SSR store lifetimes.
 - `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV. `rules/i18n.md` — multi-language or multi-locale UI: catalogs, plurals, RTL, locale formatting.
 - `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, Node pitfalls. `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
@@ -188,7 +188,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/resilience.md` — cross-service calls: timeouts and deadlines, circuit breakers, retries, sagas, load shedding. `rules/rate-limiting.md` — designing limiters and quotas: algorithm choice, shared counters, fail-open vs fail-closed.
 - `rules/deployment.md` — shipping to a running environment: deploy vs release, rollout, feature flags, migration ordering. `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
 - `rules/ci-cd-security.md` — CI workflows and release automation: component pinning, token scope, untrusted PR input. `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
-- `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory).
+- `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps. `rules/memory.md` — persistent agent memory hygiene (only if the agent has memory). `rules/long-running-agents.md` — unattended multi-iteration runs: state baton, stall detection, quota-vs-error branching, budget.
 - `rules/payments.md` — payment/checkout: webhook verification, idempotent fulfillment, server-side price integrity. `rules/privacy.md` — personal data: deletion propagation, retention windows, PII classification.
 - `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture. `rules/performance.md` — making code faster: complexity class, data-structure choice, batching, memory bounds, measure first.
 - `rules/nextjs.md` — Next.js App Router: server/client boundary, Server Actions, route handlers. `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.

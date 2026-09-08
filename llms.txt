@@ -15,6 +15,7 @@
 - [rules/commit-messages.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/commit-messages.md): commit message prose — when a body earns its place, what never stands in one, what must survive the cut.
 - [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.
 - [rules/testing.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/testing.md): test placement ladder, fixtures, flakiness, fuzz and property tests.
+- [rules/evidence-gates.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/evidence-gates.md): turning a verification rule into an enforced gate — run-bound receipts, placeholder rejection, unavailable-not-pass.
 - [rules/frontend-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/frontend-design.md): web UI craft, accessibility numbers, motion, animation performance.
 - [rules/state-management.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/state-management.md): client-side state — ownership ladder, persistence hygiene, SSR store lifetimes; JS/TS library APIs under their own heading.
 - [rules/web-seo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/web-seo.md): indexability, head tags, structured data, Core Web Vitals.
@@ -41,6 +42,7 @@
 - [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
 - [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features — Rule of Two, indirect prompt injection, tool least privilege.
 - [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
+- [rules/long-running-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/long-running-agents.md): unattended multi-iteration runs — state baton, stall detection, quota-vs-error branching, budget.
 
 ## Stack-gated rule modules
 
