@@ -51,12 +51,24 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
 
 - The gate before any "done"/"fixed"/"passing": identify the command that proves the claim → run it (full run, correct cwd) → read the output → only then claim, citing evidence ("34/34 pass, exit 0").
 - Scope the check to the claim: targeted test for a targeted change; a whole-project claim needs the whole-project command.
-- Bug fix = re-run the original failing scenario and watch it pass. A regression test must fail without the fix and pass with it; a test that passes on its very first run has proven nothing yet.
+- Bug fix = re-run the original failing scenario and watch it pass. A regression test must fail without the fix and pass with it; a test, gate or assertion that passes on its very first run has proven nothing yet.
 - A test that passes only on re-run is a flaky defect, not a pass — report the flake; never silently retry until green.
 - Before claiming done, attack your own report: which claim is most likely false? Verify that one first. Fix the implementation, not the test — unless the test itself is provably wrong.
 - No test available → typecheck/build/lint or a targeted manual check, using the repo's own commands and package manager.
 - Verification impossible → say exactly what was not verified and why; never imply success.
 - Rationalizations to refuse: "should work now", "earlier run passed", "linter passed", "the change is tiny" — each means: run the proving command now. Red-flag words that mean "stop and run the check": should, probably, seems to, looks correct — and satisfaction words before evidence: perfect, great, done.
+
+### The last pass before "done"
+
+A green proving command says the code runs. It says nothing about whether the diff is right — that is a separate reading, and it is where the defects a rerun cannot surface are found. Take the FULL change (`git diff` plus every untracked file) through these passes, one lens each, in order, reading the file rather than recalling it:
+
+1. Every hunk, including files edited early and never reopened. A deleted line gets the same reading as an added one: what did it carry, and where does that live now?
+2. Every name, count, path and cross-reference the change touched, searched repo-wide — a renamed symbol, a heading a link still points at, a sentence counting rows of a table the edit shortened.
+3. Each new check made to fail for its own reason: the exact scenario it was added to catch, not a convenient mutation of it (`rules/evidence-gates.md`).
+4. Every assumption the change rests on that cannot be checked here. Remove it by rewriting so it is not needed, or state it in the report — an assumption left in silently is the one that ships.
+5. The change against the conventions of the files it lands in: naming, where comments sit, duplication the edit introduced.
+
+A defect the user finds reopens all five passes over the whole change, not the line they named. A fix scoped to what was pointed at is how the second and third defect survive to be reported by them too.
 
 Final response for code changes: what changed, how it was verified, what remains unverified or risky.
 
@@ -67,9 +79,9 @@ Final response for code changes: what changed, how it was verified, what remains
 3. Define the smallest useful success check before editing. Open-ended task ("work until done", loops) → define a measurable end state, a verification mechanism, and a budget first.
 4. Work that writes code — a feature, a fix, a refactor, a migration — gets one question before the first edit: work here, in the current checkout and branch, or on a fresh branch, or in a dedicated `git worktree`? Ask once, follow the answer, and never branch or create a worktree unasked — the current checkout keeps the user's uncommitted work and installed dependencies in reach, an isolated one keeps a parallel session or the user's own edits from colliding. This is the exception to step 1's pick-a-default rule; read-only work (investigation, review, audit, a question) never asks and stays where it is. Worktree chosen → untracked local files and installed dependencies don't follow into it; copy or reinstall whatever the build needs there.
 5. Read the minimum necessary files; make surgical changes only. Don't start multi-file work near the context limit — summarize state and hand off instead.
-6. Verify per the gate above; report briefly. Worktree used, feature finished and its commits pushed → offer to remove it (`git worktree remove`) so the checkouts don't pile up; removing it is the user's call, never yours.
+6. Verify per the gate above, then take the whole change through the last pass before "done"; report briefly. Worktree used, feature finished and its commits pushed → offer to remove it (`git worktree remove`) so the checkouts don't pile up; removing it is the user's call, never yours.
 
-The assumptions block, the plan, and the final verification report survive any brevity or minimalism mode: compress their wording, never drop them.
+The assumptions block, the plan, the last pass, and the final verification report survive any brevity or minimalism mode: compress their wording, never drop them.
 
 Delegating to subagents: a spawned task is not a completed task — if you delegate, you own collecting and integrating the results before your final message; fire-and-forget is forbidden. Decompose only when the work can't fit one context, or when exploration would flood the main context with file dumps better isolated in a subagent. Subagents return conclusions, not raw dumps: give each an explicit output contract (a `path:line` list, a diff receipt) and a scope cap it must refuse beyond ("too big: split into N tasks") instead of half-doing.
 
