@@ -38,7 +38,7 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - Content resilience: design for short, average, and very long content; handle overflow with the CSS properties (`text-overflow`, `line-clamp`, `overflow-wrap`); flex children need `min-width: 0`; handle empty states.
 - Images get explicit width/height; reserve layout space for any injected UI (banners, consent bars, embeds) — nothing shifts content when it loads. Lazy-load below the fold; virtualize lists >50 items.
 - Never trigger browser permission prompts (notifications, geolocation) on page load — request after a user action that shows the value.
-- Typography micro-craft: `…` not `...`; curly quotes; non-breaking spaces inside `10 MB` and brand names; `text-wrap: balance` on headings, `pretty` on body.
+- Typography micro-craft: curly quotes; non-breaking spaces inside `10 MB` and brand names; `text-wrap: balance` on headings, `pretty` on body.
 - Locale: `Intl.DateTimeFormat`/`Intl.NumberFormat`, never hand-formatted dates/numbers.
 - Copy: active voice; specific button labels ("Save API key", not "Continue"); error messages state the fix.
 - Flag on sight: `user-scalable=no`, `maximum-scale=1`, paste blocking, unlabeled icon buttons, images without dimensions, `outline: none`.
