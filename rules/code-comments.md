@@ -20,9 +20,10 @@ Everything here governs comment text: `//`, `/* */`, `/** */`, CSS and JSX comme
 
 - No mirrored "X, not Y" contrast, and none of its disguises ("X rather than Y", "X instead of Y"). Negative parallelism is the strongest fingerprint of machine writing: state the fact, and where the rejected alternative carries the reason, give it its own clause. `// Rendered from routes, not a second hand-ordered list: the key handler walks the same array` → `// Rendered from routes, the same array the key handler walks, so the arrow keys land on the neighboring item`. Keep a single negative that is itself the rule ("the sender's site must not be trusted"), a list of separate absent signals ("no aria-pressed, no star form"), and plain descriptive English where nothing is being contrasted.
 - No stacked negation — a meaning the reader assembles from two negatives. `// Nothing may enter the queue without an owner` → `// Every queue entry carries an owner`. Watch for "not ... not-", "not ... un-", "never ... without", "no ... unless", "must not fail to".
-- No padding or hedging words: simply, merely, just as filler, actually, essentially, effectively, basically, really, so far, for now, at this point, in practice, in fact, of course, that said, as such, somewhat, quite, arguably, presumably. Delete them; if deleting changes the meaning, rewrite so the meaning sits in the verb. Keep "just" and "only" where they carry a real restriction ("only the last read counts") or a real time reference ("the button that just vanished").
-- No word claiming a choice was intended: deliberately, intentionally, on purpose, by design, "this is not a bug". Only the reason proves intent, so where it follows the word is already redundant, and where none can be given the sentence is a comment defending the design and goes. `// One answer for every reject reason, deliberately. Naming the failed check tells an attacker which half of the credential was right` → `// One answer for every reject reason: naming the failed check tells an attacker which half of the credential was right`. The plain adverb about something the code did not choose stays ("the platform drops these frames by design").
-- No hedging prefixes: `Best-effort:`, `Note:`, `Caveat:`, `Heads-up:`, `For safety:`, `In short:`, `Rule of thumb:`, `Sanity check:`. Delete the prefix and let the sentence start with its own subject. Where "best-effort" is a real mid-sentence predicate, say it in plain words ("these headers are optional").
+- No borrowed diction: the ceremonial verb where the plain one exists. `// Honored up to the ceiling above` → `// Applied up to the ceiling above`; `// minted once, kept for the process lifetime` → `// generated once, kept for the process lifetime`. These are the words a model reaches for when it describes code; a developer writing the same comment uses the plain verb. The entries and their replacements are in Vocabulary below.
+- No padding or hedging words (Vocabulary below). Delete them; if deleting changes the meaning, rewrite so the meaning sits in the verb. Keep "just" and "only" where they carry a real restriction ("only the last read counts") or a real time reference ("the button that just vanished").
+- No word claiming a choice was intended — the same words `rules/markdown.md` bans in a document, here in comment text. Only the reason proves intent, so where it follows the word is already redundant, and where none can be given the sentence is a comment defending the design and goes. `// One answer for every reject reason, deliberately. Naming the failed check tells an attacker which half of the credential was right` → `// One answer for every reject reason: naming the failed check tells an attacker which half of the credential was right`. The plain adverb about something the code did not choose stays ("the platform drops these frames by design").
+- No hedging prefix in front of a sentence (Vocabulary below). Delete the prefix and let the sentence start with its own subject. Where "best-effort" is a real mid-sentence predicate, say it in plain words ("these headers are optional").
 - A semicolon joining two independent statements becomes two sentences. Keep one only between list items that already contain commas.
 - No suffix glued to a searchable name: a file, function, variable, constant, type, CSS class or custom property appears verbatim so it can be pasted straight into a search. `// ci.yml's check job` → `// the check job in ci.yml`; `// getSettings' resolved value` → `// the resolved value of getSettings`. Both apostrophe forms count, including the bare apostrophe a name ending in s takes. A possessive on an ordinary word, a brand, or an acronym is fine.
 - No abbreviations: spell them out (SW → service worker, IO → IntersectionObserver, param → parameter, deps → dependency array, prod → production, esp. → especially). Standard industry acronyms stay (DOM, API, HTTP, URL, CSS, HTML, SVG, JSON, UI, OS, TTL, OTP, SPA, WCAG), as do ISO locale codes and established repo vocabulary.
@@ -32,6 +33,15 @@ Everything here governs comment text: `//`, `/* */`, `/** */`, CSS and JSX comme
 - No parenthesis the sentence reads better without, and no parenthetical identifier the prose already named. Keep a real aside the sentence cannot absorb, an example it needs ("327 555" → "327K"), and a cross-reference that tells the reader where to look.
 - Typography is keyboard characters: em and en dash become a plain hyphen or a reword, an ellipsis character becomes three dots, curly quotes become straight, arrows and bullets become a hyphen or a plain word, NBSP and ZWSP become a normal space or go. A stray emoji is deleted; a glyph that is the data the comment documents stays.
 - Do not over-compress. A comment that points somewhere must still say what is there, and the clause naming which half of a contract a line covers, or why a timeout has the value it has, is load-bearing. An "after" that reads as a sentence fragment or a bare "see X" was cut too far — give it back its subject. Wording that only parses if the reader is counting ("a fifth tab") reads better generically ("a new tab").
+
+## Vocabulary
+
+The word-level lists this module owns. They bind comment text and the prose of a commit message; a document's own prose is governed by the blocklist in `rules/markdown.md`, and a word that binds in both places lives there and is cited from here. Nothing else in this repository keeps a second copy.
+
+- Padding and hedging: simply, merely, just as filler, actually, essentially, effectively, basically, really, so far, for now, at this point, in practice, in fact, of course, that said, as such, somewhat, quite, arguably, presumably.
+- Hedging prefixes: `Best-effort:`, `Note:`, `Caveat:`, `Heads-up:`, `For safety:`, `In short:`, `Rule of thumb:`, `Sanity check:`.
+- Borrowed diction, each with the plain word it displaces: honored (applied, enforced), mint and minted and minting (created, generated), verbatim (unchanged, exactly), "derived rather than" (name what the value is derived from — the contrast rule above already bans the shape).
+- Claimed intent: deliberately, intentionally, on purpose, by design, "this is not a bug" — listed in `rules/markdown.md`, and binding here too.
 
 ## Never changed by a comment pass
 
@@ -49,26 +59,4 @@ Everything here governs comment text: `//`, `/* */`, `/** */`, CSS and JSX comme
 
 ## JS/TS specifics
 
-Print the comment-free AST of one file:
-
-```js
-// astprint.mjs: print a file's AST with comments removed
-import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
-const ts = createRequire(`${process.cwd()}/package.json`)("typescript");
-const [file, label] = process.argv.slice(2);
-const src = ts.createSourceFile(label, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext,
-  false, /\.tsx$/.test(label) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-process.stdout.write(ts.createPrinter({ removeComments: true }).printFile(src));
-```
-
-Compare every changed file against HEAD; any output line names a file whose code, not only its comments, moved:
-
-```bash
-for f in $(git diff --name-only | grep -E '\.(ts|tsx|js|mjs)$'); do
-  git show "HEAD:$f" > /tmp/head_src
-  a=$(node astprint.mjs /tmp/head_src "$f" | md5sum)
-  b=$(node astprint.mjs "$f" "$f" | md5sum)
-  [ "$a" = "$b" ] || echo "CODE-DIFF $f"
-done
-```
+The proof above needs a comment-free rendering of each file, and for JS or TS the reliable one is the parser's own: parse the file with the TypeScript compiler already in the project and print it back with comments dropped, for the file at HEAD and for the working copy. Identical output means the edit touched comments only; any file whose two renderings differ has had its code moved and belongs in a separate, non-comment commit. A regex that strips `//` and `/* */` is not a substitute — it eats a URL in a string and a comment marker inside a template literal.

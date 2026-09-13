@@ -21,7 +21,8 @@ Read this when composing a commit message that carries a body, planning or rebui
 - Stacked reasons: one reason per sentence — a chain of so, which, and because is two sentences, and three reasons behind one decision is one reason plus noise; keep the one that decided it.
 - A count that can be recounted: a number the code enforces stays (a depth cap, a history window, a concurrency limit, a timeout, an HTTP status, a version floor) — it cannot drift without the code drifting with it; a number describing the current shape of the code rots on the next edit ("bumps it in all four version files" → "bumps every version file"). A surviving number is written as digits, including 0–9 and at the start of a sentence (200 commits, 8 at a time), except where it is not data ("one place every git client agrees on"). A count in a subject is fine when the commit fixes it forever ("translate the interface into ten more locales").
 - A reference outward: a body stands alone — no reference to another commit in a plan, no "as above", no "the reason given at the top"; the reader has `git log` and the diff, and a planning document is not in the repository. A sha or an issue number is different and belongs in a footer.
-- Flourish and signposting: delete a sentence whose only job is to say the preceding fact matters ("The evidence ladder is the whole point"), an opener that announces what is about to be said, and the cleft that inflates a plain statement ("The noreply address is what lets a profile commit privately" → "The noreply address lets a profile commit privately"). The filler and inflation catalog of `rules/markdown.md` applies in full: `simply`, `robust`, `seamless`, `comprehensive`, "it is worth noting", summary stamps, the forced group of three.
+- Borrowed diction, padding, hedging prefixes and claimed intent: the ceremonial verb where the plain one exists, and the filler around it. The lists are the Vocabulary section of `rules/code-comments.md`, which governs message prose as well; "derived rather than" falls to the contrast-frame rule above.
+- Flourish and signposting: delete a sentence whose only job is to say the preceding fact matters ("The evidence ladder is the whole point"), an opener that announces what is about to be said, and the cleft that inflates a plain statement ("The noreply address is what lets a profile commit privately" → "The noreply address lets a profile commit privately"). The phrase blocklist of `rules/markdown.md` applies in full — inflation, summary stamps, the forced group of three — and the word lists come from the Vocabulary section named above.
 
 ## Characters
 
@@ -51,13 +52,11 @@ Every rule above removes text; this section wins on contact. A body anchored to 
 
 Run over a drafted message before proposing it, then ask the three questions.
 
-```bash
-grep -n '`'                        # backticks - must be empty
-grep -nP '[^\x00-\x7F]'            # non-ASCII - must be empty
-grep -c 'rather than\|instead of'  # contrast frame - at most 1
-grep -n 'used to\|previously'      # only in a commit changing existing code
-grep -nE '\b(two|three|four|six|ten|twelve) [a-z]+'  # each hit a code-enforced constant
-```
+- No backtick anywhere, and no character outside plain ASCII.
+- The contrast frame ("rather than", "instead of", "not X but Y") appears at most once in the whole message.
+- "used to", "previously" and "no longer" appear only in a commit that changes existing code.
+- Every spelled-out count is a number the code enforces; one that merely describes today's shape comes out.
+- No word from the vocabulary in `rules/code-comments.md` and no phrase from the blocklist in `rules/markdown.md`.
 
 - Could a competent developer have derived this sentence from the diff? Yes → delete it.
 - Could this paragraph sit unchanged in a hundred other commits in a hundred other repositories? Yes → it says nothing about this change; delete it.
