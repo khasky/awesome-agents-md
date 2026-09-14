@@ -11,7 +11,7 @@ The same test prunes. When a model generation stops making a mistake, the line t
 
 ## Where a rule goes
 
-`AGENTS.md` is the always-loaded core and is capped at **200 lines**, enforced in CI. That cap is the whole design: frontier models follow roughly 150–200 instructions reliably ([IFScale](https://arxiv.org/abs/2507.11538)) and the agent's own system prompt already spends some of them. Adding to the core means removing from the core.
+`AGENTS.md` is the always-loaded core and is capped at **200 instruction lines** — everything above the module index, which the gate in `scripts/lint.py` counts. That cap is the whole design: frontier models follow roughly 150–200 instructions reliably ([IFScale](https://arxiv.org/abs/2507.11538)) and the agent's own system prompt already spends some of them. Adding to the core means removing from the core.
 
 Everything conditional goes to `rules/` — a module is read only when the task matches, so it costs nothing until it is needed. A new module needs:
 
@@ -19,7 +19,7 @@ Everything conditional goes to `rules/` — a module is read only when the task 
 2. One entry in the **On-demand rule modules** list at the end of `AGENTS.md`, naming the trigger ("Read this when …"). CI fails if a module is unlisted or a listed module is missing.
 3. One entry in `llms.txt`.
 
-Pack two modules per bullet in the core list where they are related — the list is line-budgeted like everything else.
+One module per bullet in the core index, in theme order. The index sits below the cap's cut-off, so a new module costs a line there and nothing from the instruction budget.
 
 ## Module format
 
@@ -65,7 +65,7 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 
 `python3 scripts/lint.py` runs every check in a few seconds — CI runs that same script, so nothing can pass here and fail there. `python3 scripts/install-hooks.py` installs it as a `pre-commit` hook once per clone; a machine without a Python interpreter skips the hook and relies on CI.
 
-- `AGENTS.md` ≤ 200 lines.
+- `AGENTS.md` ≤ 200 lines above the module index.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist, so a tool name that belongs inside a presence check is added to the exception list in `scripts/lint.py`, never waved through.
 - Ungated modules name blocklisted stacks only under a `## <Stack> specifics` heading, on the trigger line, or on a line marked as an example — the same curated-blocklist approach, applied to `rules/`; stack-gated modules and dependencies.md (the cross-ecosystem exemplar) are exempt.
 - Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.

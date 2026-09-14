@@ -28,7 +28,7 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
 ## Repository layout
 
 ```text
-AGENTS.md        # the core ruleset — always loaded, kept under 200 lines (CI-enforced)
+AGENTS.md        # the core ruleset — always loaded, under 200 instruction lines (CI-enforced)
 rules/           # on-demand modules, read only when the task matches — the full list
                  # with trigger conditions is the last section of AGENTS.md, and CI
                  # fails if a module there is missing or a module here is unlisted
@@ -44,7 +44,7 @@ scripts/         # lint.py — every gate above, run by CI and by the optional
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
 
-The 200-line cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably (measured by [IFScale](https://arxiv.org/abs/2507.11538)), and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter.
+The 200-instruction cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably (measured by [IFScale](https://arxiv.org/abs/2507.11538)), and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter.
 
 ## Prerequisites
 
@@ -158,7 +158,7 @@ Three guides, one split — pick the layer you need:
 
 ## Contributing
 
-A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 lines — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
+A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 instruction lines — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
 
 ## License
 

@@ -48,6 +48,47 @@ Every rule above removes text; this section wins on contact. A body anchored to 
 - Vary the paragraph opening: half the paragraphs starting on "The" is a rhythm a reader feels before naming it.
 - Vary sentence length: a body of uniform 20-word compounds with a comma before "so" reads as generated even when every fact in it is true.
 
+## The shape of a proposal
+
+The core states the shape in words; these are the same rules written out.
+
+```text
+Add session refresh on 401
+Handle ISO dates without timezone
+Document per-agent install steps
+```
+
+A two-repository proposal, in a repo whose house style is Conventional Commits:
+
+```text
+[acme-api]
+
+feat(api): answer an unsupported build with its own error string
+
+A build under the supported floor gets 426 upgrade_required instead of
+the generic refusal, so the client can tell the difference between an
+update it must ship and a request it must retry.
+
+- src/middleware/client-version.ts
+- src/middleware/client-version.test.ts
+- src/routes/session.ts
+- src/config.ts
+- openapi.json
+- docs/api/versioning.md
+
+ci(ops): publish the production image from a release tag
+
+- .github/workflows/release.yml
+
+[acme-extension]
+
+feat(session): ask for an update when the API refuses this build
+
+- src/popup/session.tsx
+- src/popup/session.test.tsx
+- public/_locales/*/messages.json (all 26)
+```
+
 ## Checklist
 
 Run over a drafted message before proposing it, then ask the three questions.

@@ -40,10 +40,16 @@ def strip_comments(line: str) -> str:
 
 
 def core_under_line_limit() -> list[str]:
-    lines = (ROOT / CORE).read_bytes().count(b"\n")
+    # The cap is an instruction budget: models follow roughly 150-200
+    # instructions reliably, and the module index below the heading is a lookup
+    # table, one clause per module, not an instruction. A core that lost the
+    # heading has no index, so the whole file counts.
+    sections = read(CORE).split(f"\n{INDEX_HEADING}", 1)
+    lines = sections[0].rstrip("\n").count("\n") + 1
     if lines <= CORE_LINE_LIMIT:
         return []
-    return [f"{CORE}: {lines} lines, {lines - CORE_LINE_LIMIT} over the {CORE_LINE_LIMIT}-line cap"]
+    return [f"{CORE}: {lines} instruction lines above the module index, "
+            f"{lines - CORE_LINE_LIMIT} over the {CORE_LINE_LIMIT}-line cap"]
 
 
 # Everything from the module index down is trigger text - that is where tool
@@ -256,7 +262,7 @@ def plugin_manifests_resolve() -> list[str]:
 
 
 GATES = [
-    (f"core {CORE} stays under {CORE_LINE_LIMIT} lines", core_under_line_limit),
+    (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
     (f"core {CORE} names no framework, library, or non-baseline CLI", core_names_no_tool),
     ("ungated modules name stacks only under a specifics heading or as marked examples",
      modules_name_no_stack),
