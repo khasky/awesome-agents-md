@@ -72,6 +72,7 @@ CI runs the same checks locally in a few seconds:
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.
 - Relative links resolve and code fences are balanced.
+- The two plugin manifests agree with each other, and every plugin-root path the `SessionStart` hook reads still exists — a hook naming a file that moved loads nothing and says nothing.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 

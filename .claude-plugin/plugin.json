@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "awesome-agents-md",
+  "description": "The shared AGENTS.md ruleset, injected into every session by a SessionStart hook: boundaries, security, a verification gate before any completion claim, the lazy-senior-dev coding ladder, debug escalation, terse communication, commit conventions. On-demand modules in rules/ extend it across the stack and are read only when the task matches.",
+  "author": {
+    "name": "Khasky",
+    "url": "https://github.com/khasky"
+  },
+  "homepage": "https://github.com/khasky/awesome-agents-md",
+  "repository": "https://github.com/khasky/awesome-agents-md",
+  "license": "MIT",
+  "keywords": ["agents-md", "rules", "coding-standards", "verification", "security", "commits", "code-review", "debugging"]
+}

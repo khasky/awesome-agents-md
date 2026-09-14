@@ -28,13 +28,16 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
 ## Repository layout
 
 ```text
-AGENTS.md    # the core ruleset — always loaded, kept under 200 lines (CI-enforced)
-rules/       # on-demand modules, read only when the task matches — the full list
-             # with trigger conditions is the last section of AGENTS.md, and CI
-             # fails if a module there is missing or a module here is unlisted
-README.md    # setup and optional tooling (this file)
-llms.txt     # index of the core and every module for LLM consumption —
-             # CI keeps it two-way synced with rules/
+AGENTS.md        # the core ruleset — always loaded, kept under 200 lines (CI-enforced)
+rules/           # on-demand modules, read only when the task matches — the full list
+                 # with trigger conditions is the last section of AGENTS.md, and CI
+                 # fails if a module there is missing or a module here is unlisted
+README.md        # setup and optional tooling (this file)
+llms.txt         # index of the core and every module for LLM consumption —
+                 # CI keeps it two-way synced with rules/
+hooks/           # hooks.json — the SessionStart hook that prints AGENTS.md into a
+                 # Claude Code session when the repo is installed as a plugin
+.claude-plugin/  # plugin.json and marketplace.json for that install path
 ```
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
@@ -83,6 +86,10 @@ Claude Code resolves `@path` imports natively; forward slashes work on Windows. 
 Never copy `rules/` into `.claude/rules/` (project-level or `~/.claude/rules/`): Claude Code loads every file in that directory unconditionally at session start, which turns the on-demand modules into ~33k always-on tokens per request. The single import line above is the whole install.
 
 Verify inside Claude Code: run `/memory` — the imported `AGENTS.md` should be listed.
+
+Instead of the import line, Claude Code can install the repository as a plugin: `/plugin marketplace add khasky/awesome-agents-md`, then `/plugin install awesome-agents-md@awesome-agents-md`. The plugin ships a `SessionStart` hook that prints `AGENTS.md` into the session, so the core loads without editing `CLAUDE.md`, and the hook appends the absolute path of the installed `rules/` so the on-demand modules resolve there. `plugin.json` pins no `version` on purpose: Claude Code then tracks the commit, and a rule added here reaches installed users on the next push instead of waiting for a release bump.
+
+Pick one of the two, not both — an `@import` alongside the plugin puts the core in context twice. Verify the plugin path by the canary below rather than by `/memory`, which lists imports only: a plugin contributes context through its hook.
 
 Optional but recommended: `"attribution": { "commit": "", "pr": "" }` in `%USERPROFILE%\.claude\settings.json` (older builds: `"includeCoAuthoredBy": false`) empties the commit and PR attribution Claude Code appends by default. That is a soft backstop for the ruleset's no-AI-traces rule: a session can still be handed an attribution instruction at run time, and one that names a `Claude-Session` trailer has reached a session whose settings already carried the empty strings. The hard backstop is a `commit-msg` hook rejecting any message that matches `Co-Authored-By|Claude-Session|claude\.ai/code/session`.
 

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/AGENTS.md\"; echo \"Loaded from the awesome-agents-md plugin. The rules/ folder named above is ${CLAUDE_PLUGIN_ROOT}/rules/.\"",
+            "timeout": 10,
+            "statusMessage": "Loading the AGENTS.md ruleset"
+          }
+        ]
+      }
+    ]
+  }
+}

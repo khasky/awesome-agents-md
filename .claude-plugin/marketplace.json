@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
+  "name": "awesome-agents-md",
+  "owner": {
+    "name": "Khasky",
+    "url": "https://github.com/khasky"
+  },
+  "description": "The Awesome AGENTS.md ruleset, installable as a Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "awesome-agents-md",
+      "source": "./",
+      "description": "One tool-agnostic ruleset for AI coding agents, loaded at session start instead of by hand: boundaries, security, a verification gate, the lazy-senior-dev coding ladder, commit conventions, plus on-demand modules across the stack.",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["agents-md", "rules", "coding-standards", "verification", "security", "commits", "code-review", "debugging"]
+    }
+  ]
+}

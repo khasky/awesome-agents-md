@@ -180,3 +180,48 @@ jobs:
                 else f"self-application OK ({len(files)} files, {len(phrases)} phrases)")
           sys.exit(1 if fail else 0)
           PY
+
+      # The plugin is the Claude Code install path that needs no clone: a
+      # SessionStart hook prints the core into the session. Nothing in a session
+      # fails loudly when that hook names a file that moved — the ruleset just
+      # goes missing — so the gate is that the manifests agree with each other
+      # and that every plugin-root path the hook reads still exists.
+      - name: plugin manifests and the SessionStart hook still resolve
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, sys
+
+          root = pathlib.Path(".claude-plugin")
+          plugin = json.loads((root / "plugin.json").read_text(encoding="utf-8"))
+          market = json.loads((root / "marketplace.json").read_text(encoding="utf-8"))
+          hooks = json.loads(pathlib.Path("hooks/hooks.json").read_text(encoding="utf-8"))
+
+          fail = []
+          if plugin.get("name") != "awesome-agents-md":
+              fail.append(f"plugin.json name is {plugin.get('name')!r}")
+          entries = [p.get("name") for p in market.get("plugins", [])]
+          if entries != [plugin["name"]]:
+              fail.append(f"marketplace.json lists {entries}, expected [{plugin['name']!r}]")
+          for key in ("description", "license"):
+              if not plugin.get(key):
+                  fail.append(f"plugin.json is missing {key}")
+          # version is omitted on purpose: Claude Code then tracks the commit and
+          # every push reaches installed users, with no bump to forget.
+          if "version" in plugin:
+              fail.append("plugin.json pins a version — installed users then stay on it until the next bump")
+
+          commands = [h.get("command", "")
+                      for event in hooks.get("hooks", {}).values()
+                      for group in event for h in group.get("hooks", [])]
+          if not any("AGENTS.md" in c for c in commands):
+              fail.append("no hook reads AGENTS.md — an installed plugin would load nothing")
+          # Trailing punctuation belongs to the sentence the hook prints, not
+          # to the path: "${CLAUDE_PLUGIN_ROOT}/rules/." names rules/.
+          for path in sorted({m.rstrip("./") for m in
+                              re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9._/-]+)", " ".join(commands))}):
+              if not pathlib.Path(path).exists():
+                  fail.append(f"hooks/hooks.json reads {path}, which is not in the repository")
+
+          print("\n".join(fail) if fail else f"plugin OK ({plugin['name']}, {len(commands)} hook command(s))")
+          sys.exit(1 if fail else 0)
+          PY
