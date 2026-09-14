@@ -38,6 +38,8 @@ llms.txt         # index of the core and every module for LLM consumption —
 hooks/           # hooks.json — the SessionStart hook that prints AGENTS.md into a
                  # Claude Code session when the repo is installed as a plugin
 .claude-plugin/  # plugin.json and marketplace.json for that install path
+scripts/         # lint.py — every gate above, run by CI and by the optional
+                 # pre-commit hook that install-hooks.py sets up
 ```
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
