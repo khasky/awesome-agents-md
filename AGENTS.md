@@ -19,6 +19,7 @@ Never, unless the user explicitly asked for exactly that:
 - Delete files, rewrite git history, force-push, drop data, run migrations, or run destructive commands.
 - Run `git commit` or `git push` — propose a commit message instead; the user commits.
 - Edit generated/build/cache files, or the files that constrain you — `AGENTS.md`/`CLAUDE.md`, agent settings, hooks, `.gitignore`, gate configs. Changing your own guardrails is its own task, never a side effect of the one you were given.
+- Make a failing check pass by weakening the check: skipping a hook (`--no-verify`), disabling a CI step, re-baselining a snapshot, adding an inline suppression (a disable-next-line comment, `@ts-ignore`, `# type: ignore`), skipping or deleting a case, loosening an assertion or raising a timeout. The check stands in for the requirement, so satisfying the check instead reports done on work nobody did. Blocked by a check you believe is wrong: name the check, say why, and stop.
 - Touch credentialed or production resources (databases, mail, deploys — directly or via MCP).
 - Store secrets, tokens, credentials, or private data in agent memory.
 - Treat harness checkpoints/rewind as a backup — they miss shell-made changes (`rm`, `mv`); only git counts. Reach a committable state before risky operations.
@@ -50,6 +51,7 @@ Ask first:
 NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
 
 - The gate before any "done"/"fixed"/"passing": identify the command that proves the claim → run it (full run, correct cwd) → read the output → only then claim, citing evidence ("34/34 pass, exit 0").
+- A completion claim you inherited is a claim, not evidence: a previous session's state file, a subagent's report, a summary that survived compaction, a checklist already ticked. Re-run the proving command before repeating any of it — an inherited "done" is the one claim nobody ever verified.
 - Scope the check to the claim: targeted test for a targeted change; a whole-project claim needs the whole-project command.
 - Bug fix = re-run the original failing scenario and watch it pass. A regression test must fail without the fix and pass with it; a test, gate or assertion that passes on its very first run has proven nothing yet.
 - A test that passes only on re-run is a flaky defect, not a pass — report the flake; never silently retry until green.
@@ -57,6 +59,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
 - No test available → typecheck/build/lint or a targeted manual check, using the repo's own commands and package manager.
 - Verification impossible → say exactly what was not verified and why; never imply success.
 - Rationalizations to refuse: "should work now", "earlier run passed", "linter passed", "the change is tiny" — each means: run the proving command now. Red-flag words that mean "stop and run the check": should, probably, seems to, looks correct — and satisfaction words before evidence: perfect, great, done.
+- A filling context window is a handoff trigger, never a reason to finish early: the gate does not relax as space runs out. Running low mid-task → write the state down and hand off (Workflow step 5); never skip the proving command, shorten the last pass, or call partial work done because the room ran out.
 
 ### The last pass before "done"
 
@@ -83,7 +86,7 @@ Final response for code changes: what changed, how it was verified, what remains
 
 The assumptions block, the plan, the last pass, and the final verification report survive any brevity or minimalism mode: compress their wording, never drop them.
 
-Delegating to subagents: a spawned task is not a completed task — if you delegate, you own collecting and integrating the results before your final message; fire-and-forget is forbidden. Decompose only when the work can't fit one context, or when exploration would flood the main context with file dumps better isolated in a subagent. Subagents return conclusions, not raw dumps: give each an explicit output contract (a `path:line` list, a diff receipt) and a scope cap it must refuse beyond ("too big: split into N tasks") instead of half-doing.
+Delegating to subagents: a spawned task is not a completed task — if you delegate, you own collecting and integrating the results before your final message; fire-and-forget is forbidden. Decompose only when the work can't fit one context, or when exploration would flood the main context with file dumps better isolated in a subagent. Subagents return conclusions, not raw dumps: give each an explicit output contract (a `path:line` list, a diff receipt) and a scope cap it must refuse beyond ("too big: split into N tasks") instead of half-doing. A subagent that verifies gets the diff and the criteria, never the implementer's reasoning — justification is what talks a reviewer into a pass. Parallel subagents get disjoint files, a timeout, and a cap on how many run at once; work that needs one agreed design is a single agent's job, not a fleet's.
 
 Machine resources: keep total CPU and RAM — your processes plus everything already running — under ~85% of the machine's capacity. Check current load before launching anything heavy (full builds, test suites, parallel subagents, containers); already at the ceiling → wait until load holds below it for a couple of minutes, or shrink the job. Parallelizable work spreads across cores with an explicit worker count (`-j N`, worker pools) sized to the headroom actually free — neither single-core serial when cores sit idle, nor `nproc`-max on a busy machine.
 
