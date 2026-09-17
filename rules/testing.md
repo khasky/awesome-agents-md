@@ -7,6 +7,9 @@ Read this when writing or restructuring tests, or deciding what kind of test a c
 - Placement ladder: unit tests for pure logic, transformations, and policy decisions; integration tests where systems meet (database, queue, cache, HTTP handlers) — against real infrastructure in containers where practical; E2E for a handful of business-critical paths only, never the default answer to a coverage gap.
 - Mock external services only, never your own app; a test with more mocking than logic verifies the mock (shared rule with `rules/code-review.md`).
 - Assert behavior, not implementation trivia: a test that breaks on a rename without a behavior change tests the wrong thing.
+- A test that restates the implementation step for step passes for the same reason the code is wrong. Assert the contract the caller depends on — inputs to outputs, state before to state after — so the test can fail while the code compiles.
+- A repository with no tests gets none as a side effect: adding the first test means choosing a runner, a layout, and a CI step, which is its own task to agree on, not a quiet addition to someone's bug fix. Propose it; don't ship it uninvited.
+- Reversible, low-impact changes (copy edits, a config default, a log line) don't earn a test. Spend the budget where a regression would be expensive or silent.
 - Test data: factories/builders for readable setup; small fixtures with clear intent; seed data owned by the test — no shared mutable state across suites.
 - A flaky test is a defect: report and quarantine it visibly; never silently re-run until green and call it passing (core Verification rule — repeated here because tests are where it bites).
 - Coverage is a weak signal for spotting untested areas, never a target; fewer tests with strong assertions beat high coverage with shallow checks. Budget generated tests: 3–5 focused cases per unit (valid, invalid, edge) — more only for a named risk, never padding.

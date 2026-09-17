@@ -7,6 +7,8 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - Package context precisely: BASE and HEAD commits, what the change claims to do, and the plan/requirements it implements — not the full session history.
 - PR description answers: what changed, why, risks, how it was tested, where reviewers should focus; UI changes include screenshots; note rollout or follow-up work.
 - Prefer small PRs with one coherent intent — split unrelated changes instead of bundling them.
+- The description is written for a reviewer who never saw the conversation that produced the change: lead with the concrete problem and the resulting behavior, give a trigger and a before/after where one clarifies, and scale the detail to the change — two sentences plus the validation is a complete description of a small PR.
+- Scope drifted during the work → rewrite the title and description around what was actually built, and drop the abandoned approaches. A history of what you tried belongs in the PR only where it explains a tradeoff the reviewer has to judge.
 - Review is due before merging any major feature, after complex bug fixes, and before large refactors (to establish a baseline). Never skip it claiming the change is simple.
 
 ## Reviewing (two axes)
@@ -20,6 +22,8 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 - A test's existence proves nothing — review what its assertions would catch: an assertion that survives the regression it claims to guard is decoration.
 - Architecture findings get names: boundary drift (UI reaching into DB, domain types leaking transport shapes) and one-way doors (schema choices, public API shapes, persisted formats — anything expensive to reverse) are called out explicitly, reversibility stated.
 - Diff touches a cache → check the key encodes every variable the value depends on; a cache key missing one input serves user A's data to user B (`rules/caching.md`).
+- Review the diff, not the repository: a defect the change introduced is a finding, a pre-existing one is a separate note the author can decline. Neither is a demand for rigor the rest of the codebase doesn't carry — validation and comment density the surrounding files never had is a proposal, not a blocker.
+- "This might break something elsewhere" is not a finding until you name the code it breaks. Speculation costs the author the search you skipped.
 - Fix causes, not symptoms. A "simplification" that requires changing tests is a behavior change in disguise — flag it.
 - A comment in the diff is a claim: check it against the code it sits on. One that no longer describes that code is a defect, not a nit, and the machine-written tells (mirrored "X, not Y", figures from one measurement) are findings of their own (`rules/code-comments.md`).
 - History is review context: `git log -L <start>,<end>:<file>` on the lines being changed says what the replaced code was for. A line introduced by a commit naming a bug, CVE, or incident is a guard — its removal is a regression until the author says why the cause is gone; a file that keeps appearing in fix commits is a hotspot worth reading whole.
