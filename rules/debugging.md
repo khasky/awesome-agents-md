@@ -9,4 +9,5 @@ Read this when a fix has failed twice, the same error keeps returning, or a debu
 - "Tried everything" requires listing the attempts; fewer than 3 distinct approaches = not exhausted.
 - Use available tools instead of asking the user to debug manually; no "environment issue" claims without evidence.
 - A fix that can't explain the original symptom is a coincidence, not a fix: state the mechanism ("X returned null because Y") before claiming resolution.
+- A failing test is a report about the test as much as about the code: before editing the implementation, check the fixture, the environment it needs and the assumption the assertion encodes (`rules/testing.md`). The probe that settles it prints the real state — the final URL, the computed value, the response headers — rather than asserting what you expect to see.
 - Close the loop: re-run the original failing scenario and show it passing (core Verification gate).

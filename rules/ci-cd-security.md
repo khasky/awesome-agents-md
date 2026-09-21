@@ -16,7 +16,7 @@ Read this when writing or changing CI workflows, release automation, or anything
 - Reusable pipeline definitions — included templates, composite steps — run with the caller's secrets and token: pin them by revision like any other component, and treat one owned by another org as third-party code holding write access to this repo.
 - Release artifacts carry provenance: attest at build time (sigstore/cosign or the platform's attestation step) and make the consumer verify before install or deploy. An unsigned artifact in a registry is indistinguishable from one an attacker pushed. Rollout strategy and rollback for what those artifacts ship: `rules/deployment.md`.
 - Review the lockfile diff on every PR: a new transitive package, a changed integrity hash, or a rewritten registry URL is a supply-chain event, not noise (`rules/dependencies.md`).
-- A step that downloads a binary into the runner (a `curl`/`wget` of a release archive, an installer script piped to a shell) pins the exact version *and* verifies a checksum the workflow supplies; an empty checksum fails the step rather than defaulting to trust. Component pinning covers the pipeline steps, not the software they fetch.
+- A step that downloads a binary into the runner (a `curl`/`wget` of a release archive, an installer script piped to a shell) pins the exact version and verifies a checksum the workflow supplies; an empty checksum fails the step rather than defaulting to trust. Component pinning covers the pipeline steps, not the software they fetch.
 - Secrets are never printed, echoed, or written to an artifact for debugging; a masked value still leaks through base64, reversal, or a crash dump.
 - An AI-agent step (a Claude, Gemini, or Codex action) is an injection sink, not just a tool: issue and PR text, review comments, error logs, and env values all reach its prompt as attacker-controlled input. A prompt with no template expressions in it proves nothing when the payload arrives through an env var or an issue the agent fetches itself.
 - Agent output is untrusted code: never pipe it into `eval`, a shell, or an auto-merged commit. It gets the same review gate as PR-head code before anything executes it with repository credentials.
@@ -28,7 +28,7 @@ Read this when writing or changing CI workflows, release automation, or anything
 ## GitHub Actions specifics
 
 - SHA pinning is `uses: owner/action@a1b2c3…`; `zizmor` and `actionlint` lint the workflow YAML.
-- `pull_request_target` and `workflow_run` are the two triggers that execute with repository secrets and write scope against the *base* repo — never run PR-head code inside them.
+- `pull_request_target` and `workflow_run` are the two triggers that execute with repository secrets and write scope against the base repo — never run PR-head code inside them.
 - The read-only token floor is `permissions: contents: read` at workflow top level.
 - `${{ … }}` inside `run:` is the expansion-before-shell injection: route values through `env:` and quote them in the script.
 - `github.event.*` is the attacker-controlled event surface.

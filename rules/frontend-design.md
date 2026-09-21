@@ -43,6 +43,16 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - Copy: active voice; specific button labels ("Save API key", not "Continue"); error messages state the fix.
 - Flag on sight: `user-scalable=no`, `maximum-scale=1`, paste blocking, unlabeled icon buttons, images without dimensions, `outline: none`.
 
+## Microcopy
+
+Applies to every user-visible string a product ships: page copy, headings, button labels, `title`/`description`, `alt` text, and the plain-text twin of any structured data. Prose documentation has its own register in `rules/markdown.md`.
+
+- Digits for anything countable and checkable — items, permissions, steps, seconds, clicks, storefronts, years, questions — including 0 through 9 and at the start of a sentence. Digits survive scanning; a spelled number dissolves into the words around it ([NN/g eyetracking](https://www.nngroup.com/articles/web-writing-show-numbers-as-numerals/)). Words stay for `one` as a pronoun or idiom ("one person, one vote", "which one", "one-time code"), for a bare pronoun pair ("the two agree"), and for vague scale ("a thousand throwaway profiles").
+- Never mix the two forms in one sentence. "600 emoji, not six defaults" is the bug: recast the sentence, or keep both as words when a rhetorical `one` sits next to the count. Thousands take a comma (`50,000`), a compound modifier takes a hyphen (`6-digit code`), comparison tables always take digits, and a count that also lives in data is interpolated from it rather than typed — the hardcoded copy is the one that goes stale.
+- One pair of em-dashes per sentence, never two: an aside inside an aside is where a sentence stops being readable. Recast the second — a colon when a list follows a noun, parentheses for a short qualifier, its own sentence when the aside carries a verb. Adjacent table cells, list items and a `title`/`description` pair are separate sentences, each with its own budget.
+- One term per concept, and the internal name is never the user-facing one. Pick the word the interface itself shows the user and use it everywhere; where a product surface quotes a control's exact label, quote it verbatim and mark it as a label rather than paraphrasing. A field name, a feature flag or a class name leaking into copy reads as an implementation detail because it is one.
+- Both halves of a string pair change together: the visible HTML and the plain text that feeds structured data, the label and its `aria-label`, the heading and the `title`. Editing one leaves the other contradicting it in the exact place nobody rereads.
+
 ## Animation performance
 
 - Cost ladder: composite (`transform`/`opacity`) < paint (color/shadow/filter) < layout (size/position). Pick the cheapest that matches the intent; animate paint/layout only on small isolated surfaces.
