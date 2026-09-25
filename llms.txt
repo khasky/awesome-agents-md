@@ -43,9 +43,9 @@
 - [rules/privacy.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/privacy.md): personal data — deletion propagation, retention enforcement, PII classification, export rigor.
 - [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
 - [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features — Rule of Two, indirect prompt injection, tool least privilege.
-- [rules/subagents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/subagents.md): delegating to subagents — model tier per job, resolving and pinning the tier, escalation, what stays unchanged at the light tier.
+- [rules/subagents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/subagents.md): delegating to subagents — model tier and effort per job, resolving and pinning them, escalation, what stays unchanged at the light tier.
 - [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
-- [rules/long-running-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/long-running-agents.md): unattended multi-iteration runs — state baton, stall detection, quota-vs-error branching, budget.
+- [rules/long-running-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/long-running-agents.md): unattended multi-iteration runs — state baton, early stops and continuations, stall detection, quota-vs-error branching, budget.
 
 ## Stack-gated rule modules
 
