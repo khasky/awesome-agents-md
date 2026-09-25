@@ -67,7 +67,7 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 
 - `AGENTS.md` ≤ 200 lines above the module index.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist, so a tool name that belongs inside a presence check is added to the exception list in `scripts/lint.py`, never waved through.
-- Ungated modules name blocklisted stacks only under a `## <Stack> specifics` heading, on the trigger line, or on a line marked as an example — the same curated-blocklist approach, applied to `rules/`; stack-gated modules and dependencies.md (the cross-ecosystem exemplar) are exempt.
+- Ungated modules name blocklisted stacks only under a `## <Stack> specifics` heading, on the trigger line, on a line marked as an example, or on a line that names two or more languages or runtimes side by side — the same curated-blocklist approach, applied to `rules/`; stack-gated modules and dependencies.md (the cross-ecosystem exemplar) are exempt.
 - Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.

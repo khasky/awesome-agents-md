@@ -74,14 +74,18 @@ def core_names_no_tool() -> list[str]:
 # their siblings by design. In every other module a blocklisted name may appear
 # only below a "## <Stack> specifics" heading, on the trigger line, or on a line
 # marked as an example (e.g. / or equivalent / a labeled "(Stripe" parenthetical).
+# A line naming two or more languages or runtimes gives the advice across
+# ecosystems, which the fourth test accepts, so it passes as well.
 # Curated like the core blocklist: a name that belongs elsewhere joins the
 # exception filters here, never waved through.
 STACK_EXEMPT = {"containers", "dependencies", "git-hooks", "iac", "mobile",
-                "monorepo", "nextjs", "shell-scripts", "web-seo"}
+                "monorepo", "nextjs", "shell-scripts"}
+LANGUAGE_NAMES = r"TypeScript|Node\.js|Node|Python|JVM|Java|Kotlin|Ruby|PHP|Rust|\.NET"
 STACK_NAMES = (r"Next\.js|Nuxt|React|Vue|Angular|Svelte|Zustand|Pinia|TanStack|SWR|Redis|"
-               r"Prisma|Drizzle|husky|lint-staged|Turborepo|Kubernetes|Dockerfile|Terraform|"
-               r"Pulumi|Vitest|Jest|Playwright|Express|Fastify|npm|pnpm|yarn|npx|Stripe|"
-               r"GitHub Actions")
+               r"Prisma|Drizzle|husky|lint-staged|Turborepo|Kubernetes|Dockerfile|Docker|"
+               r"Terraform|Pulumi|Vitest|Jest|Playwright|Express|Fastify|npm|pnpm|yarn|npx|"
+               r"Stripe|GitHub Actions|PostgreSQL|Postgres|SQLite|MySQL|JSX|"
+               + LANGUAGE_NAMES)
 STACK_EXAMPLE_MARKERS = re.compile(r"e\.g\.|equivalent|\(Stripe")
 
 
@@ -98,6 +102,8 @@ def modules_name_no_stack() -> list[str]:
             if in_specifics or line.startswith("Read this when "):
                 continue
             if STACK_EXAMPLE_MARKERS.search(line):
+                continue
+            if len(set(re.findall(rf"\b({LANGUAGE_NAMES})\b", line))) >= 2:
                 continue
             for hit in re.findall(rf"\b({STACK_NAMES})\b", line):
                 found.append(f"{path}:{number}: {hit} is named outside a specifics "
