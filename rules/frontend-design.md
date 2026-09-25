@@ -2,16 +2,7 @@
 
 Read this when building, styling, or reviewing web UI: pages, components, dashboards. The craft and accessibility numbers hold for any UI; the CSS and DOM APIs are web-only.
 
-<!-- Distilled from vercel-labs/web-interface-guidelines, nextlevelbuilder/ui-ux-pro-max-skill, anthropics/skills frontend-design, and khasky/marketing-and-seo-playbook (permission prompts, layout reservation). -->
-
-## Direction before code
-
-- Commit to one clear aesthetic direction before writing code: purpose, tone, and what makes this design distinctive. Refined minimalism and bold maximalism both work — timid middle ground doesn't.
-- Never default to the generic AI look: Inter/Roboto/Arial/system fonts, purple-gradient-on-white, identical card layouts. Vary fonts, palettes, and layout between projects.
-- Pair a distinctive display font with a refined body font. Dominant color with sharp accents beats an evenly-distributed timid palette.
-- One well-orchestrated page-load reveal (staggered `animation-delay`) beats scattered micro-interactions.
-- Match implementation complexity to the vision: maximalism needs elaborate code; minimalism needs restraint and precise spacing.
-- When a design system exists, use its tokens and components — no hardcoded hex/pixel values, no ad-hoc restyling; flag deviations instead of silently inventing them.
+<!-- Distilled from vercel-labs/web-interface-guidelines, nextlevelbuilder/ui-ux-pro-max-skill, anthropics/skills frontend-design, Anthropic's Opus 5.5 prompting guide (frontend design defaults), and khasky/marketing-and-seo-playbook (permission prompts, layout reservation). -->
 
 ## Numbers agents get wrong
 
@@ -25,6 +16,7 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 
 ## Interaction correctness
 
+- When a design system exists, use its tokens and components — no hardcoded hex/pixel values, no ad-hoc restyling; flag deviations instead of silently inventing them.
 - `<button>` for actions, `<a>` for navigation — never `<div onClick>`; icon-only buttons need `aria-label`; semantic HTML before ARIA.
 - Never remove focus outline without a `:focus-visible` replacement. No `tabindex` greater than 0.
 - Core task completable in ≤3 interactions; one primary action per view — no competing primary buttons.
@@ -34,11 +26,9 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - Forms: never block paste; correct `type`/`inputmode` per field; labels clickable; validate on blur, not keystroke; errors inline naming the fix, focus the first invalid field; submit stays enabled until the request starts, then shows progress; warn before navigating away with unsaved changes.
 - Destructive actions need confirm or undo — never immediate.
 - URL reflects state: filters, tabs, pagination deep-linkable; back restores scroll and state (canon: the ownership ladder in `rules/state-management.md`, repeated here because it is a design decision too).
-- Loading: skeleton for operations >1s; visible tap feedback within 100ms.
 - Content resilience: design for short, average, and very long content; handle overflow with the CSS properties (`text-overflow`, `line-clamp`, `overflow-wrap`); flex children need `min-width: 0`; handle empty states.
 - Images get explicit width/height; reserve layout space for any injected UI (banners, consent bars, embeds) — nothing shifts content when it loads. Lazy-load below the fold; virtualize lists >50 items.
 - Never trigger browser permission prompts (notifications, geolocation) on page load — request after a user action that shows the value.
-- Typography micro-craft: curly quotes; non-breaking spaces inside `10 MB` and brand names; `text-wrap: balance` on headings, `pretty` on body.
 - Locale: `Intl.DateTimeFormat`/`Intl.NumberFormat`, never hand-formatted dates/numbers.
 - Copy: active voice; specific button labels ("Save API key", not "Continue"); error messages state the fix.
 - Flag on sight: `user-scalable=no`, `maximum-scale=1`, paste blocking, unlabeled icon buttons, images without dimensions, `outline: none`.
