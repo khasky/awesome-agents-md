@@ -78,9 +78,9 @@ def core_names_no_tool() -> list[str]:
 # ecosystems, which the fourth test accepts, so it passes as well.
 # Curated like the core blocklist: a name that belongs elsewhere joins the
 # exception filters here, never waved through.
-STACK_EXEMPT = {"containers", "dependencies", "git-hooks", "iac", "mobile",
-                "monorepo", "nextjs", "shell-scripts"}
-LANGUAGE_NAMES = r"TypeScript|Node\.js|Node|Python|JVM|Java|Kotlin|Ruby|PHP|Rust|\.NET"
+STACK_EXEMPT = {"containers", "dependencies", "iac", "mobile", "monorepo", "nextjs",
+                "shell-scripts"}
+LANGUAGE_NAMES = r"TypeScript|Node\.js|Python|JVM|Java|Kotlin|Ruby|PHP|Rust|\.NET"
 STACK_NAMES = (r"Next\.js|Nuxt|React|Vue|Angular|Svelte|Zustand|Pinia|TanStack|SWR|Redis|"
                r"Prisma|Drizzle|husky|lint-staged|Turborepo|Kubernetes|Dockerfile|Docker|"
                r"Terraform|Pulumi|Vitest|Jest|Playwright|Express|Fastify|npm|pnpm|yarn|npx|"

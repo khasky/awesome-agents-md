@@ -64,7 +64,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
 - Bug fix = re-run the original failing scenario and watch it pass. A regression test must fail without the fix and pass with it; a test, gate or assertion that passes on its very first run has proven nothing yet.
 - A test that passes only on re-run is a flaky defect, not a pass — report the flake; never silently retry until green.
 - Before claiming done, attack your own report: which claim is most likely false? Verify that one first. Fix the implementation, not the test — unless the test itself is provably wrong.
-- A wrapper's summary is not the output. Shell shims, task runners and IDE integrations rewrite what a tool printed and sometimes its exit code with it: one has reported a clean lint while the linter itself was failing. Read the real stream — the repo's own script, or the binary directly (`node node_modules/.bin/<tool>`, `./vendor/bin/<tool>`, `.venv/bin/<tool>`) — and treat a compressed "all good" from a layer you did not run as unverified.
+- A wrapper's summary is not the output. Shell shims, task runners and IDE integrations rewrite what a tool printed and sometimes its exit code with it: one has reported a clean lint while the linter itself was failing. Read the real stream — the repo's own script, or the binary directly from the project-local install (`node_modules/.bin`, `vendor/bin`, the virtualenv's `bin` or `Scripts` folder) — and treat a compressed "all good" from a layer you did not run as unverified.
 - No test available → typecheck/build/lint or a targeted manual check, using the repo's own commands and package manager.
 - Verification impossible → say exactly what was not verified and why; never imply success.
 - Rationalizations to refuse: "should work now", "earlier run passed", "linter passed", "the change is tiny" — each means: run the proving command now. Red-flag words that mean "stop and run the check": should, probably, seems to, looks correct — and satisfaction words before evidence: perfect, great, done.
@@ -201,7 +201,7 @@ NO AI TRACES IN COMMITS OR CODE — never write, and never ask whether to write,
 
 ## On-demand rule modules
 
-Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient. The last six bullets are stack-gated: read one only when its stack is present.
+Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient. The last five bullets are stack-gated: read one only when its stack is present.
 
 - `rules/markdown.md` — editing Markdown documents and articles.
 - `rules/code-comments.md` — full comment policy, including public-repo safety.
@@ -231,6 +231,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/deployment.md` — shipping to a running environment: deploy vs release, rollout, feature flags, migration ordering.
 - `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
 - `rules/ci-cd-security.md` — CI workflows and release automation: component pinning, token scope, untrusted PR input.
+- `rules/git-hooks.md` — pre-commit, commit-msg and pre-push gates: staged-set scope, time budget, secret scanning.
 - `rules/dependencies.md` — adding or upgrading packages: lockfiles, dependency confusion, provenance, reachability.
 - `rules/llm-agents.md` — code that calls an LLM or runs agents: Rule of Two, indirect injection, tool least privilege, cost caps.
 - `rules/subagents.md` — delegating to a subagent or writing a reusable agent definition: model tier and effort per job, pinning them, escalation.
@@ -244,7 +245,6 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
 - `rules/containers.md` — Docker/Compose/Kubernetes: multi-stage, non-root, secret-safe images, probes and limits.
 - `rules/iac.md` — Terraform/Pulumi/CDK: remote state, plan review, destructive applies.
-- `rules/git-hooks.md` — pre-commit gates: husky, lint-staged.
 - `rules/monorepo.md` — JS/TS workspace monorepo: pnpm/npm workspaces, Turborepo, Nx.
 
 ---

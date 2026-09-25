@@ -30,6 +30,7 @@
 - [rules/observability.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/observability.md): structured logging, health probes, metrics, graceful shutdown, env config.
 - [rules/incident-response.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/incident-response.md): a live production incident — preserve evidence, contain, postmortem discipline.
 - [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — component pinning, token scope, untrusted PR input; GitHub Actions syntax under its own heading.
+- [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit, commit-msg and pre-push gates for any hook manager; husky + lint-staged commands under their own heading.
 - [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.
 - [rules/design-patterns.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/design-patterns.md): choosing design patterns — composition over inheritance, no Singleton, language-native over GoF machinery, architecture weight.
 - [rules/performance.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/performance.md): performance fundamentals — measure first, complexity class, data-structure choice, batching round-trips, memory bounds, budgets.
@@ -54,7 +55,6 @@ Read one only when its stack is present in the repo.
 - [rules/mobile.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/mobile.md): Android and iOS — keystore storage, pinning, exported components, release hardening.
 - [rules/containers.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/containers.md): Docker/Compose/Kubernetes — multi-stage builds, non-root, secret-safe images, probes and resource limits.
 - [rules/iac.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/iac.md): infrastructure as code — remote state and locking, plan review, destructive applies, drift.
-- [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit gates with husky and lint-staged.
 - [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): JS/TS workspace monorepos — pnpm/npm workspaces, Turborepo, Nx.
 
 ## Docs
