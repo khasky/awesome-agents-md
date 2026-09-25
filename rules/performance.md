@@ -14,6 +14,7 @@ Read this when writing or reviewing performance-sensitive code, or when asked to
 - Concurrency answers measured saturation, never a hunch: I/O-bound work wants batching or async multiplexing; CPU-bound work wants parallel workers sized to the cores actually free (core Machine resources rule). Parallelizing an unmeasured path buys coordination cost and race surface.
 - Where speed is a requirement, set a budget — a latency target, a memory cap, the input size the code must handle — and leave the check runnable: a timed test on a fixed input, or the repo's benchmark harness. "Fast" without a number regresses silently.
 - Optimizations expire: a workaround for a runtime or hardware bottleneck carries a comment naming the condition for removing it (core simplification-marker rule) — the next engine version often turns it into dead weight or a pessimization.
+- Latency rising while CPU, memory and scheduler delay all look healthy points at a saturated bounded pool: a worker or thread pool, a connection pool, a semaphore. Check the queue depth of every bounded pool on the call path before suspecting the code.
 
 Not a violation — leave these alone:
 

@@ -31,6 +31,9 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - Never trigger browser permission prompts (notifications, geolocation) on page load — request after a user action that shows the value.
 - Locale: `Intl.DateTimeFormat`/`Intl.NumberFormat`, never hand-formatted dates/numbers.
 - Copy: active voice; specific button labels ("Save API key", not "Continue"); error messages state the fix.
+- A persisted preference (theme, locale, density) is applied before the first paint, through a blocking inline read in the document head or a server render from a cookie. Applied after the app starts, it paints the default first and flashes to the real value; a transition on the themed properties animates the same flash.
+- When a feature is explorable before signup and only saving is gated, keep what the visitor built (draft, input, selections) across the signup and attach it to the new account; a signup that discards it turns the wall into the exit.
+- Back the numeric rules with an automated accessibility check in the test suite so they hold on the next edit. Automated rules catch only part of the issues, so keyboard and screen-reader passes stay manual.
 - Flag on sight: `user-scalable=no`, `maximum-scale=1`, paste blocking, unlabeled icon buttons, images without dimensions, `outline: none`.
 
 ## Microcopy

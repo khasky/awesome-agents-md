@@ -19,6 +19,7 @@ Read this when shipping a change to a running environment: rollout strategy, rol
 - A declarative definition owns every workload and handles restart, rollout and placement; changes go through the committed definition, never a live edit on the running system.
 - Every workload declares its CPU and memory requests and limits, and a rollout or a node drain keeps enough replicas serving: tune the maximum unavailable to real capacity, since the defaults can brown out a small deployment.
 - Every distributed client the backend serves (mobile, desktop, CLI, extension) is checked against a server-side minimum version, so a known-vulnerable build can be cut off.
+- A fix needed on a release or support branch also lands on the mainline in the same change set, mainline first by default; an incident hotfix made on the release branch is forward-ported before the incident closes. A fix that exists only on a release branch disappears from every release cut after it.
 
 ## Infrastructure definitions
 

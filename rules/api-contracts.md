@@ -14,3 +14,4 @@ Read this when the repo has a machine-readable API schema (OpenAPI or similar), 
 - Gate breaking changes mechanically: run a schema diff in CI against the released spec (`buf breaking` for protobuf, oasdiff for OpenAPI) and fail the build on a breaking diff unless the version bumps (`rules/public-api-design.md`).
 - With two or more independent consumers, add consumer-driven contract tests (Pact or a schema-based equivalent): provider CI verifies recorded consumer expectations, catching removals consumers actually rely on before deploy orders collide.
 - Contract changes are public API changes — the core "Ask first" rule applies. Evolving a public HTTP surface (versioning, pagination, deprecation): `rules/public-api-design.md`.
+- A new custom header or parameter gets a plain, specific name without an `X-` prefix (RFC 6648): the prefix never comes off once a client depends on it. Existing `X-` names stay as they are.

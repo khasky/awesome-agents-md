@@ -7,6 +7,7 @@ Read this when building, modifying, or auditing public-facing web pages.
 ## Indexability first
 
 - Before any other SEO work, verify the page can be indexed: no accidental `noindex`, no robots.txt block, canonical not pointing elsewhere. An unindexable page makes everything else moot — if blocked, lead the report with that.
+- `Disallow` in robots.txt and `noindex` do not combine: a disallowed page is never fetched, so its `noindex` is never read, and the URL can still be indexed from inbound links. To drop a page from the index, let it be crawled and serve `noindex`; use `Disallow` to save crawl budget on URLs whose indexing does not matter.
 - Client-side-rendered page with <500 chars of visible text in raw HTML → render it headless before auditing; don't score an empty shell.
 
 ## Head
@@ -38,3 +39,4 @@ Read this when building, modifying, or auditing public-facing web pages.
 - Permanent moves get a 301 (never 302); no redirect chains or loops — update internal links to the final URL.
 - No full-screen interstitials or overlays covering main content on first paint — mobile ranking penalty; show dialogs after interaction.
 - Core Web Vitals, field data at p75: LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1. Lab Lighthouse is diagnostic only — never present a lab number as a field result.
+- Tracking parameters (UTM) and filter or facet parameters never create competing indexable URLs: canonicalize a parameter variant to the clean URL, keep facet combinations out of the crawl (robots.txt, or fragments for filters), and link internally to the clean URL only.

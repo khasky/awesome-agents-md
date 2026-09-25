@@ -18,6 +18,7 @@ Read this when the task is to produce a plan or spec rather than the change itse
 - A revised plan replaces the previous one in full. Publishing a delta against a plan the user has already stopped reading is how two incompatible versions end up in the same thread.
 - A plan as a spec and a plan as a progress checklist are different artifacts: the checklist tracks steps you are executing, the spec is the thing handed over. Do not let the tool that renders one stand in for the other.
 - No plan for work that is one obvious step, and no single-step plan: if the plan has one step, the task did not need planning.
+- An accepted decision record is never edited to reflect a new decision: write a new record and mark the old one superseded by it. The chain of records is the history of why; rewriting the old one erases what was believed when the choice was made.
 
 Not a violation — leave these alone:
 

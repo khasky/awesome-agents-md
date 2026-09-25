@@ -10,4 +10,5 @@ Read this when a fix has failed twice, the same error keeps returning, or a debu
 - Use available tools instead of asking the user to debug manually; no "environment issue" claims without evidence.
 - A fix that can't explain the original symptom is a coincidence, not a fix: state the mechanism ("X returned null because Y") before claiming resolution.
 - A failing test is a report about the test as much as about the code: before editing the implementation, check the fixture, the environment it needs and the assumption the assertion encodes (`rules/testing.md`). The probe that settles it prints the real state — the final URL, the computed value, the response headers — rather than asserting what you expect to see.
+- An edit to a config file, environment variable, secret or certificate is not yet the value the running process uses: most runtimes read these at startup or on an explicit reload. Before trusting a re-test after such an edit, confirm the process picked it up with a restart, a reload log line, or a probe of the live value.
 - Close the loop: re-run the original failing scenario and show it passing (core Verification gate).
