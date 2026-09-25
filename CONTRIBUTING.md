@@ -39,21 +39,20 @@ Read this when <the exact trigger — a task type, not a technology fan club>.
 
 Rule shapes that outperform prose — prefer them when the material allows:
 
-- A correct/wrong pair with the failure mode named ("`getSession()` compiles but trusts an unverified cookie — use `getUser()`") beats an abstract warning.
+- A correct/wrong pair with the failure mode named ("`==` on a token compiles and leaks timing — compare in constant time") beats an abstract warning.
 - A numeric threshold beats an adjective: "nesting ≤ 2, function ≤ 50 lines" is enforceable; "keep it small" is not.
-- Version-migration knowledge as old → new pairs (`useFormState` → `useActionState`), not narrative history.
+- Version-migration knowledge as old → new pairs (`protect --staged` → `git --pre-commit --staged`), not narrative history.
 - Where a rule can be checked mechanically, name the command that checks it (a grep, a lint rule, a CI step) — a rule that ships its own enforcement stops being advisory.
 - A module whose rules get over-applied ends with a `Not a violation — leave these alone:` block naming what looks like a breach of its own rules and is not. Over-application is a real failure mode with a real cost: an agent that deletes a deliberate duplicate, flattens a chosen register, or optimizes a path nobody waits on has followed the module and damaged the repository. The same line test admits each carve-out — would an agent get this wrong without it? A carve-out that merely restates the rule's scope does not earn a line.
-- For framework modules, list the APIs and package names models reliably hallucinate or that changed shape in a major version — that blocklist prevents more bugs than another style rule.
 
 ## Stack-agnostic, and what that permits
 
-The ruleset holds for any stack with nothing extra to install (README). That is a property of the whole, not of every line: a stack-specific rule is admissible exactly when it cannot fire outside its stack. Four tests decide it.
+The ruleset holds for any stack with nothing extra to install (README). It holds line by line: no rule applies to one framework, platform or tool only. Four tests decide it.
 
 - The core `AGENTS.md` names a framework, library, or non-baseline CLI only inside an explicit presence check — "A secret scanner already installed (`gitleaks version` exits 0, or similar) →", "a commitlint config always wins". The assumable baseline is git and the OS shell; the core declares no OS as its default either, it matches whichever one the user is on.
-- A module names a technology only when its trigger gates the whole module on that technology being present (`rules/mobile.md`, `rules/containers.md`, `rules/iac.md`). The rule is then unreachable elsewhere, so the ruleset stays agnostic as a whole.
-- The trigger states exactly the scope the content delivers, never wider. A trigger naming three CI platforms over a body covering one, or ending "any framework" over library-specific bullets, is a defect: narrow the trigger or add the missing content. Name the primary technology and where the transfer stops — "The invariants hold for any relational database; the SQL examples are PostgreSQL."
-- An ungated module carries no unmarked stack-specific rule. Where general advice needs a concrete API, either give it across ecosystems (`rules/crypto.md`, `rules/dependencies.md`) or move those bullets under an explicit `## <Stack> specifics` heading (`rules/ci-cd-security.md`).
+- No module is gated on a framework, platform or tool. A rule that holds for one of them is rewritten as the invariant behind it and placed in the module that owns the concern, or left out.
+- The trigger states exactly the scope the content delivers, never wider. A trigger naming three CI platforms over a body covering one, or ending "any framework" over library-specific bullets, is a defect: narrow the trigger or add the missing content. Name the primary technology and where the transfer stops — "The invariants hold for any relational database; the SQL examples use PostgreSQL syntax, and every major engine has the equivalent."
+- A module carries no unmarked stack-specific rule. Where general advice needs a concrete API, either give it across ecosystems (`rules/crypto.md`, `rules/dependencies.md`) or state the invariant and leave the API to the reader's stack.
 
 Never assume a path, file, or configuration belonging to another repository or one machine: "`x.txt` at the repo root" is a rule about someone else's project. Make it conditional or drop it.
 
@@ -67,7 +66,7 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 
 - `AGENTS.md` ≤ 200 lines above the module index.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist, so a tool name that belongs inside a presence check is added to the exception list in `scripts/lint.py`, never waved through.
-- Ungated modules name blocklisted stacks only under a `## <Stack> specifics` heading, on the trigger line, on a line marked as an example, or on a line that names two or more languages or runtimes side by side — the same curated-blocklist approach, applied to `rules/`; stack-gated modules and dependencies.md (the cross-ecosystem exemplar) are exempt.
+- Modules name blocklisted stacks only on a line marked as an example or on a line that names two or more ecosystems side by side — the same curated-blocklist approach, applied to every line of `rules/`, triggers included.
 - Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.

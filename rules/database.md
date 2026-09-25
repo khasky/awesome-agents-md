@@ -1,6 +1,6 @@
 # Database and ORM
 
-Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples are PostgreSQL.
+Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples use PostgreSQL syntax, and every major engine has the equivalent.
 
 <!-- Distilled from the Twelve-Factor App (config, backing services), Prisma and Drizzle docs, use-the-index-luke.com, the expand/contract migration pattern, GitHub's replication-lag throttling practice (freno), the sqlcheck SQL anti-pattern catalog (jarulraj), and Azure's SaaS tenancy pattern matrix; cross-checked against production reference implementations. -->
 

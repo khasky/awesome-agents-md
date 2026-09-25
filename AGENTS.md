@@ -201,7 +201,7 @@ NO AI TRACES IN COMMITS OR CODE — never write, and never ask whether to write,
 
 ## On-demand rule modules
 
-Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient. The last three bullets are stack-gated: read one only when its stack is present.
+Read these only when the task matches. They live in the `rules/` folder next to this file in the awesome-agents-md clone; if the clone can't be located, proceed — the core above is sufficient.
 
 - `rules/markdown.md` — editing Markdown documents and articles.
 - `rules/code-comments.md` — full comment policy, including public-repo safety.
@@ -216,7 +216,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/frontend-design.md` — building or styling web UI: visual craft, a11y, motion, anti-generic-design.
 - `rules/web-seo.md` — building or auditing public-facing web pages: head, indexability, structured data, CWV.
 - `rules/i18n.md` — multi-language or multi-locale UI: catalogs, plurals, RTL, locale formatting.
-- `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, client/server boundary, async errors.
+- `rules/backend-security.md` — writing or reviewing server/API code: auth, errors, queries, client/server boundary, shipped clients, async errors.
 - `rules/crypto.md` — hashing, encryption, tokens, JWT, key rotation.
 - `rules/database.md` — schema, migrations, transactions, connection/pool handling (SQL or ORM).
 - `rules/caching.md` — adding or reviewing a cache: write strategies, TTL and invalidation, stampedes, keyspace scans.
@@ -228,7 +228,7 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/api-contracts.md` — repos with machine-readable API schemas, contract packages, or generated clients.
 - `rules/resilience.md` — cross-service calls: timeouts and deadlines, circuit breakers, retries, sagas, load shedding.
 - `rules/rate-limiting.md` — designing limiters and quotas: algorithm choice, shared counters, fail-open vs fail-closed.
-- `rules/deployment.md` — shipping to a running environment: deploy vs release, rollout, feature flags, migration ordering.
+- `rules/deployment.md` — shipping to a running environment: deploy vs release, rollout, feature flags, migration ordering, artifacts, runtime hardening, infrastructure state.
 - `rules/shell-scripts.md` — shell scripts beyond a one-liner: strict mode, quoting, traps, PowerShell strictness.
 - `rules/ci-cd-security.md` — CI workflows and release automation: component pinning, token scope, untrusted PR input.
 - `rules/monorepo.md` — several packages in one repository, any ecosystem: dependency placement, package boundaries, task caching, one lockfile.
@@ -242,9 +242,6 @@ Read these only when the task matches. They live in the `rules/` folder next to 
 - `rules/privacy.md` — personal data: deletion propagation, retention windows, PII classification.
 - `rules/design-patterns.md` — choosing or reviewing design patterns, structuring modules, naming an app architecture.
 - `rules/performance.md` — making code faster: complexity class, data-structure choice, batching, memory bounds, measure first.
-- `rules/mobile.md` — Android/iOS: keystore storage, pinning, exported components, release hardening.
-- `rules/containers.md` — Docker/Compose/Kubernetes: multi-stage, non-root, secret-safe images, probes and limits.
-- `rules/iac.md` — Terraform/Pulumi/CDK: remote state, plan review, destructive applies.
 
 ---
 

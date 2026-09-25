@@ -18,4 +18,5 @@ Read this when code hashes, encrypts, signs, or generates anything security-bear
 - Keys live in a secrets manager or env, never in source, and never in the same store as the data they protect (core Security rule).
 - Store token hashes, not tokens (`rules/backend-security.md`); a leaked table then yields nothing replayable.
 - TLS is the transport floor: 1.2 minimum, certificate validation never disabled "for local dev" in shared code — gate it behind an explicit local-only flag or fix the local trust store.
-- Certificate pinning is a client-side control that needs a rotation path shipped before the pin, or renewal day becomes an outage (`rules/mobile.md`).
+- Certificate pinning is a client-side control that needs a rotation path shipped before the pin, or renewal day becomes an outage; ship a backup pin with it.
+- On a client device, secrets and tokens live in the OS credential store (keystore, keychain, credential manager) under the strictest access class the feature allows, never in preferences, a plain file or a local database. A local unlock (biometric, PIN) releases a key from that store; a boolean in app code is what a patched build flips.

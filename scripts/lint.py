@@ -68,45 +68,45 @@ def core_names_no_tool() -> list[str]:
     return found
 
 
-# CONTRIBUTING's fourth stack-agnostic test, mechanized. Stack-gated modules
-# (trigger locks the whole file to the stack) are exempt, as is dependencies.md
-# - the cross-ecosystem exemplar where package-manager names appear beside
-# their siblings by design. In every other module a blocklisted name may appear
-# only below a "## <Stack> specifics" heading, on the trigger line, or on a line
-# marked as an example (e.g. / or equivalent / a labeled "(Stripe" parenthetical).
-# A line naming two or more languages or runtimes gives the advice across
-# ecosystems, which the fourth test accepts, so it passes as well.
-# Curated like the core blocklist: a name that belongs elsewhere joins the
-# exception filters here, never waved through.
-STACK_EXEMPT = {"containers", "dependencies", "iac", "mobile", "shell-scripts"}
-LANGUAGE_NAMES = r"TypeScript|Node\.js|Python|JVM|Java|Kotlin|Ruby|PHP|Rust|\.NET"
+# CONTRIBUTING's stack-agnostic tests, mechanized over every module, trigger
+# lines included: no module is gated on a stack. A blocklisted name passes only
+# on a line marked as an example (e.g. / or equivalent), or on a line that
+# names two or more ecosystems side by side, which gives the advice across
+# ecosystems. Curated like the core blocklist: a name that belongs elsewhere
+# joins the exception filters here, never waved through.
+ECOSYSTEMS = {
+    "js": r"TypeScript|Node\.js|npm|pnpm|yarn|npx",
+    "python": r"Python|pip|PyPI|uvx|pipx",
+    "jvm": r"JVM|Java|Kotlin|Maven|Gradle",
+    "ruby": r"Ruby|RubyGems",
+    "php": r"PHP|Composer",
+    "rust": r"Rust|Cargo",
+    "go": r"Go modules",
+    "dotnet": r"\.NET|NuGet",
+}
 STACK_NAMES = (r"Next\.js|Nuxt|React|Vue|Angular|Svelte|Zustand|Pinia|TanStack|SWR|Redis|"
                r"Prisma|Drizzle|husky|lint-staged|Turborepo|Kubernetes|Dockerfile|Docker|"
-               r"Terraform|Pulumi|Vitest|Jest|Playwright|Express|Fastify|npm|pnpm|yarn|npx|"
-               r"Stripe|GitHub Actions|PostgreSQL|Postgres|SQLite|MySQL|JSX|"
-               + LANGUAGE_NAMES)
-STACK_EXAMPLE_MARKERS = re.compile(r"e\.g\.|equivalent|\(Stripe")
+               r"Terraform|Pulumi|Vitest|Jest|Playwright|Express|Fastify|Stripe|"
+               r"GitHub Actions|PostgreSQL|Postgres|SQLite|MySQL|JSX|"
+               r"TypeScript|Node\.js|npm|pnpm|yarn|npx|Python|JVM|Java|Kotlin|Ruby|PHP|Rust|\.NET")
+STACK_EXAMPLE_MARKERS = re.compile(r"e\.g\.|equivalent")
+
+
+def names_several_ecosystems(line: str) -> bool:
+    return sum(1 for names in ECOSYSTEMS.values()
+               if re.search(rf"(?<![\w.])({names})\b", line)) >= 2
 
 
 def modules_name_no_stack() -> list[str]:
     found = []
     for path in modules():
-        if pathlib.Path(path).stem in STACK_EXEMPT:
-            continue
-        in_specifics = False
         for number, raw in enumerate(read(path).splitlines(), 1):
             line = strip_comments(raw)
-            if line.startswith("## "):
-                in_specifics = line.rstrip().endswith("specifics")
-            if in_specifics or line.startswith("Read this when "):
-                continue
-            if STACK_EXAMPLE_MARKERS.search(line):
-                continue
-            if len(set(re.findall(rf"\b({LANGUAGE_NAMES})\b", line))) >= 2:
+            if STACK_EXAMPLE_MARKERS.search(line) or names_several_ecosystems(line):
                 continue
             for hit in re.findall(rf"\b({STACK_NAMES})\b", line):
-                found.append(f"{path}:{number}: {hit} is named outside a specifics "
-                             "heading or a marked example")
+                found.append(f"{path}:{number}: {hit} is named outside a marked example "
+                             "or a cross-ecosystem line")
     return found
 
 
@@ -269,7 +269,7 @@ def plugin_manifests_resolve() -> list[str]:
 GATES = [
     (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
     (f"core {CORE} names no framework, library, or non-baseline CLI", core_names_no_tool),
-    ("ungated modules name stacks only under a specifics heading or as marked examples",
+    ("modules name stacks only as marked examples or across ecosystems",
      modules_name_no_stack),
     (f"every rules module is listed in the {CORE} module index", modules_listed_in_index),
     ("every rules module opens with its trigger line", modules_open_with_trigger),

@@ -1,6 +1,6 @@
 # Performance fundamentals
 
-Read this when writing or reviewing performance-sensitive code, or when asked to make something faster — any language, any stack. Stack-specific hot paths live with their stacks: queries and indexes in `rules/database.md`, caches in `rules/caching.md`, animation in `rules/frontend-design.md`.
+Read this when writing or reviewing performance-sensitive code, or when asked to make something faster — any language, any stack. Domain-specific hot paths live in their own modules: queries and indexes in `rules/database.md`, caches in `rules/caching.md`, animation in `rules/frontend-design.md`.
 
 - Measure first: profile the real workload and name the hot spot before changing code. An optimization without a before/after number is a style change, and the bottleneck is routinely not where it was guessed to be — speed claims pass the same evidence gate as correctness claims (core Verification rule).
 - Fix the complexity class before the constants: a quadratic pair of nested loops over user-sized data outgrows any micro-tuning of its body. Replace the inner scan with a hash index built once before the loop — that is the two-line change that turns O(n²) into O(n).

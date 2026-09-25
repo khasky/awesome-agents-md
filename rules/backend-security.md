@@ -1,6 +1,6 @@
 # Backend and API security
 
-Read this when writing or reviewing server-side code: HTTP APIs, auth, database access. Scheduled and background jobs: `rules/jobs.md`.
+Read this when writing or reviewing server-side code (HTTP APIs, auth, database access) or the trust boundary between a server and the clients it ships. Scheduled and background jobs: `rules/jobs.md`.
 
 <!-- Distilled in own words from goldbergyoni/nodebestpractices (CC BY-SA 4.0), jesusprubio/strong-node (archived), ryanmcdermott/clean-code-javascript and airbnb/javascript; auth, caching, error-envelope, and runtime additions from the khasky/*-playbook suite. -->
 
@@ -37,6 +37,10 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 - Any function the client can invoke is a public endpoint, whatever the framework calls it — a route, an RPC method, a server action, a form handler: validate its input and re-authorize inside it. Middleware and route guards can be bypassed by calling the handler directly, so they never carry the only check.
 - Verify the session, never just decode it: a session read out of a cookie or token without the issuer's verification is client input, and authorization decisions call the verifying check server-side.
 - Code that holds secrets (database client, auth, payment SDK, the configuration loader) is marked server-only wherever the toolchain supports it, so importing it from client code fails the build instead of shipping. Configuration splits into a server loader holding every secret and a public loader holding only what the client bundle may carry, and data crossing to the client is plain serializable values, never a server-side object.
+- Anything shipped to users is public and extractable: a web bundle, a mobile or desktop binary, a CLI, a browser extension. It holds no key, endpoint secret or signing material; a client that needs a privileged API calls a backend that holds the credential. Client-side controls (certificate pinning, tamper and root detection, obfuscation) only raise the cost of an attack, and every security decision is re-made server-side.
+- Every entry point another app, page or process can reach validates the caller and the payload: deep links and URL handlers, exported app components, IPC and extension messages. An incoming URI or message is never authorization.
+- An embedded browser view loads only trusted origins, keeps its native bridge minimal, and never exposes a native method that takes a URL or a file path from page content.
+- Cleartext transport is off by default in clients as well as servers; an exception is per host and documented, never a blanket opt-out (`rules/crypto.md`).
 - An error raised in an async handler, callback, event emitter or stream reaches the global error handler: forward it explicitly where the framework does not await handlers, and register the runtime's unhandled-error hook. A lost rejection hangs the request or takes the process down with no log line.
 - No blocking work on the request path: synchronous file, crypto or compression calls on an event-loop runtime, or unbounded CPU work on a request thread, stall every other request. Stream large payloads instead of buffering whole files in memory.
 - Bound fan-out: no unbounded parallel map over a user-sized collection — batch or cap concurrency.

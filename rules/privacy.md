@@ -12,3 +12,4 @@ Read this when code stores, copies, or deletes personal data — user deletion, 
 - Soft delete is not deletion: `deleted_at` keeps the data. Decide per table whether soft-deleted rows get hard-purged on a schedule, and exclude them by a default scope, not per call-site.
 - Data export (portability) carries the same authorization rigor as deletion: verified identity, rate-limited, audit-logged — an export endpoint is an exfiltration endpoint with paperwork (`rules/backend-security.md`).
 - Anonymization keeps no reversible link: a mapping table back to identity is the data with extra steps. Aggregates built before deletion may stand only if the individual can't be re-derived from them.
+- Screens showing personal or secret data are excluded from screenshots and task-switcher snapshots where the platform allows it, and secrets never go to the clipboard.

@@ -1,6 +1,6 @@
 # Driving a real browser
 
-Read this when automating a live browser — Playwright, Puppeteer, Selenium, a CDP session, or a browser extension under test. The traps below produce confident wrong readings rather than errors, which is what makes them expensive.
+Read this when automating a live browser through any automation driver or a DevTools protocol session, or testing a browser extension. The traps below produce confident wrong readings rather than errors, which is what makes them expensive.
 
 - Prefer reading the DOM over reading a screenshot. An image tells you something looks wrong; a query tells you which node, which attribute and which computed value, and it is what the assertion should rest on. Keep screenshots for the human who will look at the failure.
 - Open shadow roots do not answer `document.querySelector`. A component that mounts inside one reports as absent, and "the element never mounted" is the most common false reading in this whole file. Walk into every `shadowRoot` recursively when you query from an evaluate call. Some drivers pierce open shadow DOM in their own selector engine (e.g. Playwright locators), so a driver-side selector can succeed where the in-page query failed — know which side of that boundary each line of your script runs on.
