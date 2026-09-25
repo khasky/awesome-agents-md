@@ -29,7 +29,7 @@
 - [rules/payments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/payments.md): checkout, webhook verification, idempotent fulfillment, price integrity.
 - [rules/observability.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/observability.md): structured logging, health probes, metrics, graceful shutdown, env config.
 - [rules/incident-response.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/incident-response.md): a live production incident — preserve evidence, contain, postmortem discipline.
-- [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — component pinning, token scope, untrusted PR input; GitHub Actions syntax under its own heading.
+- [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — component pinning, token scope, untrusted PR input.
 - [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit, commit-msg and pre-push gates for any hook manager: staged-set scope, time budget, secret scanning.
 - [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): several packages in one repository, any ecosystem — dependency placement, package boundaries, task caching, one lockfile.
 - [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.

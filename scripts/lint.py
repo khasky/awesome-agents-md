@@ -97,16 +97,31 @@ def names_several_ecosystems(line: str) -> bool:
                if re.search(rf"(?<![\w.])({names})\b", line)) >= 2
 
 
+def module_descriptions() -> list[tuple[str, int, str]]:
+    # Every place a module is described: its own file, its entry in the core
+    # index, and its entry in llms.txt. The core above the index has its own
+    # gate, so its lines start the count without being scanned.
+    lines = [(path, number, raw) for path in modules()
+             for number, raw in enumerate(read(path).splitlines(), 1)]
+    core = read(CORE).splitlines()
+    index_start = next((i for i, line in enumerate(core) if line.startswith(INDEX_HEADING)),
+                       len(core))
+    lines += [(CORE, number, raw)
+              for number, raw in enumerate(core[index_start:], index_start + 1)]
+    lines += [("llms.txt", number, raw)
+              for number, raw in enumerate(read("llms.txt").splitlines(), 1)]
+    return lines
+
+
 def modules_name_no_stack() -> list[str]:
     found = []
-    for path in modules():
-        for number, raw in enumerate(read(path).splitlines(), 1):
-            line = strip_comments(raw)
-            if STACK_EXAMPLE_MARKERS.search(line) or names_several_ecosystems(line):
-                continue
-            for hit in re.findall(rf"\b({STACK_NAMES})\b", line):
-                found.append(f"{path}:{number}: {hit} is named outside a marked example "
-                             "or a cross-ecosystem line")
+    for path, number, raw in module_descriptions():
+        line = strip_comments(raw)
+        if STACK_EXAMPLE_MARKERS.search(line) or names_several_ecosystems(line):
+            continue
+        for hit in re.findall(rf"\b({STACK_NAMES})\b", line):
+            found.append(f"{path}:{number}: {hit} is named outside a marked example "
+                         "or a cross-ecosystem line")
     return found
 
 
