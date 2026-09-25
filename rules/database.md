@@ -1,6 +1,6 @@
 # Database and ORM
 
-Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples are PostgreSQL and the ORM examples Prisma/Drizzle.
+Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples are PostgreSQL.
 
 <!-- Distilled from the Twelve-Factor App (config, backing services), Prisma and Drizzle docs, use-the-index-luke.com, the expand/contract migration pattern, GitHub's replication-lag throttling practice (freno), the sqlcheck SQL anti-pattern catalog (jarulraj), and Azure's SaaS tenancy pattern matrix; cross-checked against production reference implementations. -->
 
@@ -28,8 +28,3 @@ Read this when writing schema, migrations, queries, or data-access code — raw 
 - Run migrations as a dedicated release phase before the new code deploys — not in the serving container's entrypoint and not lazily on first request; rollout ordering and one-version-back compatibility live in `rules/deployment.md`.
 - Type JSON columns to a named shape and write through a builder, not untyped blobs. Give URL-exposed rows an opaque public id (`cuid`/`uuid`) so the sequential primary key never leaks (`rules/backend-security.md`).
 - Gate query logging by env (`error`/`warn` in dev, `error` only in prod); never log query parameters that carry PII or secrets.
-
-## JS/TS ORM specifics
-
-- Dev hot-reload re-executes modules: cache the client on `globalThis` guarded by `NODE_ENV` so each reload reuses one pool instead of opening another.
-- Prisma: `migrate deploy` in production, `db push` local-only; eager-load with `include` (Prisma) or `with` (Drizzle) to kill an N+1.

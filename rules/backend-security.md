@@ -4,8 +4,6 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 
 <!-- Distilled in own words from goldbergyoni/nodebestpractices (CC BY-SA 4.0), jesusprubio/strong-node (archived), ryanmcdermott/clean-code-javascript and airbnb/javascript; auth, caching, error-envelope, and runtime additions from the khasky/*-playbook suite. -->
 
-## Any language
-
 - Error responses: never send `err.message`, stack traces, or internal details to the client — log them server-side, return a generic message (with a correlation ID if the stack has one).
 - One global error handler maps domain errors to statuses — services never speak HTTP codes. Stable error JSON (`code`, `message`, `request_id`); pick 400 vs 422 once per API.
 - Crash policy: operational errors (bad input, timeouts, unavailable dependencies) → handle, respond, stay up. Programmer errors (unknown state) → log and exit; let the runtime restart the process. Don't catch-all-and-continue, and don't crash on malformed user input.
@@ -36,18 +34,15 @@ Read this when writing or reviewing server-side code: HTTP APIs, auth, database 
 - Bound every input dimension explicitly — body size, upload size, field count, array length, JSON nesting depth, multipart parts. A parser with no limit is a denial-of-service primitive that no rate limiter catches.
 - Validate uploads by content, not by filename or the client's `Content-Type`: sniff magic bytes, allowlist only the types actually handled, assign a server-side name, store outside the web root or in object storage, and serve back with a fixed content type and `Content-Disposition: attachment`.
 - Log hygiene: raw user input never enters logs unsanitized (log injection); secrets and PII never at all. Destination, format, and redaction list are one deployment-level decision, never a hardcoded file transport in a handler (`rules/observability.md`).
+- Any function the client can invoke is a public endpoint, whatever the framework calls it — a route, an RPC method, a server action, a form handler: validate its input and re-authorize inside it. Middleware and route guards can be bypassed by calling the handler directly, so they never carry the only check.
+- Verify the session, never just decode it: a session read out of a cookie or token without the issuer's verification is client input, and authorization decisions call the verifying check server-side.
+- Code that holds secrets (database client, auth, payment SDK, the configuration loader) is marked server-only wherever the toolchain supports it, so importing it from client code fails the build instead of shipping. Configuration splits into a server loader holding every secret and a public loader holding only what the client bundle may carry, and data crossing to the client is plain serializable values, never a server-side object.
+- An error raised in an async handler, callback, event emitter or stream reaches the global error handler: forward it explicitly where the framework does not await handlers, and register the runtime's unhandled-error hook. A lost rejection hangs the request or takes the process down with no log line.
+- No blocking work on the request path: synchronous file, crypto or compression calls on an event-loop runtime, or unbounded CPU work on a request thread, stall every other request. Stream large payloads instead of buffering whole files in memory.
+- Bound fan-out: no unbounded parallel map over a user-sized collection — batch or cap concurrency.
+- Shelling out passes an argument vector to the process API with no shell in between; input is never interpolated into a command string.
 - Event/message payloads are objects, not raw values — extensible without touching every handler.
 - Keep server processes stateless: no module-level caches, sessions, or uploads held in process memory; externalize to a store. Anything that holds per-user data — a store, a query client, an authenticated API client, a render cache — is created in request scope, since a module-level instance on a server shared by requests hands one user's data to the next request. The one narrow exception — a small, bounded, safe-to-lose in-process cache — is defined in `rules/caching.md`.
 - Cache keys encode scope — tenant, user, locale, schema version; permission- or billing-sensitive data never under a shared key. Repeated from `rules/caching.md` because a mis-scoped key is a cross-tenant data leak, not a staleness bug.
 - TTL is a guardrail, not invalidation: name the domain event that makes a cached value wrong and invalidate on it (canonical caching rules: `rules/caching.md`).
 - Calling external APIs: never retry 4xx (fix input or credentials); retry 429 per `Retry-After` with jitter, 5xx with capped exponential backoff (3–5 attempts); state-mutating retries need an idempotency key; mid-stream (SSE) errors are terminal — restart, don't resume; log the provider's request ID. This is the canonical outbound-retry contract — `rules/resilience.md` and `rules/messaging.md` defer here.
-
-## Node.js specifics
-
-- `return await` inside try blocks — a bare `return promise` skips the surrounding catch and drops the function from stack traces.
-- try/catch does not catch EventEmitter or stream errors: subscribe to `'error'`; register `process.on('unhandledRejection')`; async event handlers need `{ captureRejections: true }`.
-- Express: an async route handler that throws or rejects never reaches the error middleware unless errors are forwarded (`express-async-errors` or an async wrapper) — otherwise the request hangs. Fastify and most modern frameworks await handlers natively.
-- No sync calls in request paths (`fs.*Sync`, `crypto.pbkdf2Sync`, `zlib.*Sync`) — they block the event loop; stream large payloads instead of buffering whole files in memory.
-- Bound fan-out: no `Promise.all` over an unbounded collection — batch or cap concurrency.
-- Shelling out: `child_process.execFile` over `exec` — no shell expansion; never interpolate input into a command string.
-- Builtins via the `node:` prefix (`import http from "node:http"`) — kills builtin-name typosquatting.

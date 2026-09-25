@@ -1,6 +1,6 @@
 # Caching
 
-Read this when adding or reviewing a cache — in-process, a shared cache server, or a cached computation. The rules hold for any cache; the Redis commands sit under their own heading. HTTP/CDN response caching lives in `rules/public-api-design.md`.
+Read this when adding or reviewing a cache — in-process, a shared cache server, or a cached computation. The rules hold for any cache. HTTP/CDN response caching lives in `rules/public-api-design.md`.
 
 <!-- Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice. -->
 
@@ -12,12 +12,8 @@ Read this when adding or reviewing a cache — in-process, a shared cache server
 - The cache is disposable: anything that can't be rebuilt from the source of truth doesn't live only in the cache. An ephemeral cache server as the primary store for real state is an outage on a timer.
 - Stampede protection on expensive keys: single-flight/lock so one expiry triggers one rebuild, or jittered TTLs so a cohort of keys doesn't expire in the same second.
 - A hot key melts one shard while the cluster idles: shard the key (bucket suffix, aggregated on read) or put a short-TTL in-process cache in front of it.
+- Application code never enumerates the keyspace: a match over every key is linear in the whole store and blocks a single-threaded server. Operations tooling uses the store's incremental scan, application lookups a maintained index structure.
+- Model the value for its access pattern: a structure with independently addressable fields when fields are read or written independently, a serialized blob only when the value is always read whole.
 - Pipeline or batch serial round-trips; a per-item network round-trip in a loop is the cache's own N+1.
 - An in-process cache is per-instance state: N instances hold N divergent copies and a deploy wipes them all. Anything needing cross-instance coherence goes to the shared cache; in-process caches stay small, bounded (LRU with a max size), and safe to lose (`rules/backend-security.md` stateless-process rule).
 - Expose hit/miss counters per cache (`rules/observability.md`): an unmeasured cache can't justify its complexity, and a 5% hit rate is a bug that looks like a feature.
-
-## Redis specifics
-
-- Never `KEYS` (or an unbounded `SMEMBERS`) in application code — `SCAN` for ops tooling, a maintained index structure for app lookups. `KEYS` is O(N) over the whole keyspace and blocks the server.
-- The eviction knobs are `maxmemory` plus a policy (`allkeys-lru` for a pure cache, `volatile-ttl` when only some keys may go); batch with `MGET`/`MSET` or a pipeline instead of serial `GET`s in a loop.
-- Model values for the access pattern: a HASH when fields are read/written independently, a serialized blob only when the value is always read whole.

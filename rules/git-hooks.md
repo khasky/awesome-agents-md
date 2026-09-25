@@ -1,6 +1,6 @@
 # Git hooks and pre-commit gates
 
-Read this when setting up or changing pre-commit, commit-msg or pre-push automation, with any hook manager. The gate rules hold everywhere; the husky + lint-staged commands sit under their own heading.
+Read this when setting up or changing pre-commit, commit-msg or pre-push automation, with any hook manager.
 
 <!-- Distilled from the husky and lint-staged docs and pre-commit-hook practice; cross-checked against production reference implementations. -->
 
@@ -14,8 +14,3 @@ Read this when setting up or changing pre-commit, commit-msg or pre-push automat
 - Keep hooks deterministic and side-effect-free — no network calls, no writes outside the staged files; a flaky hook trains developers to bypass it.
 - CI re-runs the same gates: hooks are a fast local shortcut, never the source of truth, since `--no-verify` and clients that bypass the hook manager skip them.
 - Never weaken a shared hook to fix a local-only problem (core Boundaries rule) — fix your environment instead.
-
-## husky + lint-staged specifics
-
-- lint-staged is what scopes the pre-commit to the staged set; `prepare: husky` in `package.json` installs the hooks on dependency install.
-- Zero tolerance in the lint-staged config: `eslint --max-warnings 0`, `prettier --write` or `--check`.

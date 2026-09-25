@@ -1,14 +1,12 @@
-# Monorepo workspaces
+# Monorepos
 
-Read this when working in a JS/TS workspace monorepo: pnpm/npm workspaces, Turborepo, Nx.
+Read this when working in a repository that holds several packages, modules or services built together, in any ecosystem (JS/TS workspaces, Cargo workspaces, Go workspaces, Gradle multi-project, uv workspaces, or equivalent).
 
-<!-- Distilled from khasky/monorepo-architecture-playbook. -->
-
-- Install a dependency in the package that imports it, never in the root `package.json` — the root holds repo-level tooling only.
-- Import other workspace packages through their public entry (`@scope/pkg`), never deep paths into their `src/` internals.
+- Declare a dependency in the package that uses it, never at the root; the root holds repository-level tooling only.
+- Import another package through its public entry point, never by a deep path into its internals.
 - No new `shared`/`common`/`utils` dumping-ground packages: extend the package that owns the domain, or propose a named, scoped package.
-- Run tasks through the repo's orchestrator (`turbo run`, `nx affected`, workspace scripts) so caching and dependency order apply — don't hand-run each package.
-- Repo uses Changesets → a change to any published package needs a changeset file in the same commit; without one the release silently skips it.
-- Mark side-effecting tasks (`db:migrate`, `db:seed`, deploys) `cache: false` in the orchestrator, and add env files (`**/.env.*local`) to `globalDependencies` so an env change busts the cache instead of serving a stale build.
-- Expose operations behind named workspace scripts (`docker:up`, `db:migrate`, `infra:deploy`) as one discoverable entrypoint, instead of contributors memorizing raw docker/prisma/cdk invocations.
-- One lockfile at the repo root covering the whole workspace, never one per package — a per-package lockfile resolves that package's tree in isolation and silently diverges from what the root install produces (`rules/dependencies.md`).
+- Run tasks through the repository's orchestrator or workspace commands so caching and dependency order apply; don't hand-run each package.
+- A change to a published package carries the repository's release-note record (a changeset file, a changelog entry) in the same commit; the release tooling skips a change that has none.
+- Side-effecting tasks (migrations, seeds, deploys) are never cached, and environment files are part of the task cache key, so an environment change rebuilds instead of serving a stale result.
+- Expose operations as named workspace tasks (`db:migrate`, `infra:deploy`), one discoverable entry point instead of raw tool invocations contributors must memorize.
+- One lockfile at the repository root covering the whole workspace, never one per package: a per-package lockfile resolves that package's tree in isolation and silently diverges from what the root install produces (`rules/dependencies.md`).
