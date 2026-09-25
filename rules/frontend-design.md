@@ -25,7 +25,7 @@ Read this when building, styling, or reviewing web UI: pages, components, dashbo
 - `dvh` over `vh` for full-height layouts.
 - Forms: never block paste; correct `type`/`inputmode` per field; labels clickable; validate on blur, not keystroke; errors inline naming the fix, focus the first invalid field; submit stays enabled until the request starts, then shows progress; warn before navigating away with unsaved changes.
 - Destructive actions need confirm or undo — never immediate.
-- URL reflects state: filters, tabs, pagination deep-linkable; back restores scroll and state (canon: the ownership ladder in `rules/state-management.md`, repeated here because it is a design decision too).
+- URL reflects state: filters, tabs, pagination deep-linkable; back restores scroll and state.
 - Content resilience: design for short, average, and very long content; handle overflow with the CSS properties (`text-overflow`, `line-clamp`, `overflow-wrap`); flex children need `min-width: 0`; handle empty states.
 - Images get explicit width/height; reserve layout space for any injected UI (banners, consent bars, embeds) — nothing shifts content when it loads. Lazy-load below the fold; virtualize lists >50 items.
 - Never trigger browser permission prompts (notifications, geolocation) on page load — request after a user action that shows the value.

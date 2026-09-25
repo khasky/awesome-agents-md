@@ -19,7 +19,6 @@
 - [rules/evidence-gates.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/evidence-gates.md): turning a verification rule into an enforced gate — run-bound receipts, placeholder rejection, unavailable-not-pass.
 - [rules/browser-automation.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/browser-automation.md): driving a live browser — shadow DOM, trusted events, waits, real sessions, extension harnesses.
 - [rules/frontend-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/frontend-design.md): web UI craft, accessibility numbers, motion, animation performance, microcopy.
-- [rules/state-management.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/state-management.md): client-side state — ownership ladder, persistence hygiene, SSR store lifetimes; JS/TS library APIs under their own heading.
 - [rules/web-seo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/web-seo.md): indexability, head tags, structured data, Core Web Vitals.
 - [rules/backend-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/backend-security.md): server and API code — auth, authorization, errors, queries, Node pitfalls.
 - [rules/crypto.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/crypto.md): hashing, encryption, tokens, JWT verification, key rotation.
