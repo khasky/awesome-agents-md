@@ -2,12 +2,14 @@
 
 Read this when building async messaging: message queues, event streams, pub/sub, or inbound/outbound webhooks.
 
-<!-- Distilled from Enterprise Integration Patterns (Hohpe & Woolf), microservices.io (Transactional Outbox, Idempotent Consumer), Stripe's webhook/signing docs, and at-least-once delivery practice; cross-checked against production reference implementations. -->
+<!-- Distilled from Enterprise Integration Patterns (Hohpe & Woolf), microservices.io (Transactional Outbox, Idempotent Consumer), Stripe's webhook/signing docs, and at-least-once delivery practice; cross-checked against production reference implementations; consumer error classification from khasky/messaging-and-async-playbook. -->
 
 - Never publish to a broker inside the request path or transaction: write the domain change and an outbox row in the same DB transaction, then a separate relay reads the outbox and publishes. The commit is the single source of truth — the message can't exist without the state change or vice versa.
-- The relay drains the outbox with `SELECT … FOR UPDATE SKIP LOCKED` plus a `dispatched` flag, so multiple worker instances poll concurrently without double-sending.
+- The relay drains the outbox with `SELECT ... FOR UPDATE SKIP LOCKED` plus a `dispatched` flag, so multiple worker instances poll concurrently without double-sending.
 - Delivery is at-least-once, so consumers must be idempotent: carry a stable event id, dedupe on it (unique constraint or seen-set), and make the handler safe to run twice. Derive queue job ids deterministically (`endpointId:eventId`) so a re-enqueue can't double-deliver.
-- Consumer retry policy: bounded attempts, exponential backoff with jitter, throw to trigger retry; after max attempts move the message to a dead-letter queue and record why. Persist one row per delivery attempt for visibility. A consumer retry budget is not an outbound HTTP retry budget — the broker already redelivers, so counting both without noticing multiplies the attempts (`rules/backend-security.md` for the outbound numbers).
+- Consumer retry policy: bounded attempts, exponential backoff with jitter, throw to trigger retry; after max attempts move the message to a dead-letter queue and record why.
+- Persist one row per delivery attempt for visibility.
+- A consumer retry budget is not an outbound HTTP retry budget — the broker already redelivers, so counting both without noticing multiplies the attempts (`rules/backend-security.md` for the outbound numbers).
 - Classify a consumer failure before retrying it: timeouts, 5xx responses and lock contention are retriable; validation failures and business-rule rejections are terminal and go straight to the dead-letter queue with the reason, instead of spending the retry budget on a message that can never succeed.
 - An event is a past-tense fact that any number of consumers, or none, may handle (`OrderPlaced`); a command asks one owner to act (`SendInvoice`) and needs that owner to exist and succeed. Decide which one a message is before naming it: a command broadcast as an event has nothing enforcing that anyone handled it.
 - Inbound webhooks you receive: verify the signature against the raw request body before parsing, reject timestamps outside a tolerance window (replay defense), and respond fast — do the work async. Return 2xx only once the event is durably accepted; return 5xx to make the sender retry (`rules/payments.md` for the payment specifics).

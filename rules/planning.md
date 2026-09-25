@@ -1,13 +1,14 @@
 # Planning before implementation
 
-Read this when the task is to produce a plan or spec rather than the change itself — a design handed to someone else, an approach agreed before editing, or an open-ended request that has to be pinned down first.
+Read this when the task is to produce a plan or spec rather than the change itself — a design handed to someone else, an approach agreed before editing, or an open-ended request that has to be pinned down first. Also when writing or updating an architecture decision record.
 
-<!-- Distilled from the plan-mode instructions in a public collection of Codex system prompts, and from spec-handoff practice. -->
+<!-- Distilled from the plan-mode instructions in a public collection of Codex system prompts, and from spec-handoff practice; decision records from Michael Nygard's ADR format. -->
 
 - The plan is finished when it is decision complete: whoever implements it — another person, another agent, you tomorrow — makes no further decisions. Every open choice left in the plan gets made twice, differently.
 - Planning is read-only. Searching, reading, static inspection, dry runs, and builds or tests that touch only caches and generated output refine a plan; editing files, running a formatter or codegen that rewrites them, or applying a migration is executing it. Asked mid-planning for something that would execute the plan, plan that work instead — unless the user is switching the task to implementation, which their next instruction, not your reading of it, decides.
 - Explore before asking, always in that order: run at least one targeted pass over the repository — entry points, configuration, schemas, call sites — before the first question. A question the repository answers spends the user's attention on something you could have read.
-- Two kinds of unknowns, handled differently. A discoverable fact (where a symbol lives, which version is pinned, what the current behavior is) is researched, never asked; ask only when several candidates survive the search, and then present them with a recommendation. A preference or tradeoff (scope, priority, which of two acceptable designs) cannot be derived from any file — ask it early, before the plan sets around a guess.
+- Two kinds of unknowns get handled differently: a discoverable fact (where a symbol lives, which version is pinned, what the current behavior is) is researched, never asked; ask only when several candidates survive the search, and then present them with a recommendation.
+- A preference or tradeoff (scope, priority, which of two acceptable designs) cannot be derived from any file — ask it early, before the plan sets around a guess.
 - Every question earns its place by changing the plan, locking an assumption, or choosing between real tradeoffs. Offer 2–4 mutually exclusive options plus a recommended default, and no filler option nobody would pick.
 - An unanswered optional question resolves to your recommended default, recorded as an explicit assumption in the plan. Do not stall on it, and do not silently drop the choice.
 - Plan shape: a title, then three to five short sections — summary, the changes grouped by subsystem or behavior, the test plan, the assumptions. Add a scope section only where a boundary is genuinely easy to cross by mistake.

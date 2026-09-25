@@ -1,8 +1,8 @@
 # Personal data and retention
 
-Read this when code stores, copies, or deletes personal data — user deletion, retention policies, PII handling, data export. Legal scope is the user's call; these are the engineering invariants under any privacy regime.
+Read this when code stores, copies, or deletes personal data (user deletion, retention policies, PII handling, data export), or when adding analytics, tracking scripts, ad pixels, or a session-recording or error-reporting SDK to a client. The engineering invariants hold under any privacy regime; a rule that depends on a jurisdiction names it, and the legal call stays the user's.
 
-<!-- Distilled from GDPR/CCPA engineering practice: deletion propagation, retention enforcement, data mapping. -->
+<!-- Distilled from GDPR/CCPA engineering practice: deletion propagation, retention enforcement, data mapping; consent from the ePrivacy Directive, the Planet49 ruling and EDPB guidance; session-replay masking from vendor privacy documentation. -->
 
 - Deletion propagates to every copy or it isn't deletion: primary rows, caches, search indexes, analytics/warehouse, queues and DLQs, logs, and backups each need an explicit answer — delete now, expire by retention, or crypto-shred (destroy a per-user key). "Deleted from the users table" alone is a compliance bug (`rules/caching.md`, `rules/messaging.md`).
 - Backups are append-only by design, so deletion there is policy, not a row operation: bounded retention plus re-deletion after any restore (replay the deletion log), or per-user encryption with key destruction.
@@ -12,6 +12,6 @@ Read this when code stores, copies, or deletes personal data — user deletion, 
 - Soft delete is not deletion: `deleted_at` keeps the data. Decide per table whether soft-deleted rows get hard-purged on a schedule, and exclude them by a default scope, not per call-site.
 - Data export (portability) carries the same authorization rigor as deletion: verified identity, rate-limited, audit-logged — an export endpoint is an exfiltration endpoint with paperwork (`rules/backend-security.md`).
 - Anonymization keeps no reversible link: a mapping table back to identity is the data with extra steps. Aggregates built before deletion may stand only if the individual can't be re-derived from them.
-- Screens showing personal or secret data are excluded from screenshots and task-switcher snapshots where the platform allows it, and secrets never go to the clipboard.
+- Screens showing personal or secret data are excluded from screenshots and task-switcher snapshots where the platform allows it, and secrets never go to the clipboard: a snapshot outlives the screen in galleries and backups, and other apps can read the clipboard.
 - Where consent law applies (the EU and UK ePrivacy rules and their equivalents), non-essential trackers (analytics, ad pixels, heatmaps, embedded social widgets) load only after an explicit opt-in per purpose, never on page load. A pre-ticked box, an accept-all that bundles advertising with strictly necessary storage, or a cookie wall is not consent, and withdrawing consent is as easy as giving it.
 - A session-replay, heatmap or error-reporting SDK can capture page text and form input: check its masking defaults before enabling it, never switch off mask-all without field-level masking for passwords, payment data and free text, and send the vendor a pseudonymous id instead of an email or a name.

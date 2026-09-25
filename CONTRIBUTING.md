@@ -9,14 +9,21 @@ One question decides admission and retention: **would an agent get this wrong wi
 
 The same test prunes. When a model generation stops making a mistake, the line that prevented it becomes a deletion candidate.
 
+Some lines exist only to compensate for a model weakness: push harder to use a tool, keep going instead of stopping early, verify again before claiming done. They cost the most when the weakness is gone, because a newer model over-applies them: an instruction to be thorough turns into over-triggering, and a carried-over verification instruction into over-verification that adds tokens and latency. Re-test these lines against each new model generation the ruleset supports, and cut or narrow the ones the model no longer needs. The ruleset serves several agents at once, so a line stays while any supported model still needs it.
+
 ## Where a rule goes
 
-`AGENTS.md` is the always-loaded core and is capped at **200 instruction lines** — everything above the module index, which the gate in `scripts/lint.py` counts. That cap is the whole design: frontier models follow roughly 150–200 instructions reliably ([IFScale](https://arxiv.org/abs/2507.11538)) and the agent's own system prompt already spends some of them. Adding to the core means removing from the core.
+`AGENTS.md` is the always-loaded core and carries two caps, both enforced by `scripts/lint.py`:
+
+- **200 instruction lines** above the module index. Frontier models follow roughly 150–200 instructions reliably ([IFScale](https://arxiv.org/abs/2507.11538)), the agent's own system prompt already spends some of them, and Claude Code's guidance targets the same figure per file.
+- **32 KiB for the whole file**, index included. Codex reads at most 32 KiB of project instructions by default and silently truncates the rest ([Codex AGENTS.md docs](https://developers.openai.com/codex/guides/agents-md)), so anything past that byte never reaches it. The gate counts the file with CRLF line endings, the size a Windows checkout reads. Leave headroom: a project's own `AGENTS.md` shares the same budget.
+
+Adding to the core means removing from the core. A long line counts once toward the line cap and in full toward the byte cap, so moving words into fewer lines saves nothing.
 
 Everything conditional goes to `rules/` — a module is read only when the task matches, so it costs nothing until it is needed. A new module needs:
 
 1. The file, `rules/<topic>.md`.
-2. One entry in the **On-demand rule modules** list at the end of `AGENTS.md`, naming the trigger ("Read this when …"). CI fails if a module is unlisted or a listed module is missing.
+2. One entry in the **On-demand rule modules** list at the end of `AGENTS.md`, naming the trigger ("Read this when ..."). CI fails if a module is unlisted or a listed module is missing.
 3. One entry in `llms.txt`.
 
 One module per bullet in the core index, in theme order. The index sits below the cap's cut-off, so a new module costs a line there and nothing from the instruction budget.
@@ -33,7 +40,14 @@ Read this when <the exact trigger — a task type, not a technology fan club>.
 - <one rule per bullet, imperative, specific enough to act on>
 ```
 
+- The trigger names what the agent can see at the start of the task: the kind of task, the files it touches, the command it is about to run. A module loads only when the agent decides to open it, so a trigger phrased around a concept the agent never names at that moment ("coupling", "a decision record") never fires. When a module gains a rule, re-read the trigger and widen it if the new rule fires on a task the trigger does not name.
 - Every bullet states a decision, a threshold, or a boundary. "Be careful with X" is not a rule; "X is atomic — a read, then a decision, then a write loses to parallel requests" is.
+- Every bullet carries its reason in a clause: the failure it prevents. A model generalizes from the reason to cases the rule never listed, and a rule without one is followed only where its words match.
+- A prohibition names what to do instead, where an alternative exists: "never parse a completion with a regex; validate against a schema" steers, "never parse a completion with a regex" leaves the agent guessing.
+- State the outcome and the check that proves it, not the procedure. Numbered steps belong only where the order itself matters; a step list for a task the model can plan narrows its search and reads as mechanical.
+- One rule per bullet. A bullet that needs a third sentence to state its rule is two rules.
+- Plain register, no emphasis. Current models follow system and project instructions closely, and CRITICAL, MUST or a line in capitals makes them over-apply that rule everywhere ([Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)). Emphasis goes on one line at most, and only after the agent was seen skipping that line; emphasis spread over many lines marks none of them.
+- No rule contradicts another, in its own module or elsewhere: a model given two conflicting rules follows one of them at random ([Claude Code memory docs](https://code.claude.com/docs/en/memory)), and a model that follows instructions literally is hurt more ([GPT-5 prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide)). Before adding a rule, search `rules/` and the core for rules it could collide with; where two apply to the same case, the narrower rule names the exception or the precedence itself.
 - Cross-reference sibling modules inline as `` (`rules/<sibling>.md`) `` instead of repeating their content. Repeat a rule across modules only when its absence at that moment would cause the mistake, and say why it is repeated.
 - Cite where non-obvious material came from in the HTML comment under the heading. Distil in your own words; do not paste licensed text. The comment is optional — a module written from first principles has nothing to cite; never invent a source to fill the slot.
 
@@ -64,7 +78,8 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 
 `python3 scripts/lint.py` runs every check in a few seconds — CI runs that same script, so nothing can pass here and fail there. `python3 scripts/install-hooks.py` installs it as a `pre-commit` hook once per clone; a machine without a Python interpreter skips the hook and relies on CI.
 
-- `AGENTS.md` ≤ 200 lines above the module index.
+- `AGENTS.md` ≤ 200 lines above the module index, and ≤ 32 KiB as a whole file.
+- No ellipsis glyph (U+2026) in any tracked Markdown file; three plain dots stand in for it.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist, so a tool name that belongs inside a presence check is added to the exception list in `scripts/lint.py`, never waved through.
 - Modules name blocklisted stacks only on a line marked as an example or on a line that names two or more ecosystems side by side — the same curated-blocklist approach, applied to every line of `rules/`, triggers included, and to each module's entry in the core index and in `llms.txt`.
 - Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.

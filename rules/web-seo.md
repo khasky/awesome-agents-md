@@ -2,7 +2,7 @@
 
 Read this when building, modifying, or auditing public-facing web pages.
 
-<!-- Distilled from AgriciDaniel/claude-seo, nowork-studio/NotFair, coreyhaines31/marketingskills, seb1n seo-optimization; corrected against current guidance (INP replaced FID in 2024; keyword-density advice dropped as dated). hreflang, redirect, and interstitial rules from khasky/marketing-and-seo-playbook. -->
+<!-- Distilled from AgriciDaniel/claude-seo, nowork-studio/NotFair, coreyhaines31/marketingskills, seb1n seo-optimization; corrected against current guidance (INP replaced FID in 2024; keyword-density advice dropped as dated). hreflang, redirect, and interstitial rules from khasky/marketing-and-seo-playbook; robots.txt, noindex and faceted navigation from Google Search Central documentation. -->
 
 ## Indexability first
 
@@ -12,9 +12,10 @@ Read this when building, modifying, or auditing public-facing web pages.
 
 ## Head
 
-- Exactly one `<title>` per page, ~50–60 chars, unique site-wide; `<meta name="description">` ~150–160 chars, unique. Length bands are SERP-display heuristics — overruns are warnings, not errors. No meta keywords tag (dead).
+- Exactly one `<title>` per page, ~50–60 chars, unique site-wide; `<meta name="description">` ~150–160 chars, unique. Length bands are SERP-display heuristics — overruns are warnings, not errors.
+- No meta keywords tag (dead).
 - `<meta charset="utf-8">` early in `<head>`; `<meta name="viewport" content="width=device-width, initial-scale=1">`; `<html lang>` with a valid BCP-47 tag.
-- Self-referencing `<link rel="canonical">` on every indexable page.
+- Self-referencing `<link rel="canonical">` on every indexable page, so URL variants don't split ranking signals as duplicates.
 - Shareable pages get `og:title`, `og:description`, `og:image` (1200×630) plus Twitter Card tags.
 - No synchronous render-blocking `<script>` in `<head>` — use `defer`/`async`/`type="module"`; set `font-display` on webfonts.
 
@@ -22,8 +23,10 @@ Read this when building, modifying, or auditing public-facing web pages.
 
 - Exactly one H1; H2–H4 nest without skipping levels; headings describe content, not keyword strings.
 - Descriptive anchor text (never "click here"); no orphan pages — everything reachable from nav or a hub. Prefer subfolders over subdomains (authority consolidates).
-- JSON-LD in `<script type="application/ld+json">` matched to page type: Organization/WebSite sitewide; Article, Product, FAQPage, BreadcrumbList where applicable. Mark up only content visible on the page; validate it.
-- Write for people: no keyword stuffing, doorway/thin templated pages, hidden text, or separate AI-targeted content. For AI answers, lead sections with a direct 40–60-word answer.
+- JSON-LD in `<script type="application/ld+json">` matched to page type: Organization/WebSite sitewide; Article, Product, FAQPage, BreadcrumbList where applicable.
+- Mark up only content visible on the page and validate it — mismatched markup risks a structured-data penalty from the search engine.
+- Write for people: no keyword stuffing, doorway/thin templated pages, hidden text, or separate AI-targeted content.
+- For AI answers, lead sections with a direct 40–60-word answer.
 
 ## Images
 
@@ -34,7 +37,8 @@ Read this when building, modifying, or auditing public-facing web pages.
 ## Site level
 
 - XML sitemap of canonical indexable URLs only, referenced from robots.txt; `lastmod` reflects real content changes.
-- Never block CSS/JS assets needed for rendering. AI-crawler policy (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) is an explicit decision — blocking prevents AI citation.
+- Never block CSS/JS assets needed for rendering — a crawler that can't render the page can't evaluate it as users see it.
+- AI-crawler policy (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) is an explicit decision — blocking prevents AI citation.
 - Language/region variants: `hreflang` pairs plus `x-default`; every variant lists the full set including itself.
 - Permanent moves get a 301 (never 302); no redirect chains or loops — update internal links to the final URL.
 - No full-screen interstitials or overlays covering main content on first paint — mobile ranking penalty; show dialogs after interaction.

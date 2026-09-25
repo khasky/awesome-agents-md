@@ -2,7 +2,7 @@
 
 Read this when designing or evolving an HTTP API that external clients consume: versioning, pagination, idempotency, concurrency, deprecation. Pairs with `rules/api-contracts.md` (schemas and generated clients).
 
-<!-- Distilled from Stripe's API design, Google AIP, RFC 9457 (Problem Details), RFC 8594 (Sunset), RFC 7232 (conditional requests), RFC 9111 (HTTP caching), and the IETF RateLimit-header draft; cross-checked against production reference implementations. -->
+<!-- Distilled from Stripe's API design, Google AIP, RFC 9457 (Problem Details), RFC 8594 (Sunset), RFC 7232 (conditional requests), RFC 9111 (HTTP caching), and the IETF RateLimit-header draft; cross-checked against production reference implementations; long-running operations from the Microsoft REST API Guidelines; header naming from RFC 6648. -->
 
 - Version in the URL path (`/v1`, `/v2`) as independent route trees with their own schemas. Additive changes go in place; a breaking change only ever creates a new version — an existing version's response shape never changes under clients.
 - Publish a breaking-vs-non-breaking taxonomy so consumers know what's safe: adding a field or optional param is non-breaking; removing/renaming a field, tightening validation, or changing a type is breaking.
@@ -16,5 +16,6 @@ Read this when designing or evolving an HTTP API that external clients consume: 
 - Deprecation lifecycle by header: `Deprecation` + `Sunset` + `Link rel="successor-version"`, a minimum removal window (commonly 12 months), then `410 Gone`. Announce; don't silently break.
 - Authentication and scopes are part of the published contract: name the scheme (API key, OAuth 2 bearer, mTLS), define scopes as verbs over resource families, and on denial return 403 naming the scope that was missing. A credential that can do everything is not a scope model (`rules/backend-security.md`).
 - Outbound webhooks are a public surface of this API, not an implementation detail — subscription management, signed payloads, redelivery, and payload versioning carry the same contract discipline as endpoints (`rules/messaging.md`).
-- Every resource response carries a type discriminator and a stable, sortable id (prefixed ULID / `obj_…`) so clients can route polymorphic payloads.
+- Every resource response carries a type discriminator and a stable, sortable id (prefixed ULID / `obj_...`) so clients can route polymorphic payloads.
 - Work that outlives the request returns 202 with an operation resource the client polls (a status URL in the response, a `Retry-After` hint) until it reaches a terminal state, in the same envelope, id scheme and error shape as every other resource. One operations endpoint serves the whole API: no bespoke status shape per feature, and no connection held open in hope.
+- A new custom header or parameter gets a plain, specific name without an `X-` prefix (RFC 6648): the prefix never comes off once a client depends on it. Existing `X-` names stay as they are.

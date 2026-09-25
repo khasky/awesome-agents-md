@@ -1,6 +1,8 @@
 # Performance fundamentals
 
-Read this when writing or reviewing performance-sensitive code, or when asked to make something faster — any language, any stack. Domain-specific hot paths live in their own modules: queries and indexes in `rules/database.md`, caches in `rules/caching.md`, animation in `rules/frontend-design.md`.
+Read this when writing or reviewing performance-sensitive code, or when asked to make something faster or to explain rising latency — any language, any stack. Domain-specific hot paths live in their own modules: queries and indexes in `rules/database.md`, caches in `rules/caching.md`, animation in `rules/frontend-design.md`.
+
+<!-- Pool saturation is distilled from khasky/nodejs-runtime-performance-playbook. -->
 
 - Measure first: profile the real workload and name the hot spot before changing code. An optimization without a before/after number is a style change, and the bottleneck is routinely not where it was guessed to be — speed claims pass the same evidence gate as correctness claims (core Verification rule).
 - Fix the complexity class before the constants: a quadratic pair of nested loops over user-sized data outgrows any micro-tuning of its body. Replace the inner scan with a hash index built once before the loop — that is the two-line change that turns O(n²) into O(n).
@@ -8,7 +10,8 @@ Read this when writing or reviewing performance-sensitive code, or when asked to
 - Library calls carry hidden complexity: string concatenation in a loop is quadratic where strings are immutable — collect parts and join once; a sort, deep copy, or full scan inside a loop multiplies its cost by N. Account for the big-O of what the call does, not only of the lines you wrote.
 - Batch per-item round-trips — network, disk, database, IPC: latency dominates compute, so one call carrying N items beats N calls carrying one. The N+1 query is one instance of this class (`rules/database.md`); a per-item HTTP call in a loop is another.
 - Hoist invariant work out of loops: a compiled regex, a parsed schema, an opened connection, a constructed formatter — built once before the loop, not once per iteration.
-- Stream instead of materializing: process large inputs incrementally so peak memory is bounded by a chunk, not by the input size. Every buffer, cache, and queue gets an explicit bound — unbounded growth is a deferred crash (`rules/resilience.md`).
+- Stream instead of materializing: process large inputs incrementally so peak memory is bounded by a chunk, not by the input size.
+- Every buffer, cache, and queue gets an explicit bound — unbounded growth is a deferred crash (`rules/resilience.md`).
 - Do less work before doing work faster: early-exit on the common case, compute lazily what may go unread, dedupe repeated identical calls, cache pure results (`rules/caching.md` owns invalidation).
 - Prefer contiguous, in-order data access in hot paths: sequential iteration is cheap because of memory locality; pointer-chasing and per-item allocation defeat it. In garbage-collected languages, allocation churn inside a hot loop is GC pressure — reuse and preallocate there, and only there.
 - Concurrency answers measured saturation, never a hunch: I/O-bound work wants batching or async multiplexing; CPU-bound work wants parallel workers sized to the cores actually free (core Machine resources rule). Parallelizing an unmeasured path buys coordination cost and race surface.

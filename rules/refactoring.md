@@ -3,7 +3,7 @@
 Read this when the task is a dedicated refactor, cleanup, or "improve this code" pass.
 
 - Refactoring is behavior-preserving. Do not change public behavior, public APIs, persisted formats, routes, event names, config keys, or database schemas unless explicitly requested.
-- Match the existing style of the repository before applying generic best practices.
+- Match the existing style of the repository before applying generic best practices: a codebase written in two styles costs every later reader.
 - Small, reviewable passes: rename, remove dead code, simplify control flow (nested conditionals become named predicate functions), extract helper, deduplicate — then verify with the narrowest relevant test, typecheck, lint, or build after each pass.
 - Before editing, inspect nearby code and tests to infer naming, error handling, logging, and abstraction patterns.
 - No broad rewrites, framework swaps, dependency upgrades, or architectural migrations as part of a cleanup pass.

@@ -1,19 +1,19 @@
 # Awesome AGENTS.md
 
-> One tool-agnostic `AGENTS.md` that Claude Code, OpenAI Codex CLI, Gemini CLI and Cursor Agent all import, plus on-demand rule modules in `rules/` that an agent reads only when the task matches. The core file is always loaded and capped at 200 instruction lines, the module index excluded (CI-enforced); everything else is opt-in.
+> One tool-agnostic `AGENTS.md` that Claude Code, OpenAI Codex CLI, Gemini CLI and Cursor Agent all import, plus on-demand rule modules in `rules/` that an agent reads only when the task matches. The core file is always loaded and capped at 200 instruction lines, the module index excluded, and at 32 KiB as a whole (CI-enforced); everything else is opt-in.
 
 ## Core
 
-- [AGENTS.md](https://github.com/khasky/awesome-agents-md/blob/main/AGENTS.md): the always-loaded ruleset — boundaries, security, the verification gate, workflow, debugging, the lazy-senior-dev coding ladder, communication style, commit conventions.
+- [AGENTS.md](https://github.com/khasky/awesome-agents-md/blob/main/AGENTS.md): the always-loaded ruleset — boundaries, security, the verification gate, workflow, debugging, the lazy-senior-dev coding ladder, communication style, the commit-proposal habit.
 
 ## Rule modules
 
 - [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): editing Markdown documents and articles.
-- [rules/planning.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/planning.md): producing a plan or spec as the deliverable — explore before asking, decision-complete plans, plan shape.
+- [rules/planning.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/planning.md): producing a plan or spec as the deliverable — explore before asking, decision-complete plans, plan shape, immutable decision records.
 - [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring or cleanup passes, Chesterton's Fence, the rule of 500.
 - [rules/debugging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/debugging.md): the full debug escalation ladder — hypotheses, disproving checks, when to question the architecture.
 - [rules/code-comments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-comments.md): full comment policy — what survives a pass, the machine-written prose tells, what a pass must never change, proving it was comment-only, public-repo safety.
-- [rules/commit-messages.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/commit-messages.md): commit message prose — when a body earns its place, what never stands in one, what must survive the cut, and the shape a proposal takes.
+- [rules/commit-messages.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/commit-messages.md): commit messages, PR titles and branch names — house style, proposal shape, type choice, security-neutral wording, body prose.
 - [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.
 - [rules/testing.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/testing.md): test placement ladder, fixtures, flakiness, fuzz and property tests.
 - [rules/evidence-gates.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/evidence-gates.md): turning a verification rule into an enforced gate — run-bound receipts, placeholder rejection, unavailable-not-pass.
@@ -24,32 +24,32 @@
 - [rules/crypto.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/crypto.md): hashing, encryption, tokens, JWT verification, key rotation.
 - [rules/database.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/database.md): schema, migrations, transactions, indexes, connection pooling.
 - [rules/api-contracts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/api-contracts.md): machine-readable API schemas, contract packages, generated clients.
-- [rules/public-api-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/public-api-design.md): versioning, cursor pagination, idempotency keys, ETags, response caching, deprecation.
+- [rules/public-api-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/public-api-design.md): versioning, cursor pagination, idempotency keys, ETags, response caching, long-running operations, deprecation, header naming.
 - [rules/messaging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/messaging.md): queues, event streams, outbox, idempotent consumers, webhooks.
 - [rules/payments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/payments.md): checkout, webhook verification, idempotent fulfillment, price integrity.
-- [rules/observability.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/observability.md): structured logging, health probes, metrics, graceful shutdown, env config.
+- [rules/observability.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/observability.md): structured logging, health probes, metrics, alerts with runbooks, graceful shutdown, env config.
 - [rules/incident-response.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/incident-response.md): a live production incident — preserve evidence, contain, postmortem discipline.
 - [rules/ci-cd-security.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/ci-cd-security.md): CI workflows and release automation — component pinning, token scope, untrusted PR input.
 - [rules/git-hooks.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/git-hooks.md): pre-commit, commit-msg and pre-push gates for any hook manager: staged-set scope, time budget, secret scanning.
 - [rules/monorepo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/monorepo.md): several packages in one repository, any ecosystem — dependency placement, package boundaries, task caching, one lockfile.
-- [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles, dependency confusion, provenance.
-- [rules/design-patterns.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/design-patterns.md): choosing design patterns — composition over inheritance, no Singleton, language-native over GoF machinery, architecture weight.
-- [rules/performance.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/performance.md): performance fundamentals — measure first, complexity class, data-structure choice, batching round-trips, memory bounds, budgets.
+- [rules/dependencies.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/dependencies.md): adding or upgrading packages — lockfiles and their conflicts, dependency confusion, provenance, update grouping.
+- [rules/design-patterns.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/design-patterns.md): module structure and design patterns — derived state, coupling, dependency cycles, environment adapters, composition over inheritance, architecture weight.
+- [rules/performance.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/performance.md): performance fundamentals — measure first, complexity class, data structures, batching, memory bounds, pool saturation, budgets.
 - [rules/resilience.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/resilience.md): cross-service calls — timeouts and deadline propagation, circuit breakers, retry budgets, sagas, fencing tokens, load shedding.
 - [rules/rate-limiting.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/rate-limiting.md): rate limiters and quotas — algorithm choice, shared counters across instances, fail-open vs fail-closed, limit keying.
-- [rules/caching.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/caching.md): caches — write-strategy selection, TTL and event invalidation, eviction policy, stampede protection, keyspace scans.
-- [rules/deployment.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/deployment.md): shipping to a running environment — deploy vs release, rollout strategy, feature-flag lifecycle, migration ordering, build artifacts, runtime hardening, infrastructure state and plans.
+- [rules/caching.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/caching.md): caches — write strategies, TTL and event invalidation, cache layers, eviction policy, stampede protection, per-family metrics.
+- [rules/deployment.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/deployment.md): shipping to a running environment — deploy vs release, rollout, feature flags, migration ordering, release-branch fixes, build artifacts, runtime hardening, infrastructure state and plans.
 - [rules/jobs.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/jobs.md): cron and batch work — single execution across replicas, overlap policy, idempotent reruns, missed-run policy.
 - [rules/i18n.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/i18n.md): internationalization — message catalogs, plurals, RTL, locale-aware formatting and collation.
-- [rules/privacy.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/privacy.md): personal data — deletion propagation, retention enforcement, PII classification, export rigor.
+- [rules/privacy.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/privacy.md): personal data — deletion propagation, retention enforcement, PII classification, export rigor, tracker consent, session-recording SDKs.
 - [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
-- [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features — Rule of Two, indirect prompt injection, tool least privilege.
-- [rules/subagents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/subagents.md): delegating to subagents — model tier and effort per job, resolving and pinning them, escalation, what stays unchanged at the light tier.
+- [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features and configuring agent tooling — Rule of Two, indirect prompt injection, tool least privilege, remote tool servers.
+- [rules/subagents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/subagents.md): delegating to subagents — output contracts, parallelism, shared workspace, model tier and effort, pinning, escalation.
 - [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
 - [rules/long-running-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/long-running-agents.md): unattended multi-iteration runs — state baton, early stops and continuations, stall detection, quota-vs-error branching, budget.
 
 ## Docs
 
 - [README](https://github.com/khasky/awesome-agents-md/blob/main/README.md): per-agent install paths for Claude Code, Codex CLI, Gemini CLI and Cursor.
-- [CONTRIBUTING](https://github.com/khasky/awesome-agents-md/blob/main/CONTRIBUTING.md): the line test, the 200-instruction core budget, module format.
+- [CONTRIBUTING](https://github.com/khasky/awesome-agents-md/blob/main/CONTRIBUTING.md): the line test, the core budget (200 instruction lines, 32 KiB), module format and writing rules.
 - [LICENSE](https://github.com/khasky/awesome-agents-md/blob/main/LICENSE): MIT.

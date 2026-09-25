@@ -15,6 +15,12 @@ Read this when spawning a subagent or writing a reusable agent definition: which
 - Where the result is cheaply checkable, two light runs beat one frontier run: a wrong answer you can verify costs less than a right one you cannot afford to repeat.
 - Confirm once that a pinned tier took effect — the harness's run log, usage output or session UI names the model actually used. A field the harness ignores looks identical to one it honors.
 
+- Delegate only when the work cannot fit one context, or when exploration would flood the main context with file dumps better isolated in a subagent.
+- A subagent returns conclusions, not raw dumps: give it an explicit output contract (a `path:line` list, a diff receipt) and a scope cap it refuses beyond ("too big: split into N tasks") instead of half-doing the job.
+- A subagent that verifies gets the diff and the criteria, never the implementer's reasoning, because the justification is what talks a reviewer into a pass.
+- Parallel subagents get disjoint files, a timeout, and a cap on how many run at once; work that needs one agreed design is a single agent's job.
+- Tell every spawned agent that it shares the workspace, so it leaves alone what another agent or the user has in flight (no reverting, reformatting or staging it), and tell it outright whether it may spawn agents of its own; an unstated recursion limit is how one fleet becomes several.
+
 Not a violation — leave these alone:
 
 - A tier the user named. Their choice stands whatever this ladder says.

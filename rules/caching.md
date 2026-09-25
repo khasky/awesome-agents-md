@@ -1,15 +1,15 @@
 # Caching
 
-Read this when adding or reviewing a cache — in-process, a shared cache server, or a cached computation. The rules hold for any cache. HTTP/CDN response caching lives in `rules/public-api-design.md`.
+Read this when adding or reviewing a cache (in-process, a shared cache server, or a cached computation), or chasing data that stays stale after a change. The rules hold for any cache. HTTP/CDN response caching lives in `rules/public-api-design.md`.
 
-<!-- Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice. -->
+<!-- Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice; cache layers and per-family metrics from khasky/caching-playbook. -->
 
 - Cache-aside is the default: read → miss → load from the source of truth → set with TTL. The write path invalidates the key rather than updating the cached value in place — two writers updating a value race; a delete is idempotent.
 - Choose the write strategy by read-follows-write distance, before writing code: cache-aside covers most cases; write-through when a read follows its write immediately and staleness is unacceptable; write-behind only for loss-tolerant counters and metrics — it acknowledges before the store write, so a crash loses data.
 - Invalidation is designed before the cache is added, not after the first stale bug: every entry gets a TTL as the guardrail, and the domain event that makes the value wrong is named and invalidated on (`rules/backend-security.md`). A cache "invalidated" only by expiry serves known-stale data for the whole window.
 - List every cache between the user and the source of truth before declaring one cleared: a CDN, a framework's own route or data cache, and the application cache are separate layers with separate invalidation. Wire each into the same domain event, or a stale-data fix clears one layer and the bug returns from the next.
 - Set the eviction policy and memory ceiling explicitly — the unconfigured default either grows until OOM or silently evicts the wrong class of keys.
-- Cache keys encode their scope — tenant, user, locale, schema version; permission- or billing-sensitive data never sits under a shared key (`rules/backend-security.md`).
+- Cache keys encode their scope — tenant, user, locale, schema version; permission- or billing-sensitive data never sits under a shared key (`rules/backend-security.md`) — a mis-scoped key is a cross-tenant data leak, not a staleness bug.
 - The cache is disposable: anything that can't be rebuilt from the source of truth doesn't live only in the cache. An ephemeral cache server as the primary store for real state is an outage on a timer.
 - Stampede protection on expensive keys: single-flight/lock so one expiry triggers one rebuild, or jittered TTLs so a cohort of keys doesn't expire in the same second.
 - A hot key melts one shard while the cluster idles: shard the key (bucket suffix, aggregated on read) or put a short-TTL in-process cache in front of it.

@@ -1,11 +1,11 @@
 # Dependencies and supply chain
 
-Read this when adding, upgrading, or auditing third-party packages in any ecosystem (npm, PyPI, Go modules, Cargo, Maven).
+Read this when adding, upgrading, or auditing third-party packages, configuring an update bot, or resolving a lockfile conflict, in any ecosystem (npm, PyPI, Go modules, Cargo, Maven).
 
-<!-- Distilled from TupleType/awesome-cicd-attacks (dependency confusion, typosquatting), lirantal/awesome-nodejs-security, npm/PyPI provenance documentation, and trickest/cve automation practice. -->
+<!-- Distilled from TupleType/awesome-cicd-attacks (dependency confusion, typosquatting), lirantal/awesome-nodejs-security, npm/PyPI provenance documentation, and trickest/cve automation practice; lockfile conflicts from the npm package-lock documentation; update grouping from Renovate's group presets. -->
 
 - Adding a dependency is an "ask first" decision (core Boundaries rule). Before proposing one, walk the coding ladder: stdlib, a native platform feature, or an already-installed package usually covers it.
-- One lockfile per repo, committed, matching the declared package manager; CI installs frozen (`npm ci`, `pnpm install --frozen-lockfile`, `pip install -r requirements.txt --require-hashes`) — never a resolving install.
+- One lockfile per repo, committed, matching the declared package manager; CI installs frozen (`npm ci`, `pnpm install --frozen-lockfile`, `pip install -r requirements.txt --require-hashes`) — never a resolving install, which can silently pick different versions than the lockfile pins.
 - Prefer `--ignore-scripts` on install; a package's postinstall script runs with your shell's privileges before any code is imported.
 - Dependency confusion: internal package names are scoped (`@company/pkg`) and the registry is pinned in `.npmrc`/`pip.conf`/equivalent with no implicit fallback to the public index. An internal name that resolves publicly is a takeover waiting to happen.
 - Check a new name for typosquats before installing it: transposed characters, hyphen/underscore swaps, and a plausible-but-wrong scope are the standard trick.
@@ -25,7 +25,8 @@ Read this when adding, upgrading, or auditing third-party packages in any ecosys
 - Pin exact versions for anything that executes at build time (build plugins, codegen, CI tooling) and for one-off executions (`npx pkg@1.2.3`, `uvx`, `pipx run`) — a bare `npx pkg` resolves and runs whatever is latest at that moment, unreviewed; ranges are acceptable only where a lockfile freezes them.
 - Upgrades land as their own commit, separate from feature work, so a regression bisects cleanly (`rules/code-review.md`).
 - Agent extensions are dependencies no scanner sees: a skill, MCP server, plugin, or hook is third-party code executing with the developer's credentials and the agent's tool access. Pin it to a release tag or commit SHA (a marketplace or repo referenced by branch re-installs whatever that ref points to today), read it before enabling, and reject one that fetches its instructions or code from a URL at run time — that defeats the pin unless the fetched content is hash-pinned and fails closed (`rules/llm-agents.md`).
-- The publishing account is part of the supply chain: phishing a maintainer beats attacking the code. Every account that can push to the repo, the registry, or the cloud carries a hardware token or passkey — not SMS, whose recovery path is a SIM swap. Publish tokens are scoped to one package, short-lived, and stored in the CI secret store, never on a laptop; a token that can publish anything is a single stolen laptop away from a supply-chain incident.
+- The publishing account is part of the supply chain: phishing a maintainer beats attacking the code. Every account that can push to the repo, the registry, or the cloud carries a hardware token or passkey — not SMS, whose recovery path is a SIM swap.
+- Publish tokens are scoped to one package, short-lived, and stored in the CI secret store, never on a laptop; a token that can publish anything is a single stolen laptop away from a supply-chain incident.
 - A base or runtime image is a dependency: pin it by digest with the supported major version named beside it, and check that major is still supported before pinning. A tag is mutable upstream.
 - An SDK embedded in a shipped client has the reach of the app itself (device data, network, storage): review what it collects and transmits before adding it.
 - A conflicted lockfile is never merged by hand: resolve the manifest conflict, then let the package manager regenerate the lockfile (several resolve lockfile conflicts on install; otherwise take one side and re-run the install). A hand-spliced lockfile parses and matches no real resolution.

@@ -1,15 +1,15 @@
 # Observability and runtime config
 
-Read this when adding logging, health checks, metrics, graceful shutdown, or environment configuration to a running service.
+Read this when adding logging, health checks, metrics, alerts, graceful shutdown, or environment configuration to a running service.
 
-<!-- Distilled from the Twelve-Factor App, Google SRE (health checking, graceful degradation), OpenTelemetry, and the RED method (Tom Wilkie); cross-checked against production reference implementations. -->
+<!-- Distilled from the Twelve-Factor App, Google SRE (health checking, graceful degradation), OpenTelemetry, and the RED method (Tom Wilkie); cross-checked against production reference implementations; runbook links from the Google SRE Workbook. -->
 
 - Validate all environment variables at boot against a schema; fail loud listing every missing/invalid key, then expose a typed, cached config object. No raw environment reads scattered through the code, no silent default for anything that matters (core Security rule).
 - Two liveness endpoints, not one: `/healthz` (or `/livez`) returns 200 whenever the process is up and calls no dependencies; `/readyz` probes each dependency and returns 503 with a per-dependency status map. Load balancers poll liveness; orchestrator readiness gates traffic on readiness.
 - Structured logs (JSON) to stdout only — the destination is deployment config, never a hardcoded file transport. One log line per request: method, route, status, latency.
 - Redaction list on the logger, not per call-site: `authorization`, `cookie`, `x-api-key`, `idempotency-key`, and any `*.password`/`*.token`/`*.secret` field. Treat anything logged as retained and possibly shipped off-host.
 - Correlation id per request: honor an inbound `x-request-id`/trace header or generate one (ULID/UUID), attach it to every log line, and echo it in the response header and error body. Thread it through request-scoped context (`AsyncLocalStorage`, `ContextVar`) picked up by the log formatter — never as a parameter handlers must remember to pass.
-- Metrics: RED per route — request Rate, Error count, Duration histogram — emitted from one response hook, plus default process metrics. Keep `/metrics` off the public rate-limit and out of API docs.
+- Metrics: RED per route — request Rate, Error count, Duration histogram — emitted from one response hook, plus default process metrics. Keep `/metrics` off the public rate-limit, so the scraper is never throttled into gaps, and out of API docs, where it would read as a public contract.
 - Metric labels are a cardinality budget: never label with a user id, tenant id, request id, or raw path — every distinct combination is a stored time series, and one unbounded label is how a metrics bill and an OOM arrive together. Use route templates (`/users/:id`), not concrete URLs.
 - Tracing is spans plus propagation, not a library import: accept `traceparent` inbound, open a span per unit of work, and inject the context into every outbound call, queue message, and scheduled job. A trace that stops at the process boundary answers nothing about a distributed failure — carry the request's correlation id as the trace id so logs and spans join on one key.
 - Define the SLO before the alert: a target on a user-visible symptom (availability, a latency percentile), an error budget derived from it, and alerts on budget burn rate rather than a single breached threshold. An alert nobody can act on gets deleted, not tuned down.

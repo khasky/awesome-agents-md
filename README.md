@@ -4,7 +4,7 @@
 
 One `AGENTS.md` to import, with shared rules for AI coding agents: Claude Code, OpenAI Codex CLI, Gemini CLI, Cursor Agent — plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
 
-The always-loaded core covers: concise token-efficient communication, a "lazy senior dev" coding discipline (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, commit messages that inherit whatever convention the target repo already enforces. On-demand modules in `rules/` extend it across the stack — backend security, databases, caching, resilience, deployment, infrastructure as code, payments, and more.
+The always-loaded core covers: concise token-efficient communication, a "lazy senior dev" coding discipline (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, and a commit-proposal habit with no assistant traces. On-demand modules in `rules/` extend it — commit messages that inherit the target repo's own convention, backend security, databases, caching, resilience, deployment and infrastructure definitions, payments, and more.
 
 No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install. Agent tooling lives in sibling repos: [agent-mcp-integrations](https://github.com/khasky/agent-mcp-integrations) for the MCP integration servers (browsers, cloud, databases, infra, domain APIs) and [claude-code-token-optimization](https://github.com/khasky/claude-code-token-optimization) for the token-efficiency layers (LSP, `codebase-memory-mcp`, ast-grep, Context7, Caveman, Ponytail).
 
@@ -28,7 +28,7 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
 ## Repository layout
 
 ```text
-AGENTS.md        # the core ruleset — always loaded, under 200 instruction lines (CI-enforced)
+AGENTS.md        # the core ruleset — always loaded, under 200 instruction lines and 32 KiB (CI-enforced)
 rules/           # on-demand modules, read only when the task matches — the full list
                  # with trigger conditions is the last section of AGENTS.md, and CI
                  # fails if a module there is missing or a module here is unlisted
@@ -42,9 +42,9 @@ scripts/         # lint.py — every gate above, run by CI and by the optional
                  # pre-commit hook that install-hooks.py sets up
 ```
 
-The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, …) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
+The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, ...) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
 
-The 200-instruction cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably (measured by [IFScale](https://arxiv.org/abs/2507.11538)), and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter.
+The 200-instruction cap is not cosmetic: frontier models follow roughly 150–200 instructions reliably (measured by [IFScale](https://arxiv.org/abs/2507.11538)), and the agent's own system prompt already spends ~50 of them. Everything past that budget degrades adherence to the rules that matter. The file also stays under 32 KiB, the default `project_doc_max_bytes` past which Codex silently truncates project instructions.
 
 ## Prerequisites
 
@@ -158,7 +158,7 @@ Three guides, one split — pick the layer you need:
 
 ## Contributing
 
-A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 instruction lines — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
+A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 instruction lines and 32 KiB — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
 
 ## License
 

@@ -2,15 +2,15 @@
 
 Read this when editing Markdown documents: docs, articles, READMEs.
 
-- Preserve facts, links, citations, code blocks, commands, and YAML frontmatter.
-- Do not invent sources, numbers, quotes, dates, or personal experience.
-- Prefer specific, direct prose over generic summaries.
-- Remove chatbot artifacts, placeholders, excessive bold, decorative formatting, and empty conclusions.
-- Replace vague headings with concrete headings.
+- Preserve facts, links, citations, code blocks, commands, and YAML frontmatter — changing any of them changes what the document proves or runs, not just how it reads.
+- Do not invent sources, numbers, quotes, dates, or personal experience: use only what the source already states, since a fabricated detail reads as verified until checked.
+- Prefer specific, direct prose over generic summaries — a generic summary could describe any document, so it tells the reader nothing about this one.
+- Remove chatbot artifacts, placeholders, excessive bold, decorative formatting, and empty conclusions — none of them adds information the reader can use.
+- Replace vague headings with concrete headings — a vague heading tells a reader scanning the document nothing about what's under it.
 - Delete paragraphs that add no fact, instruction, example, or decision.
-- Return concise diff summaries. Do not add generic praise.
-- Quoted examples and cited text stay byte-identical — even when they contain patterns banned below.
-- Consistency pass: uniform terminology, heading capitalization, and number style across the document.
+- Return concise diff summaries — the user is scanning for what changed, not reading a review. Do not add generic praise: it carries no information about what changed.
+- Quoted examples and cited text stay byte-identical, since altering them misrepresents the source — even when they contain patterns banned below.
+- Consistency pass: uniform terminology, heading capitalization, and number style across the document — inconsistency reads as an unfinished edit.
 - One H1 per document; heading levels descend without skipping (never H2 straight to H4), and heading text is unique within the file so generated anchors don't collide.
 - Every code fence declares a language after the opening backticks (`ts`, `bash`, `json`) — highlighting, copy buttons, and downstream tooling all key off it; use `text` when the block has no language.
 - Links to files inside the same repository are relative (`rules/testing.md`), not absolute URLs to the hosting provider — a relative link survives forks, mirrors, and an org rename. Exception: files whose format specification requires absolute URLs (`llms.txt`).

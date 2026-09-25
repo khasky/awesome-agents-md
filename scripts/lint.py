@@ -18,6 +18,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 CORE = "AGENTS.md"
 CORE_LINE_LIMIT = 200
+CORE_BYTE_LIMIT = 32 * 1024
 INDEX_HEADING = "## On-demand rule modules"
 
 
@@ -50,6 +51,26 @@ def core_under_line_limit() -> list[str]:
         return []
     return [f"{CORE}: {lines} instruction lines above the module index, "
             f"{lines - CORE_LINE_LIMIT} over the {CORE_LINE_LIMIT}-line cap"]
+
+
+def core_under_byte_limit() -> list[str]:
+    # Codex reads project instructions up to its default project_doc_max_bytes
+    # and truncates the rest without a warning, index included. A Windows
+    # checkout with CRLF line endings is the largest form the file takes, so
+    # that is the size counted, whatever this checkout uses.
+    text = (ROOT / CORE).read_bytes().replace(b"\r\n", b"\n")
+    size = len(text) + text.count(b"\n")
+    if size <= CORE_BYTE_LIMIT:
+        return []
+    return [f"{CORE}: {size} bytes, {size - CORE_BYTE_LIMIT} over the "
+            f"{CORE_BYTE_LIMIT}-byte cap"]
+
+
+def markdown_has_no_ellipsis_glyph() -> list[str]:
+    return [f"{source}:{number}: ellipsis glyph, write three plain dots"
+            for source in tracked_markdown()
+            for number, line in enumerate(read(source).splitlines(), 1)
+            if "…" in line]
 
 
 # Everything from the module index down is trigger text - that is where tool
@@ -283,6 +304,8 @@ def plugin_manifests_resolve() -> list[str]:
 
 GATES = [
     (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
+    (f"core {CORE} stays under {CORE_BYTE_LIMIT} bytes", core_under_byte_limit),
+    ("Markdown carries no ellipsis glyph", markdown_has_no_ellipsis_glyph),
     (f"core {CORE} names no framework, library, or non-baseline CLI", core_names_no_tool),
     ("modules name stacks only as marked examples or across ecosystems",
      modules_name_no_stack),
