@@ -10,11 +10,70 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    # The hooks ship in bash and PowerShell, and Windows is where both run:
+    # Claude Code starts the .sh hooks through Git Bash, Codex the .ps1 ones
+    # through Windows PowerShell. Each runner exercises every shell it has.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: python3
+          - os: windows-latest
+            python: python
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       # Every check lives in the script so the pre-commit hook runs the same
       # code; a gate added here alone could pass locally and fail on the server.
       - name: the repository's gates
-        run: python3 scripts/lint.py
+        run: ${{ matrix.python }} scripts/lint.py
+
+      - name: the eval scorers, without an agent
+        run: ${{ matrix.python }} evals/check_scoring.py
+
+  plugin-load:
+    # A manifest can pass every schema check and still fail to install, so each
+    # agent installs this checkout into an empty home and must list it enabled.
+    # No account or API key is involved. Versions are pinned to the ones the
+    # README's install steps were tested with.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: install the agent CLIs
+        run: npm install -g @anthropic-ai/claude-code@2.1.283 @openai/codex@0.156.0 @google/gemini-cli@0.45.1
+
+      - name: Claude Code
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude
+        run: |
+          claude plugin validate .
+          claude plugin marketplace add ./
+          claude plugin install awesome-agents-md@awesome-agents-md
+          claude plugin list | tee list.txt
+          grep -A3 'awesome-agents-md@awesome-agents-md' list.txt | grep -q 'enabled'
+
+      - name: Codex
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex
+        run: |
+          mkdir -p "$CODEX_HOME"
+          codex plugin marketplace add ./
+          codex plugin add awesome-agents-md@awesome-agents-md
+          codex plugin list | tee list.txt
+          grep 'awesome-agents-md@awesome-agents-md' list.txt | grep -q 'installed, enabled'
+
+      - name: Gemini CLI
+        env:
+          GEMINI_CLI_HOME: ${{ runner.temp }}/gemini
+        run: |
+          mkdir -p "$GEMINI_CLI_HOME"
+          gemini extensions validate .
+          gemini extensions link . --consent
+          gemini extensions list | tee list.txt
+          grep -q 'AGENTS.md' list.txt

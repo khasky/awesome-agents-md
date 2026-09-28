@@ -86,10 +86,21 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.
 - Relative links resolve and code fences are balanced.
-- The two plugin manifests agree with each other, and every plugin-root path a hook reads still exists — a hook naming a file that moved loads nothing and says nothing.
-- The plugin guard (`hooks/guard.sh`) blocks every command on its block list and lets the neighbouring commands through: a guard that stops ordinary work gets disabled, and one that lets a case slip reports a protection nobody has.
-- The plugin `Stop` hook (`hooks/verify.sh`) holds a turn whose last edit no command followed, once, and lets every other turn end.
-- The plugin's `SessionStart` parts (`hooks/load-core.sh`) each stay under Claude Code's inline limit for hook output, rebuild `AGENTS.md` in order, and each has a hook in `hooks/hooks.json`: a part over the limit reaches the session as a two-kilobyte preview.
+- The Claude Code, Codex and Gemini CLI manifests agree with each other, and every path a hook runs still exists — a hook naming a file that moved loads nothing and says nothing. No `hooks/hooks.json` exists: Gemini CLI runs that file from an extension's root, and these hooks are written for Claude Code and Codex, so they live in `hooks/plugin-hooks.json`.
+- Every hook ships twice, `.sh` for Claude Code and `.ps1` for Codex on Windows, and `hooks/plugin-hooks.json` wires each event to both (`command` and `commandWindows`). The checks below run every twin in each shell the machine has (Git Bash, `pwsh`, Windows PowerShell), from a plugin copy whose path contains spaces, and a missing shell fails the gate.
+- The plugin guard (`hooks/guard.*`) blocks every command on its block list and lets the neighbouring commands through: a guard that stops ordinary work gets disabled, and one that lets a case slip reports a protection nobody has.
+- The plugin `Stop` hook (`hooks/verify.*`) holds a turn whose last edit no command followed, once, and lets every other turn end.
+- The plugin's `SessionStart` parts (`hooks/load-core.*`) each stay under Claude Code's inline limit for hook output, rebuild `AGENTS.md` in order, print the same parts in every shell, and each has a hook: a part over the limit reaches the session as a two-kilobyte preview.
+
+CI runs the script on Ubuntu and Windows, runs `evals/check_scoring.py` (the eval scorers against scripted outcomes, no agent), and installs the checkout as a plugin into empty Claude Code and Codex homes and as a Gemini CLI extension, failing unless each lists it enabled. A manifest can pass every schema check and still fail to install.
+
+## Changing the core or a hook
+
+The evals are the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/run.py` on the changed tasks before and after the change, on the same model and with the same repeats, and put both tables in the PR.
+
+- The change is accepted only if no task loses passes on any model it was run on. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone.
+- A change made to fix a failing task is tested on that task, and the PR says so; a new task tests it independently (`evals/README.md`, Reading the results).
+- A change to the communication rules is graded with `evals/judge.py` as well, and no rubric criterion drops for the variant that carries the ruleset.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 

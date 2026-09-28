@@ -264,20 +264,30 @@ def prose_obeys_markdown_rules() -> list[str]:
     return found
 
 
+HOOKS_FILE = "hooks/plugin-hooks.json"
+
+
+def plugin_hooks() -> list[dict]:
+    hooks = json.loads((ROOT / HOOKS_FILE).read_text(encoding="utf-8"))
+    return [dict(hook, event=event) for event, groups in hooks.get("hooks", {}).items()
+            for group in groups for hook in group.get("hooks", [])]
+
+
 def plugin_manifests_resolve() -> list[str]:
-    # The plugin is the Claude Code install path that needs no clone: a
-    # SessionStart hook prints the core into the session. Nothing in a session
-    # fails loudly when that hook names a file that moved - the ruleset just
-    # goes missing - so the gate is that the manifests agree with each other and
-    # that every plugin-root path the hook reads still exists.
-    manifests = ROOT / ".claude-plugin"
-    plugin = json.loads((manifests / "plugin.json").read_text(encoding="utf-8"))
-    market = json.loads((manifests / "marketplace.json").read_text(encoding="utf-8"))
-    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+    # Claude Code and Codex install the repository as a plugin, Gemini CLI as an
+    # extension. Nothing in a session fails loudly when a manifest names a file
+    # that moved - the ruleset just goes missing - so the gate is that the
+    # manifests agree and that every path a hook runs still exists.
+    plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+    codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    gemini = json.loads((ROOT / "gemini-extension.json").read_text(encoding="utf-8"))
 
     found = []
-    if plugin.get("name") != "awesome-agents-md":
-        found.append(f"plugin.json name is {plugin.get('name')!r}")
+    for source, manifest in (("plugin.json", plugin), (".codex-plugin/plugin.json", codex),
+                             ("gemini-extension.json", gemini)):
+        if manifest.get("name") != "awesome-agents-md":
+            found.append(f"{source} name is {manifest.get('name')!r}")
     entries = [p.get("name") for p in market.get("plugins", [])]
     if entries != [plugin.get("name")]:
         found.append(f"marketplace.json lists {entries}, expected [{plugin.get('name')!r}]")
@@ -288,20 +298,85 @@ def plugin_manifests_resolve() -> list[str]:
     # every push reaches installed users, with no bump to forget.
     if "version" in plugin:
         found.append("plugin.json pins a version - installed users then stay on it until the next bump")
+    for source, manifest in (("plugin.json", plugin), (".codex-plugin/plugin.json", codex)):
+        if manifest.get("hooks") != f"./{HOOKS_FILE}":
+            found.append(f"{source} points its hooks at {manifest.get('hooks')!r}, not ./{HOOKS_FILE}")
+    # Gemini CLI runs hooks/hooks.json from an extension's root with its own
+    # event names and without the plugin-root variables these hooks rely on.
+    if (ROOT / "hooks" / "hooks.json").exists():
+        found.append("hooks/hooks.json exists - Gemini CLI would run it as extension hooks")
+    if gemini.get("contextFileName") != CORE:
+        found.append(f"gemini-extension.json loads {gemini.get('contextFileName')!r}, not {CORE}")
 
-    commands = [hook.get("command", "")
-                for event in hooks.get("hooks", {}).values()
-                for group in event for hook in group.get("hooks", [])]
-    if not any("load-core.sh" in command for command in commands):
+    hooks = plugin_hooks()
+    if not any("load-core.sh" in hook.get("command", "") for hook in hooks):
         found.append(f"no hook runs load-core.sh - an installed plugin would load no {CORE}")
-    # Trailing punctuation belongs to the sentence the hook prints, not to the
+    for hook in hooks:
+        # Codex runs commandWindows through PowerShell, where `bash` may resolve
+        # to WSL, so every hook carries a PowerShell twin of its script.
+        script = re.search(r"hooks/([a-z-]+)\.sh", hook.get("command", ""))
+        twin = hook.get("commandWindows", "")
+        if script and f"hooks/{script.group(1)}.ps1" not in twin:
+            found.append(f"{hook['event']} hook {script.group(0)} has no commandWindows running "
+                         f"hooks/{script.group(1)}.ps1")
+    # Trailing punctuation belongs to the sentence a hook prints, not to the
     # path: "${CLAUDE_PLUGIN_ROOT}/rules/." names rules/.
+    text = " ".join(hook.get("command", "") + " " + hook.get("commandWindows", "") for hook in hooks)
     referenced = {match.rstrip("./") for match in
-                  re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9._/-]+)", " ".join(commands))}
+                  re.findall(r"\$\{(?:CLAUDE_)?PLUGIN_ROOT\}/([A-Za-z0-9._/-]+)", text)}
     for path in sorted(referenced):
         if not (ROOT / path).exists():
-            found.append(f"hooks/hooks.json reads {path}, which is not in the repository")
+            found.append(f"{HOOKS_FILE} reads {path}, which is not in the repository")
     return found
+
+
+def find_bash() -> str | None:
+    # On Windows the first bash on PATH can be WSL's launcher in System32,
+    # which runs Linux paths; the hooks need the bash that ships with git.
+    bash = shutil.which("bash")
+    if bash and "system32" not in bash.lower():
+        return bash
+    git = shutil.which("git")
+    if git:
+        for candidate in (pathlib.Path(git).parent.parent / "bin" / "bash.exe",
+                          pathlib.Path(git).parent.parent / "usr" / "bin" / "bash.exe"):
+            if candidate.is_file():
+                return str(candidate)
+    return None
+
+
+def hook_runtimes() -> tuple[list[tuple[str, list[str], str]], list[str]]:
+    # Each runtime is (name, launcher, script suffix). Both script families are
+    # shipped, so a runtime that cannot be found is a gap, never a pass.
+    runtimes, missing = [], []
+    bash = find_bash()
+    if bash:
+        runtimes.append(("bash", [bash], ".sh"))
+    else:
+        missing.append("bash not found - the .sh hooks cannot be exercised here")
+    shells = [shell for shell in (shutil.which("pwsh"), shutil.which("powershell")) if shell]
+    for shell in dict.fromkeys(shells):
+        runtimes.append((pathlib.Path(shell).stem.lower(),
+                         [shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"], ".ps1"))
+    if not shells:
+        missing.append("PowerShell not found - the .ps1 hooks cannot be exercised here")
+    return runtimes, missing
+
+
+def plugin_copy(scratch: str) -> pathlib.Path:
+    # Hooks run from wherever an agent unpacked the plugin, and a user profile
+    # path with a space in it is common on Windows.
+    root = pathlib.Path(scratch) / "plugin root with spaces"
+    shutil.copytree(ROOT / "hooks", root / "hooks")
+    shutil.copy2(ROOT / CORE, root / CORE)
+    return root
+
+
+def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
+             args: list[str], payload: str = "") -> subprocess.CompletedProcess:
+    _, launcher, suffix = runtime
+    return subprocess.run([*launcher, str(root / "hooks" / f"{name}{suffix}"), *args],
+                          input=payload, capture_output=True, text=True, encoding="utf-8")
 
 
 # Each case is a command the plugin's PreToolUse guard must block (True) or let
@@ -320,7 +395,7 @@ GUARD_CASES = [
     ("declare -p", True),
     ("cat /proc/1/environ", True),
     ("Get-ChildItem env:", True),
-    ('git commit -m "fix\\n\\nCo-Authored-By: Bot <bot@example.com>"', True),
+    ("git commit -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("git push origin main", False),
     ("git push --follow-tags", False),
     ("git commit -m 'verify the parser'", False),
@@ -332,22 +407,21 @@ GUARD_CASES = [
 
 
 def plugin_guard_blocks_what_it_names() -> list[str]:
-    # Runs the real hook script the way Claude Code does: the tool call as JSON
-    # on stdin, exit 2 meaning blocked. A machine with no bash cannot run the
-    # hook either, so the gate reports that instead of passing.
-    bash = shutil.which("bash")
-    if not bash:
-        return ["bash not found - the guard hook cannot be exercised here"]
-    found = []
-    for command, expect_block in GUARD_CASES:
-        payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
-        run = subprocess.run([bash, str(ROOT / "hooks" / "guard.sh")], input=payload,
-                             capture_output=True, text=True)
-        if run.returncode not in (0, 2):
-            found.append(f"guard crashed on {command!r}: exit {run.returncode} {run.stderr.strip()}")
-        elif (run.returncode == 2) != expect_block:
-            verdict = "let through" if expect_block else "blocked"
-            found.append(f"guard {verdict} {command!r}")
+    # Runs the real hook scripts the way the agents do: the tool call as JSON
+    # on stdin, exit 2 meaning blocked.
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        for runtime in runtimes:
+            for command, expect_block in GUARD_CASES:
+                payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+                run = run_hook(runtime, root, "guard", [], payload)
+                if run.returncode not in (0, 2):
+                    found.append(f"{runtime[0]} guard crashed on {command!r}: exit "
+                                 f"{run.returncode} {run.stderr.strip()}")
+                elif (run.returncode == 2) != expect_block:
+                    verdict = "let through" if expect_block else "blocked"
+                    found.append(f"{runtime[0]} guard {verdict} {command!r}")
     return found
 
 
@@ -376,28 +450,27 @@ VERIFY_CASES = [
 
 
 def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
-    # Runs the real Stop hook against a transcript file it reads the way
+    # Runs the real Stop hooks against a transcript file they read the way
     # Claude Code hands it over: the path in the JSON payload on stdin.
-    bash = shutil.which("bash")
-    if not bash:
-        return ["bash not found - the Stop hook cannot be exercised here"]
-    found = []
+    runtimes, found = hook_runtimes()
     with tempfile.TemporaryDirectory() as scratch:
-        transcript = pathlib.Path(scratch) / "session.jsonl"
-        for turn, second_stop, expect_block in VERIFY_CASES:
-            transcript.write_text("\n".join(transcript_line(*step) for step in turn) + "\n",
-                                  encoding="utf-8")
-            payload = json.dumps({"transcript_path": str(transcript),
-                                  "stop_hook_active": second_stop})
-            run = subprocess.run([bash, str(ROOT / "hooks" / "verify.sh")], input=payload,
-                                 capture_output=True, text=True)
-            steps = " > ".join(step[-1] for step in turn)
-            if run.returncode not in (0, 2):
-                found.append(f"Stop hook crashed on {steps}: exit {run.returncode} {run.stderr.strip()}")
-            elif (run.returncode == 2) != expect_block:
-                verdict = "let the agent stop after" if expect_block else "held the agent after"
-                found.append(f"Stop hook {verdict} {steps}"
-                             + (" (second stop)" if second_stop else ""))
+        root = plugin_copy(scratch)
+        transcript = root / "session log.jsonl"
+        for runtime in runtimes:
+            for turn, second_stop, expect_block in VERIFY_CASES:
+                transcript.write_text("\n".join(transcript_line(*step) for step in turn) + "\n",
+                                      encoding="utf-8")
+                payload = json.dumps({"transcript_path": str(transcript),
+                                      "stop_hook_active": second_stop})
+                run = run_hook(runtime, root, "verify", [], payload)
+                steps = " > ".join(step[-1] for step in turn)
+                if run.returncode not in (0, 2):
+                    found.append(f"{runtime[0]} Stop hook crashed on {steps}: exit "
+                                 f"{run.returncode} {run.stderr.strip()}")
+                elif (run.returncode == 2) != expect_block:
+                    verdict = "let the agent stop after" if expect_block else "held the agent after"
+                    found.append(f"{runtime[0]} Stop hook {verdict} {steps}"
+                                 + (" (second stop)" if second_stop else ""))
     return found
 
 
@@ -408,31 +481,49 @@ HOOK_OUTPUT_LIMIT = 9500
 
 def plugin_loads_whole_core() -> list[str]:
     # Every part must fit under the limit, the parts in order must rebuild the
-    # core (blank lines at the cuts aside), and hooks.json must run a hook for
-    # every part, or the tail of the core silently never reaches a session.
-    bash = shutil.which("bash")
-    if not bash:
-        return ["bash not found - the SessionStart parts cannot be checked here"]
-    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
-    commands = [hook.get("command", "") for group in hooks["hooks"].get("SessionStart", [])
-                for hook in group.get("hooks", [])]
-    wired = {int(m) for c in commands for m in re.findall(r"load-core\.sh\"?\s+(\d+)", c)}
-    found, bodies, part = [], [], 1
-    while True:
-        out = subprocess.run([bash, str(ROOT / "hooks" / "load-core.sh"), str(part)],
-                             capture_output=True, text=True, encoding="utf-8").stdout
-        if not out:
-            break
-        if len(out) > HOOK_OUTPUT_LIMIT:
-            found.append(f"SessionStart part {part} is {len(out)} characters, over {HOOK_OUTPUT_LIMIT}")
-        if part not in wired:
-            found.append(f"SessionStart part {part} exists but no hook in hooks.json prints it")
-        body = out.split("\n\n", 1)[1]
-        body = re.sub(r"\n\nThe rules/ folder named in this ruleset is .*\n$", "", body)
-        bodies.append(body.strip("\n"))
-        part += 1
-    if "\n\n".join(bodies) != read(CORE).replace("\r\n", "\n").strip("\n"):
-        found.append(f"the SessionStart parts do not rebuild {CORE}")
+    # core (blank lines at the cuts aside), every part needs its hook, and the
+    # PowerShell twin must print the same parts, or the tail of the core
+    # silently never reaches a session.
+    runtimes, found = hook_runtimes()
+    wired = {int(m) for hook in plugin_hooks() if hook["event"] == "SessionStart"
+             for m in re.findall(r"load-core\.sh\"?\s+(\d+)", hook.get("command", ""))}
+    wired_windows = {int(m) for hook in plugin_hooks() if hook["event"] == "SessionStart"
+                     for m in re.findall(r"load-core\.ps1\"?\s+(\d+)", hook.get("commandWindows", ""))}
+    if wired != wired_windows:
+        found.append(f"SessionStart parts wired for bash {sorted(wired)} and PowerShell "
+                     f"{sorted(wired_windows)} differ")
+
+    def root_neutral(text: str) -> str:
+        return re.sub(r"ruleset is .+/rules/\.\n", "ruleset is <root>/rules/.\n",
+                      text.replace("\r\n", "\n"))
+
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        reference: list[str] = []
+        for runtime in runtimes:
+            parts = []
+            while True:
+                run = run_hook(runtime, root, "load-core", [str(len(parts) + 1)])
+                if run.returncode:
+                    found.append(f"{runtime[0]} load-core part {len(parts) + 1} exited "
+                                 f"{run.returncode}: {run.stderr.strip()}")
+                    break
+                if not run.stdout:
+                    break
+                parts.append(root_neutral(run.stdout))
+            if not reference:
+                reference = parts
+            elif parts != reference:
+                found.append(f"{runtime[0]} load-core prints different parts than {runtimes[0][0]}")
+        for part, out in enumerate(reference, 1):
+            if len(out) > HOOK_OUTPUT_LIMIT:
+                found.append(f"SessionStart part {part} is {len(out)} characters, over {HOOK_OUTPUT_LIMIT}")
+            if part not in wired:
+                found.append(f"SessionStart part {part} exists but no hook in {HOOKS_FILE} prints it")
+        bodies = [re.sub(r"\n\nThe rules/ folder named in this ruleset is .*\n$", "",
+                         out.split("\n\n", 1)[1]).strip("\n") for out in reference]
+        if reference and "\n\n".join(bodies) != read(CORE).replace("\r\n", "\n").strip("\n"):
+            found.append(f"the SessionStart parts do not rebuild {CORE}")
     return found
 
 
@@ -451,7 +542,7 @@ GATES = [
     ("relative links resolve", relative_links_resolve),
     ("code fences are balanced", code_fences_balanced),
     ("the repo's own prose obeys rules/markdown.md", prose_obeys_markdown_rules),
-    ("plugin manifests and the SessionStart hook still resolve", plugin_manifests_resolve),
+    ("plugin and extension manifests and every hook path still resolve", plugin_manifests_resolve),
     ("the plugin SessionStart hooks deliver the whole core under the output limit",
      plugin_loads_whole_core),
     ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),

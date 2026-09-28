@@ -9,5 +9,6 @@
   "homepage": "https://github.com/khasky/awesome-agents-md",
   "repository": "https://github.com/khasky/awesome-agents-md",
   "license": "MIT",
-  "keywords": ["agents-md", "rules", "coding-standards", "verification", "security", "commits", "code-review", "debugging"]
+  "keywords": ["agents-md", "rules", "coding-standards", "verification", "security", "commits", "code-review", "debugging"],
+  "hooks": "./hooks/plugin-hooks.json"
 }

@@ -1,0 +1,25 @@
+{
+  "name": "awesome-agents-md",
+  "description": "The shared AGENTS.md ruleset for Codex: boundaries, security, a verification gate before any completion claim, terse communication and commit conventions, loaded at session start, with hooks that block force-pushes, skipped git hooks, environment dumps and assistant commit trailers.",
+  "author": {
+    "name": "Khasky",
+    "url": "https://github.com/khasky"
+  },
+  "homepage": "https://github.com/khasky/awesome-agents-md",
+  "repository": "https://github.com/khasky/awesome-agents-md",
+  "license": "MIT",
+  "keywords": [
+    "agents-md",
+    "rules",
+    "coding-standards",
+    "verification",
+    "security",
+    "commits"
+  ],
+  "hooks": "./hooks/plugin-hooks.json",
+  "interface": {
+    "displayName": "Awesome AGENTS.md",
+    "shortDescription": "One ruleset for coding agents, with guard hooks",
+    "category": "Productivity"
+  }
+}
