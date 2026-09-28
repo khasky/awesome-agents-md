@@ -45,6 +45,7 @@
 - [rules/shell-scripts.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shell-scripts.md): shell scripts — bash strict mode, quoting, trap cleanup, ShellCheck, PowerShell strict mode.
 - [rules/llm-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/llm-agents.md): building LLM and agent features and configuring agent tooling — Rule of Two, indirect prompt injection, tool least privilege, remote tool servers.
 - [rules/subagents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/subagents.md): delegating to subagents — output contracts, parallelism, shared workspace, model tier and effort, pinning, escalation.
+- [rules/shared-machine.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/shared-machine.md): heavy builds, suites and parallel work on a machine other agent sessions share: the load ceiling, worker counts, stopping only your own processes, cleaning up after browser and server runs.
 - [rules/memory.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/memory.md): persistent agent memory hygiene.
 - [rules/long-running-agents.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/long-running-agents.md): unattended multi-iteration runs — state baton, early stops and continuations, stall detection, quota-vs-error branching, budget.
 

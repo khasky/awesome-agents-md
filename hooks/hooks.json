@@ -6,9 +6,52 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/AGENTS.md\"; echo \"Loaded from the awesome-agents-md plugin. The rules/ folder named above is ${CLAUDE_PLUGIN_ROOT}/rules/.\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-core.sh\" 1",
             "timeout": 10,
             "statusMessage": "Loading the AGENTS.md ruleset"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-core.sh\" 2",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-core.sh\" 3",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-core.sh\" 4",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-core.sh\" 5",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/verify.sh\"",
+            "timeout": 10
           }
         ]
       }

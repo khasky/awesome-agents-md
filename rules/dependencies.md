@@ -1,6 +1,6 @@
 # Dependencies and supply chain
 
-Read this when adding, upgrading, or auditing third-party packages, configuring an update bot, or resolving a lockfile conflict, in any ecosystem (npm, PyPI, Go modules, Cargo, Maven).
+Read this when adding, upgrading, or auditing third-party packages, configuring an update bot, resolving a lockfile conflict, or enabling an agent skill, MCP server, plugin or hook, in any ecosystem (npm, PyPI, Go modules, Cargo, Maven).
 
 <!-- Distilled from TupleType/awesome-cicd-attacks (dependency confusion, typosquatting), lirantal/awesome-nodejs-security, npm/PyPI provenance documentation, and trickest/cve automation practice; lockfile conflicts from the npm package-lock documentation; update grouping from Renovate's group presets. -->
 

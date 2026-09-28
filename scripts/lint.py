@@ -11,8 +11,10 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -290,8 +292,8 @@ def plugin_manifests_resolve() -> list[str]:
     commands = [hook.get("command", "")
                 for event in hooks.get("hooks", {}).values()
                 for group in event for hook in group.get("hooks", [])]
-    if not any(CORE in command for command in commands):
-        found.append(f"no hook reads {CORE} - an installed plugin would load nothing")
+    if not any("load-core.sh" in command for command in commands):
+        found.append(f"no hook runs load-core.sh - an installed plugin would load no {CORE}")
     # Trailing punctuation belongs to the sentence the hook prints, not to the
     # path: "${CLAUDE_PLUGIN_ROOT}/rules/." names rules/.
     referenced = {match.rstrip("./") for match in
@@ -299,6 +301,138 @@ def plugin_manifests_resolve() -> list[str]:
     for path in sorted(referenced):
         if not (ROOT / path).exists():
             found.append(f"hooks/hooks.json reads {path}, which is not in the repository")
+    return found
+
+
+# Each case is a command the plugin's PreToolUse guard must block (True) or let
+# through (False). Each allowed one sits next to a blocked pattern: a neighbour
+# that trips the guard would stall ordinary work.
+GUARD_CASES = [
+    ("git commit --no-verify -m 'x'", True),
+    ("git -c core.hooksPath=/dev/null commit -m x", True),
+    ("git push --force origin main", True),
+    ("git push --force-with-lease", True),
+    ("git push -f", True),
+    ("git push origin +main", True),
+    ("printenv", True),
+    ("env | grep KEY", True),
+    ("cd app && set", True),
+    ("declare -p", True),
+    ("cat /proc/1/environ", True),
+    ("Get-ChildItem env:", True),
+    ('git commit -m "fix\\n\\nCo-Authored-By: Bot <bot@example.com>"', True),
+    ("git push origin main", False),
+    ("git push --follow-tags", False),
+    ("git commit -m 'verify the parser'", False),
+    ("env NODE_ENV=test make check", False),
+    ("set -e", False),
+    ("git log --oneline", False),
+    ("ls -la", False),
+]
+
+
+def plugin_guard_blocks_what_it_names() -> list[str]:
+    # Runs the real hook script the way Claude Code does: the tool call as JSON
+    # on stdin, exit 2 meaning blocked. A machine with no bash cannot run the
+    # hook either, so the gate reports that instead of passing.
+    bash = shutil.which("bash")
+    if not bash:
+        return ["bash not found - the guard hook cannot be exercised here"]
+    found = []
+    for command, expect_block in GUARD_CASES:
+        payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+        run = subprocess.run([bash, str(ROOT / "hooks" / "guard.sh")], input=payload,
+                             capture_output=True, text=True)
+        if run.returncode not in (0, 2):
+            found.append(f"guard crashed on {command!r}: exit {run.returncode} {run.stderr.strip()}")
+        elif (run.returncode == 2) != expect_block:
+            verdict = "let through" if expect_block else "blocked"
+            found.append(f"guard {verdict} {command!r}")
+    return found
+
+
+def transcript_line(kind: str, name: str = "") -> str:
+    if kind == "prompt":
+        return json.dumps({"type": "user", "message": {"role": "user", "content": "fix it"}},
+                          separators=(",", ":"))
+    if kind == "result":
+        return json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}}, separators=(",", ":"))
+    return json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "t", "name": name, "input": {}}]}}, separators=(",", ":"))
+
+
+# Each case is a turn as the session transcript records it, whether the Stop
+# hook must send the agent back (True), and whether this is the second stop.
+VERIFY_CASES = [
+    ([("prompt",), ("tool", "Edit"), ("result",)], False, True),
+    ([("prompt",), ("tool", "Edit"), ("result",), ("tool", "Bash"), ("result",)], False, False),
+    ([("prompt",), ("tool", "Bash"), ("result",), ("tool", "Write"), ("result",)], False, True),
+    ([("prompt",), ("tool", "Edit"), ("result",)], True, False),
+    ([("prompt",), ("tool", "Edit"), ("result",), ("prompt",), ("tool", "Read"), ("result",)],
+     False, False),
+    ([("prompt",), ("tool", "Read"), ("result",)], False, False),
+]
+
+
+def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
+    # Runs the real Stop hook against a transcript file it reads the way
+    # Claude Code hands it over: the path in the JSON payload on stdin.
+    bash = shutil.which("bash")
+    if not bash:
+        return ["bash not found - the Stop hook cannot be exercised here"]
+    found = []
+    with tempfile.TemporaryDirectory() as scratch:
+        transcript = pathlib.Path(scratch) / "session.jsonl"
+        for turn, second_stop, expect_block in VERIFY_CASES:
+            transcript.write_text("\n".join(transcript_line(*step) for step in turn) + "\n",
+                                  encoding="utf-8")
+            payload = json.dumps({"transcript_path": str(transcript),
+                                  "stop_hook_active": second_stop})
+            run = subprocess.run([bash, str(ROOT / "hooks" / "verify.sh")], input=payload,
+                                 capture_output=True, text=True)
+            steps = " > ".join(step[-1] for step in turn)
+            if run.returncode not in (0, 2):
+                found.append(f"Stop hook crashed on {steps}: exit {run.returncode} {run.stderr.strip()}")
+            elif (run.returncode == 2) != expect_block:
+                verdict = "let the agent stop after" if expect_block else "held the agent after"
+                found.append(f"Stop hook {verdict} {steps}"
+                             + (" (second stop)" if second_stop else ""))
+    return found
+
+
+# Claude Code keeps a hook's output inline only below a size limit and shows a
+# longer one as a short preview plus a file path, so the core goes out in parts.
+HOOK_OUTPUT_LIMIT = 9500
+
+
+def plugin_loads_whole_core() -> list[str]:
+    # Every part must fit under the limit, the parts in order must rebuild the
+    # core (blank lines at the cuts aside), and hooks.json must run a hook for
+    # every part, or the tail of the core silently never reaches a session.
+    bash = shutil.which("bash")
+    if not bash:
+        return ["bash not found - the SessionStart parts cannot be checked here"]
+    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+    commands = [hook.get("command", "") for group in hooks["hooks"].get("SessionStart", [])
+                for hook in group.get("hooks", [])]
+    wired = {int(m) for c in commands for m in re.findall(r"load-core\.sh\"?\s+(\d+)", c)}
+    found, bodies, part = [], [], 1
+    while True:
+        out = subprocess.run([bash, str(ROOT / "hooks" / "load-core.sh"), str(part)],
+                             capture_output=True, text=True, encoding="utf-8").stdout
+        if not out:
+            break
+        if len(out) > HOOK_OUTPUT_LIMIT:
+            found.append(f"SessionStart part {part} is {len(out)} characters, over {HOOK_OUTPUT_LIMIT}")
+        if part not in wired:
+            found.append(f"SessionStart part {part} exists but no hook in hooks.json prints it")
+        body = out.split("\n\n", 1)[1]
+        body = re.sub(r"\n\nThe rules/ folder named in this ruleset is .*\n$", "", body)
+        bodies.append(body.strip("\n"))
+        part += 1
+    if "\n\n".join(bodies) != read(CORE).replace("\r\n", "\n").strip("\n"):
+        found.append(f"the SessionStart parts do not rebuild {CORE}")
     return found
 
 
@@ -318,6 +452,11 @@ GATES = [
     ("code fences are balanced", code_fences_balanced),
     ("the repo's own prose obeys rules/markdown.md", prose_obeys_markdown_rules),
     ("plugin manifests and the SessionStart hook still resolve", plugin_manifests_resolve),
+    ("the plugin SessionStart hooks deliver the whole core under the output limit",
+     plugin_loads_whole_core),
+    ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),
+    ("the plugin Stop hook holds edits no command followed, once per turn",
+     plugin_verify_hook_holds_unchecked_edits),
 ]
 
 

@@ -86,7 +86,10 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.
 - Relative links resolve and code fences are balanced.
-- The two plugin manifests agree with each other, and every plugin-root path the `SessionStart` hook reads still exists — a hook naming a file that moved loads nothing and says nothing.
+- The two plugin manifests agree with each other, and every plugin-root path a hook reads still exists — a hook naming a file that moved loads nothing and says nothing.
+- The plugin guard (`hooks/guard.sh`) blocks every command on its block list and lets the neighbouring commands through: a guard that stops ordinary work gets disabled, and one that lets a case slip reports a protection nobody has.
+- The plugin `Stop` hook (`hooks/verify.sh`) holds a turn whose last edit no command followed, once, and lets every other turn end.
+- The plugin's `SessionStart` parts (`hooks/load-core.sh`) each stay under Claude Code's inline limit for hook output, rebuild `AGENTS.md` in order, and each has a hook in `hooks/hooks.json`: a part over the limit reaches the session as a two-kilobyte preview.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 
