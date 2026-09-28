@@ -101,6 +101,7 @@ The evals are the acceptance test for anything that changes what an agent does: 
 - The change is accepted only if no task loses passes on any model it was run on. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone.
 - A change made to fix a failing task is tested on that task, and the PR says so; a new task tests it independently (`evals/README.md`, Reading the results).
 - A change to the communication rules is graded with `evals/judge.py` as well, and no rubric criterion drops for the variant that carries the ruleset.
+- A change to what the core loads, or how, also runs `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on all its tasks, and the PR compares it with the published tables in `evals/benchmark/README.md`: cost and code size count as well as passes. Three attempts per task miss a difference of one or two passes; a claim rests on ten.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 

@@ -426,14 +426,21 @@ def plugin_guard_blocks_what_it_names() -> list[str]:
 
 
 def transcript_line(kind: str, name: str = "") -> str:
+    # Key order as Claude Code writes a session record: the message first, the
+    # record's own "type" after it. A hook pattern that assumes the other order
+    # passes a hand-built transcript and misses every real one.
     if kind == "prompt":
-        return json.dumps({"type": "user", "message": {"role": "user", "content": "fix it"}},
-                          separators=(",", ":"))
-    if kind == "result":
-        return json.dumps({"type": "user", "message": {"content": [
-            {"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}}, separators=(",", ":"))
-    return json.dumps({"type": "assistant", "message": {"content": [
-        {"type": "tool_use", "id": "t", "name": name, "input": {}}]}}, separators=(",", ":"))
+        record = {"message": {"role": "user", "content": "fix it"}, "type": "user"}
+    elif kind == "result":
+        record = {"message": {"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}, "type": "user"}
+    elif kind == "text":
+        record = {"message": {"role": "assistant", "content": [
+            {"type": "text", "text": name}]}, "type": "assistant"}
+    else:
+        record = {"message": {"role": "assistant", "content": [
+            {"type": "tool_use", "id": "t", "name": name, "input": {}}]}, "type": "assistant"}
+    return json.dumps(record, separators=(",", ":"))
 
 
 # Each case is a turn as the session transcript records it, whether the Stop
@@ -446,6 +453,13 @@ VERIFY_CASES = [
     ([("prompt",), ("tool", "Edit"), ("result",), ("prompt",), ("tool", "Read"), ("result",)],
      False, False),
     ([("prompt",), ("tool", "Read"), ("result",)], False, False),
+    # A proposed commit message with an assistant trailer, which no shell guard
+    # sees; the same reply clean; the second stop; a trailer from an older turn.
+    ([("prompt",), ("text", "Proposed commit:\n\nFix x\n\nCo-Authored-By: Bot <b@x.io>")],
+     False, True),
+    ([("prompt",), ("text", "Proposed commit:\n\nFix x")], False, False),
+    ([("prompt",), ("text", "Fix x\n\nco-authored-by: Bot <b@x.io>")], True, False),
+    ([("prompt",), ("text", "Co-Authored-By: Bot"), ("prompt",), ("text", "Done.")], False, False),
 ]
 
 
@@ -463,7 +477,7 @@ def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
                 payload = json.dumps({"transcript_path": str(transcript),
                                       "stop_hook_active": second_stop})
                 run = run_hook(runtime, root, "verify", [], payload)
-                steps = " > ".join(step[-1] for step in turn)
+                steps = " > ".join(step[-1][:20] for step in turn)
                 if run.returncode not in (0, 2):
                     found.append(f"{runtime[0]} Stop hook crashed on {steps}: exit "
                                  f"{run.returncode} {run.stderr.strip()}")
@@ -546,7 +560,7 @@ GATES = [
     ("the plugin SessionStart hooks deliver the whole core under the output limit",
      plugin_loads_whole_core),
     ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),
-    ("the plugin Stop hook holds edits no command followed, once per turn",
+    ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
      plugin_verify_hook_holds_unchecked_edits),
 ]
 

@@ -6,7 +6,7 @@
 
 A ruleset written in the [AGENTS.md](https://agents.md) format, with shared rules for AI coding agents: Claude Code, OpenAI Codex, Gemini, Cursor, plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
 
-The always-loaded core covers: concise token-efficient communication, a coding discipline that stops at the first rung that holds (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, debug escalation, and a commit-proposal habit with no assistant traces. On-demand modules in `rules/` extend it — commit messages that inherit the target repo's own convention, backend security, databases, caching, resilience, deployment and infrastructure definitions, payments, and more.
+The always-loaded core covers: concise token-efficient communication, a coding discipline that stops at the first rung that holds (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, and a commit-proposal habit with no assistant traces. The procedure for larger work (assumptions, plans, the last pass before "done", debugging) loads from `rules/workflow.md` when the task calls for it, so the always-loaded part stays under 10 KB. On-demand modules in `rules/` extend it — commit messages that inherit the target repo's own convention, backend security, databases, caching, resilience, deployment and infrastructure definitions, payments, and more.
 
 No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install.
 
@@ -89,7 +89,8 @@ hooks/           # plugin-hooks.json and load-core — the SessionStart hooks th
 gemini-extension.json  # the Gemini CLI extension: loads AGENTS.md as a context file, no hooks
 scripts/         # lint.py — every gate above, run by CI and by the optional
                  # pre-commit hook that install-hooks.py sets up
-evals/           # with/without comparison of the ruleset on trap tasks
+evals/           # with/without comparison of the ruleset on trap tasks; evals/benchmark/ runs the
+                 # same tasks against caveman, ponytail and i-have-adhd
 ```
 
 The core is self-sufficient. Agents read `rules/*.md` only when the task matches (editing Markdown, styling UI, a dedicated refactor, ...) and skip them if the clone can't be located — so importing the single `AGENTS.md` is always enough.
@@ -228,7 +229,7 @@ The first rule in `AGENTS.md` makes the agent end every response with `✓ aweso
 
 Beyond the canary: in Claude Code, `/context` confirms the file is actually loaded and `/doctor` suggests trims; a model-agnostic check is prompting "Summarize the instructions you loaded." If a specific rule keeps being ignored, the usual cause is file length — prune before rephrasing.
 
-The canary sits on the first line, so it proves the start of the file arrived. `/context` shows how many tokens the core takes in your session; to check that the whole file arrived, ask about a rule near its end, such as the Maintaining these rules section.
+The canary sits on the first line, so it proves the start of the file arrived. `/context` shows how many tokens the core takes in your session; to check that the whole file arrived, ask about a rule near its end, such as the Commits section.
 
 ## Evals
 
@@ -236,7 +237,7 @@ The canary sits on the first line, so it proves the start of the file arrived. `
 
 Latest run: Claude Code 2.1.283, 5 attempts per task, variant and model. `without` loads nothing, `import` finds the core in a `CLAUDE.md` (the channel the `@import` install uses), `plugin` installs this repository as a plugin with its hooks. The `import` and `plugin` numbers come from runs made after the plugin's delivery was split into parts. The repository ships the harness and the tasks only: run results (transcripts and `summary.json`) are written outside the checkout and are not committed, so the table is reproduced by running `evals/run.py`, not by reading stored output.
 
-Tasks passed out of 35 (7 tasks × 5 attempts), and the average cost per attempt. The `compacted_claim` scenario was added after this run and is not in the table:
+Tasks passed out of 35 (7 tasks × 5 attempts), and the average cost per attempt. This run used the previous 29 KB core; the benchmark below measures the current one. The `compacted_claim` scenario was added after this run and is not in the table:
 
 | Model | without | import | plugin |
 |---|---|---|---|
@@ -254,9 +255,22 @@ Where the difference comes from:
 Where the ruleset does not deliver yet:
 
 - `unverified_done`: after a one-line fix, sonnet with the ruleset checked its work in 10 of 10 attempts, but 9 of those checks were an ad-hoc snippet and 1 ran the repository's tests, which is what the core rule and the task ask for; haiku ran the tests in 3 of 10. The `Stop` hook counts any command after the last edit as a check, so a snippet satisfies it.
-- On opus the core's "ask which branch before editing" rule stopped a headless one-line fix 3 times out of 10 to ask, which the task counts as a miss.
-- The core adds 7-10k tokens of cache writes per session, through either channel, and on tasks this short the ruleset costs 1.4-1.8× a run without it.
+- On opus the previous core's "ask which branch before editing" rule stopped a headless one-line fix 3 times out of 10 to ask, which the task counts as a miss. That question now lives in `rules/workflow.md`, read for larger work.
+- The previous core added 7-10k tokens of cache writes per session, and on tasks this short the ruleset cost 1.4-1.8× a run without it. The current core is a third of that size; the benchmark below measures it at about 1.5× the baseline, most of it the checks it runs.
 - Four core rules were reworded and the `Stop` hook was added after an earlier round of these runs showed them failing (the commit request, secret values, injections addressed to agents, the proving command in a repository with tests). The numbers above are measured on the same tasks those changes were made for, so they show the changes work on these traps; they are not an independent test.
+
+### Against other plugins
+
+`evals/benchmark/` runs the trap tasks above and twelve coding tasks from [ponytail's agentic benchmark](https://github.com/DietrichGebert/ponytail/tree/main/benchmarks/agentic) (the produced code is executed against adversarial input) through headless Claude Code with no plugin, this ruleset, [caveman](https://github.com/JuliusBrussee/caveman), [ponytail](https://github.com/DietrichGebert/ponytail) and [i-have-adhd](https://github.com/ayghri/i-have-adhd), one plugin per session, each pinned to a commit. `claude-haiku-4-5`, 10 attempts per task:
+
+| | baseline | this ruleset | caveman | ponytail | i-have-adhd |
+|---|--:|--:|--:|--:|--:|
+| Trap tasks passed | 27/80 | **63/80** | 26/80 | 26/80 | 28/80 |
+| Source lines on open "build me" tasks | 109 | 98 | 95 | **69** | 96 |
+| Words in the final reply | 57 | 54 | **24** | 32 | 34 |
+| Cost per task | **$0.048** | $0.071 | $0.054 | $0.057 | $0.055 |
+
+In the full 23-task run, the produced code was equally safe in every arm. This ruleset is the only one that moves the trap tasks off the baseline; ponytail writes the least code and caveman the shortest replies; this ruleset costs the most, since it runs the checks that prove each change. Per-task tables, the method and the history of the changes the benchmark drove are in [evals/benchmark/README.md](evals/benchmark/README.md).
 
 ## Related
 

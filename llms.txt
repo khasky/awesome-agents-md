@@ -8,6 +8,7 @@
 
 ## Rule modules
 
+- [rules/workflow.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/workflow.md): larger work — assumptions, direction choices, plans, the last pass before "done", being stuck, debugging, communication in full.
 - [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): editing Markdown documents and articles.
 - [rules/planning.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/planning.md): producing a plan or spec as the deliverable — explore before asking, decision-complete plans, plan shape, immutable decision records.
 - [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring or cleanup passes, Chesterton's Fence, the rule of 500.

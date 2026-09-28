@@ -1,5 +1,5 @@
 # PowerShell twin of verify.sh for agents that run Windows hooks through
-# PowerShell (Codex). It reads a Claude Code session transcript; a runtime that
+# PowerShell (Codex): the same two checks, the same messages. It reads a Claude Code session transcript; a runtime that
 # passes no transcript path, or another format, finds no edit and lets the turn
 # end. scripts/lint.py runs both scripts against the same turns.
 $ErrorActionPreference = 'Stop'
@@ -17,12 +17,18 @@ if (-not $transcript -or -not (Test-Path -LiteralPath $transcript -PathType Leaf
 
 # Line numbers in the session transcript, one JSON record per line. A user
 # record without a tool_result is a prompt, so it marks where this turn began.
-$turnStart = 0; $lastEdit = 0; $lastCommand = 0; $number = 0
+$turnStart = 0; $lastEdit = 0; $lastCommand = 0; $lastText = 0; $lastTextLine = ''; $number = 0
 foreach ($line in [System.IO.File]::ReadAllLines($transcript)) {
   $number++
   if ($line -match '"type":"user"' -and $line -notmatch '"tool_result"') { $turnStart = $number }
   if ($line -match '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"') { $lastEdit = $number }
   if ($line -match '"type":"tool_use"[^}]*"name":"(Bash|PowerShell)"') { $lastCommand = $number }
+  if ($line -match '"type":"text"' -and $line -match '"role":"assistant"') { $lastText = $number; $lastTextLine = $line }
+}
+
+if ($lastText -gt $turnStart -and $lastTextLine -match '(?i)co-authored-by|claude-session|claude\.ai/code/session') {
+  [Console]::Error.WriteLine('Your reply carries an assistant trace (a Co-Authored-By or session trailer). Commit messages, proposed or made, carry none: give the reply again without it.')
+  exit 2
 }
 
 if ($lastEdit -gt $turnStart -and $lastEdit -gt $lastCommand) {

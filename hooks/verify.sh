@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Stop hook: when the agent edited files in this turn and ran no command after
-# its last edit, it is sent back once to run the check that proves the change
-# or to say the change is unverified. Exit 2 keeps the turn going and hands
-# stderr to the agent.
+# Stop hook, two checks on the turn that is ending, each sending the agent back
+# once. Its final reply carries an assistant trace (a Co-Authored-By or session
+# trailer in a proposed commit message, which the shell guard never sees); or it
+# edited files and ran no command after its last edit. Exit 2 keeps the turn
+# going and hands stderr to the agent.
 set -euo pipefail
 
 payload=$(cat)
@@ -28,6 +29,16 @@ last_line() {
 turn_start=$(last_line '"type":"user"' '"tool_result"')
 last_edit=$(last_line '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"')
 last_command=$(last_line '"type":"tool_use"[^}]*"name":"(Bash|PowerShell)"')
+# Claude Code writes the record's own "type" after its message, so the reply
+# text is found by the message's role and block type, in either order.
+last_text=$({ grep -n '"type":"text"' "$transcript" || true; } |
+  { grep '"role":"assistant"' || true; } | tail -n 1 | cut -d: -f1)
+
+if [ "${last_text:-0}" -gt "${turn_start:-0}" ] &&
+  sed -n "${last_text}p" "$transcript" | grep -qiE 'co-authored-by|claude-session|claude\.ai/code/session'; then
+  printf '%s\n' 'Your reply carries an assistant trace (a Co-Authored-By or session trailer). Commit messages, proposed or made, carry none: give the reply again without it.' >&2
+  exit 2
+fi
 
 if [ "${last_edit:-0}" -gt "${turn_start:-0}" ] && [ "${last_edit:-0}" -gt "${last_command:-0}" ]; then
   printf '%s\n' 'You edited files after your last command. Run the tests or checks of this repository that cover the change before finishing (a snippet you write yourself does not replace them), or say plainly that the change is unverified and why.' >&2
