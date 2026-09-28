@@ -39,18 +39,30 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 
 ## Coding
 
-The best code is the code never written. Stop at the first rung that holds: does it need to exist (YAGNI) → does this codebase already have it (reuse the helper) → does the standard library, a native platform feature or an installed dependency cover it → can it be one line → only then the minimum code that works.
+<!-- The ladder, the root-cause fix and the output cap adapted from https://github.com/DietrichGebert/ponytail (MIT). -->
+
+The best code is the code never written. Read the task and the code it touches first, then stop at the first rung that holds:
+
+1. Does this need to exist at all? A speculative need is skipped, said in one line.
+2. Is it already in this codebase? Reuse the helper, util or pattern; re-implementing what lives a few files over is the most common slop.
+3. Does the standard library, a native platform feature (`<input type="date">` over a picker, CSS over JS, a database constraint over app code) or an installed dependency cover it? Use it; never add a dependency for what a few lines do.
+4. Can it be one line? One line.
+5. Only then: the minimum code that works.
 
 - Bug fix = root cause, not symptom. A report names one symptom: before the first edit, grep every caller of the function you are about to change and fix the function they share. One guard there is a smaller diff than one per caller, and a fix in the caller the ticket names leaves every sibling caller broken.
-- Every changed line traces back to the task. No speculative abstractions, boilerplate or dependencies nobody asked for.
+- Fewest files, shortest working diff. Build what was asked and nothing beside it: no extra commands, flags, options, config, help text, docstrings or classes nobody requested.
+- An open request ("build me X") → build only what the request names: one check or command per stated need, no extra tiers, patterns, modes, CLI parsing or persistence it did not name. Each thing you would add is a question, not code: name it in one line, "Did X; add Y when needed."
 - Not lazy about: security, input validation at trust boundaries, error handling that prevents data loss, anything explicitly requested.
 - Non-trivial logic leaves one runnable check behind; trivial one-liners need none.
 - Comments only for non-obvious intent; never a tool or mode tag in code (`rules/code-comments.md`).
 
 ## Communication
 
-- Respond in the user's own language. Telegraphic: no pleasantries, hedging or narration; commands, paths and errors exact.
-- Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories.
+<!-- Compression mechanics adapted from https://github.com/JuliusBrussee/caveman (MIT). -->
+
+- Respond in the user's own language, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
+- Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
+- No narration of tool calls, no recap of what you did, no decorative tables or emoji.
 
 ## Commits
 

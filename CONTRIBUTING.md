@@ -89,17 +89,18 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 - The Claude Code, Codex and Gemini CLI manifests agree with each other, and every path a hook runs still exists — a hook naming a file that moved loads nothing and says nothing. No `hooks/hooks.json` exists: Gemini CLI runs that file from an extension's root, and these hooks are written for Claude Code and Codex, so they live in `hooks/plugin-hooks.json`.
 - Every hook ships twice, `.sh` for Claude Code and `.ps1` for Codex on Windows, and `hooks/plugin-hooks.json` wires each event to both (`command` and `commandWindows`). The checks below run every twin in each shell the machine has (Git Bash, `pwsh`, Windows PowerShell), from a plugin copy whose path contains spaces, and a missing shell fails the gate.
 - The plugin guard (`hooks/guard.*`) blocks every command on its block list and lets the neighbouring commands through: a guard that stops ordinary work gets disabled, and one that lets a case slip reports a protection nobody has.
-- The plugin `Stop` hook (`hooks/verify.*`) holds a turn whose last edit no command followed, once, and lets every other turn end.
+- The plugin `Stop` hook (`hooks/verify.*`) sends a turn back once for the first of: a reply carrying an assistant trailer, an edit no command followed, a source file created in the turn (one trimming pass), an answer past the word limit when no explanation was asked for. It lets every other turn, and every second stop, end.
 - The plugin's `SessionStart` parts (`hooks/load-core.*`) each stay under Claude Code's inline limit for hook output, rebuild `AGENTS.md` in order, print the same parts in every shell, and each has a hook: a part over the limit reaches the session as a two-kilobyte preview.
 
 CI runs the script on Ubuntu and Windows, runs `evals/benchmark/run.py --selftest` (every benchmark scorer against scripted good and bad outcomes, no agent), and installs the checkout as a plugin into empty Claude Code and Codex homes and as a Gemini CLI extension, failing unless each lists it enabled. A manifest can pass every schema check and still fail to install.
 
 ## Changing the core or a hook
 
-The benchmark against the other plugins is the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on its tasks, on the model of the published tables, and put the result next to those tables in the PR (`evals/benchmark/README.md`).
+The benchmark against the other plugins is the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on its tasks, on the model of the published tables, and put the result next to those tables in the PR (the Benchmark section of `README.md`).
 
 - The change is accepted only if no trap task loses passes. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone. Cost, code size and reply length count as well, and a change that trades trap passes for them is a decision for the maintainer, stated in the PR.
-- Three attempts per task miss a difference of one or two passes; a claim rests on ten. The published history in `evals/benchmark/README.md` has several changes that looked like wins at three and were losses at ten.
+- Three attempts per task miss a difference of one or two passes; a claim rests on ten. Several changes to the core looked like wins at three and were losses at ten.
+- A rule that text alone does not hold on the benchmark's model belongs in a hook, the way answer length, trimming a new file, unasked commits and assistant trailers are held: rewording it again rarely moves the number.
 - A change made to fix a failing task is tested on that task, and the PR says so; the numbers on the task a change was tuned for are not independent evidence.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.

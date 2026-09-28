@@ -466,10 +466,10 @@ def transcript_line(kind: str, name: str = "") -> str:
     # record's own "type" after it. A hook pattern that assumes the other order
     # passes a hand-built transcript and misses every real one.
     if kind == "prompt":
-        record = {"message": {"role": "user", "content": "fix it"}, "type": "user"}
+        record = {"message": {"role": "user", "content": name or "fix it"}, "type": "user"}
     elif kind == "result":
         record = {"message": {"role": "user", "content": [
-            {"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}, "type": "user"}
+            {"type": "tool_result", "tool_use_id": "t", "content": name or "ok"}]}, "type": "user"}
     elif kind == "text":
         record = {"message": {"role": "assistant", "content": [
             {"type": "text", "text": name}]}, "type": "assistant"}
@@ -478,6 +478,11 @@ def transcript_line(kind: str, name: str = "") -> str:
             {"type": "tool_use", "id": "t", "name": name, "input": {}}]}, "type": "assistant"}
     return json.dumps(record, separators=(",", ":"))
 
+
+CREATED = "File created successfully at: C:\\repo with space\\{} (file state is current)"
+LONG_ANSWER = ("The bug was in the range bound of paginate, which stopped one item early, "
+               "so I changed it to run to the end of the list and then checked every page "
+               "size I could think of, and all of them now include the final item as expected.")
 
 # Each case is a turn as the session transcript records it, whether the Stop
 # hook must send the agent back (True), and whether this is the second stop.
@@ -496,6 +501,32 @@ VERIFY_CASES = [
     ([("prompt",), ("text", "Proposed commit:\n\nFix x")], False, False),
     ([("prompt",), ("text", "Fix x\n\nco-authored-by: Bot <b@x.io>")], True, False),
     ([("prompt",), ("text", "Co-Authored-By: Bot"), ("prompt",), ("text", "Done.")], False, False),
+    # The answer's length: past the limit it is sent back; an explanation asked
+    # for, the commit proposal, code blocks and the canary are not counted.
+    ([("prompt",), ("text", LONG_ANSWER)], False, True),
+    ([("prompt",), ("text", " ".join(["word"] * 34))], False, False),
+    ([("prompt", "explain why the test failed"), ("text", LONG_ANSWER)], False, False),
+    ([("prompt",), ("text", "Fixed, 2/2 pass.\n\n**Commit message:**\n```\nFix x\n\n" + LONG_ANSWER
+                  + "\n```\n- pager.py")], False, False),
+    ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```\n\n✓ awesome-agents-md")],
+     False, False),
+    ([("prompt",), ("text", " ".join(["слово"] * 40))], False, True),
+    ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 40))], False, False),
+    ([("prompt",), ("text", LONG_ANSWER)], True, False),
+    # A source file created in this turn gets one trimming pass; a test file,
+    # a non-code file or an updated file does not.
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("tool", "Bash"),
+      ("result",), ("text", "Done.")], False, True),
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("test_todo.py")), ("tool", "Bash"),
+      ("result",), ("text", "Done.")], False, False),
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("notes.md")), ("tool", "Bash"),
+      ("result",), ("text", "Done.")], False, False),
+    ([("prompt",), ("tool", "Edit"), ("result", "The file C:\\repo\\todo.py has been updated successfully."),
+      ("tool", "Bash"), ("result",), ("text", "Done.")], False, False),
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("tool", "Bash"),
+      ("result",), ("text", "Done.")], True, False),
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("prompt", "now list it"),
+      ("tool", "Bash"), ("result",), ("text", "Done.")], False, False),
 ]
 
 
