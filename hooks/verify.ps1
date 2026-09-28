@@ -1,7 +1,8 @@
 # PowerShell twin of verify.sh for agents that run Windows hooks through
-# PowerShell (Codex): the same two checks, the same messages. It reads a Claude Code session transcript; a runtime that
-# passes no transcript path, or another format, finds no edit and lets the turn
-# end. scripts/lint.py runs both scripts against the same turns.
+# PowerShell (Codex): the same two checks, the same messages. It reads a Claude
+# Code session transcript; a runtime that passes no transcript path, or another
+# format, finds nothing and lets the turn end. scripts/lint.py runs both scripts
+# against the same turns.
 $ErrorActionPreference = 'Stop'
 
 try {

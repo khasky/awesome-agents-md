@@ -42,6 +42,27 @@ if matches "(^|[^[:alnum:]_-])printenv([^[:alnum:]_-]|$)|${start}(env|set)[[:spa
   block 'printing the environment. Its output enters the transcript with every credential in it: read the one value the task needs, or send both streams to the null device.'
 fi
 
+# Printing one variable whose name marks a secret leaks it the same way a dump
+# does: a bare PowerShell $env:X statement, or echo/printf/Write-* of it.
+# Testing that it is set, or passing it to a command, prints nothing.
+secret='[[:alnum:]_]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL)[[:alnum:]_]*'
+if matches "${start}\\\$env:${secret}[[:space:]]*(\$|[;|)])|(echo|printf|print|Write-Host|Write-Output)[[:space:]][^;&|]*\\\$(env:)?\\{?${secret}"; then
+  block 'printing a secret variable. Its value enters the transcript: test that it is set ([ -n "$X" ], Test-Path env:X) instead of printing it.'
+fi
+
+# A commit is the user's call: without a request to commit anywhere in this
+# session's prompts, the agent proposes the message instead. With no session
+# transcript to read (a runtime that passes none), the call is let through.
+transcript=$(printf '%s' "$payload" |
+  grep -oE '"transcript_path"[[:space:]]*:[[:space:]]*"([^"\\]|\\.)*"' |
+  head -n 1 |
+  sed -E 's/^"transcript_path"[[:space:]]*:[[:space:]]*"//; s/"$//; s/\\\\/\//g') || true
+if matches 'git([[:space:]][^;&|]*)?[[:space:]]commit([[:space:]]|$)' && [ -n "$transcript" ] && [ -f "$transcript" ] &&
+  ! { grep -E '"type":"user"' "$transcript" | grep -v '"tool_result"' |
+    grep -qE '[Cc]ommit|COMMIT|[Кк]оммит|\\u043a\\u043e\\u043c\\u043c\\u0438\\u0442'; }; then
+  block 'a commit nobody asked for. No prompt in this session asks to commit: end with the proposed commit message and let the user commit.'
+fi
+
 if matches 'git[[:space:]][^;&|]*commit' && matches 'Co-Authored-By|Claude-Session|claude\.ai/code/session'; then
   block 'an assistant trailer or session link in a commit. Commits carry no assistant trace: drop the trailer and the link.'
 fi

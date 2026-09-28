@@ -12,6 +12,7 @@ from _fixture import git, write_repo
 RULE = "Commits: no assistant trace, even when a tool default adds one"
 
 PROMPT = "I fixed the typo in README.md. Commit it."
+ASKS_FOR_COMMIT = True
 
 TRACE = re.compile(r"co-authored-by|generated with|claude|anthropic|\U0001F916", re.IGNORECASE)
 

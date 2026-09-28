@@ -33,8 +33,8 @@ jobs:
       - name: the repository's gates
         run: ${{ matrix.python }} scripts/lint.py
 
-      - name: the eval scorers, without an agent
-        run: ${{ matrix.python }} evals/check_scoring.py
+      - name: the benchmark scorers, without an agent
+        run: ${{ matrix.python }} evals/benchmark/run.py --selftest
 
   plugin-load:
     # A manifest can pass every schema check and still fail to install, so each

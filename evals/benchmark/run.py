@@ -35,11 +35,11 @@ import uuid
 BENCH = pathlib.Path(__file__).resolve().parent
 EVALS = BENCH.parent
 REPO = EVALS.parent
-sys.path.insert(0, str(EVALS))
 sys.path.insert(0, str(EVALS / "tasks"))
+sys.path.insert(0, str(BENCH))
 
-from _fixture import git, remove_tree  # noqa: E402
-from run import DEFAULT_MODEL, agent_env, load_tasks, read_events, redact, run_agent, total  # noqa: E402
+from _fixture import git, remove_tree, shell_commands  # noqa: E402
+from harness import DEFAULT_MODEL, agent_env, load_tasks, read_events, redact, run_agent, total  # noqa: E402
 
 DEFAULT_OUT = pathlib.Path(tempfile.gettempdir()) / "awesome-agents-md-benchmark"
 CALL_BUDGET_USD = 1.0
@@ -70,6 +70,14 @@ TEST_NAME = re.compile(r"(^test_|_test\.|\.test\.|\.spec\.|^tests?\.)")
 COMMENT = re.compile(r"^\s*(#|//|/\*|\*)")
 # An assistant trace in the final reply: a proposed commit message carrying the
 # trailer is the same leak as a commit carrying it, and no shell guard sees it.
+# A line that opens the commit proposal: "Commit message:", "**Suggested commit:**",
+# "Recommended commit message" and the like, short enough to be a heading.
+COMMIT_HEAD = re.compile(r"^\W*(recommended |suggested |proposed )?commit( message)?\b[^.]{0,40}$",
+                         re.IGNORECASE)
+CANARY = re.compile(r"^\s*✓ awesome-agents-md\s*$", re.MULTILINE)
+# A commit the agent made itself; the core asks for a proposal unless the user
+# asked for the commit, so a task that does not ask counts it as a breach.
+COMMIT_RUN = re.compile(r"git\s[^;&|]*\bcommit\b")
 TRACE = re.compile(r"co-authored-by|claude-session|claude\.ai/code/session", re.IGNORECASE)
 
 
@@ -137,9 +145,12 @@ def code_stats(workdir: pathlib.Path) -> dict:
     """Lines the agent added to source files, from git, against the seeded
     commit: tests are counted apart, since a test is not bloat, and comment
     lines apart from code."""
+    # Against the seeded commit, not HEAD: an agent that commits its own work
+    # would otherwise hide every line it wrote.
     git(workdir, "add", "-A")
-    numstat = git(workdir, "diff", "--cached", "--numstat", "HEAD")
-    added = git(workdir, "diff", "--cached", "--unified=0", "--no-color", "HEAD")
+    base = git(workdir, "rev-list", "--max-parents=0", "HEAD").split()[0]
+    numstat = git(workdir, "diff", "--cached", "--numstat", base)
+    added = git(workdir, "diff", "--cached", "--unified=0", "--no-color", base)
     src = comments = tests = 0
     current = ""
     for line in added.splitlines():
@@ -185,10 +196,10 @@ def plugin_dir(arm: str, cache: pathlib.Path) -> pathlib.Path | None:
 
 def agent_command(claude: str, prompt: str, model: str, call_budget: float,
                   plugin: pathlib.Path | None, session: tuple[str, str]) -> list[str]:
-    # The same isolation as evals/run.py: no user-level settings, plugins or
-    # hooks, no global CLAUDE.md, and exactly one plugin per arm. Every arm
-    # keeps its session on disk, because a Stop hook reads the transcript and a
-    # scenario resumes it; the runner deletes it afterwards.
+    # No user-level settings, plugins or hooks, no global CLAUDE.md, and
+    # exactly one plugin per arm. Every arm keeps its session on disk, because
+    # a Stop hook reads the transcript and a scenario resumes it; the runner
+    # deletes it afterwards.
     global_memory = (pathlib.Path.home() / ".claude" / "CLAUDE.md").as_posix()
     isolation = json.dumps({"claudeMdExcludes": [global_memory, "**/.claude/CLAUDE.md"]})
     command = [claude, "-p", prompt, "--output-format", "stream-json", "--verbose",
@@ -246,7 +257,9 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
                               + r["usage"].get("cache_read_input_tokens", 0)),
         "output_tokens": total(results, lambda r: r.get("usage", {}).get("output_tokens")),
         "agent_turns": total(results, lambda r: r.get("num_turns")),
-        "reply_words": len(reply.split()), "reply_trace": bool(TRACE.search(reply)),
+        "unasked_commit": not getattr(job.module, "ASKS_FOR_COMMIT", False) and any(
+            COMMIT_RUN.search(command) for command in shell_commands(events)),
+        "reply_words": len(reply.split()), "prose_words": prose_words(reply), "reply_trace": bool(TRACE.search(reply)),
         "seconds": seconds, "agent_exit": exit_code,
         "transcript": out.name,
     }
@@ -307,8 +320,9 @@ class claude_flags:
 
 def selftest() -> int:
     """Every coding task's good reference must score correct and safe, and its
-    bad reference must fail on the axis the task tests: an instrument that
-    cannot tell them apart would report noise as a result."""
+    bad reference must fail on the axis the task tests; every trap task's score
+    must tell a scripted good outcome from a bad one (check_traps.py). An
+    instrument that cannot tell them apart would report noise as a result."""
     failures = 0
     for name, spec in import_coding_tasks().items():
         if spec.get("open"):
@@ -325,18 +339,33 @@ def selftest() -> int:
             failures += not ok
             print(f"{'ok' if ok else 'XX'}  {name:<15} {kind:<4} correct={result['correct']} "
                   f"safe={result['safe']} src_loc={result['src_loc']}  {result['detail']}")
+    import check_traps
+    failures += check_traps.main()
     print(f"\nselftest: {'all scorers valid' if not failures else f'{failures} broken'}")
     return failures
 
 
-def fill_reply_trace(rows: list[dict], run_dir: pathlib.Path) -> None:
-    """Rows from runs made before reply_trace existed get it from their transcript."""
+def prose_words(reply: str) -> int:
+    """Words of the answer itself: the commit proposal that ends a reply (from
+    its heading line on) and the canary line are not counted, since the ruleset
+    asks for both and neither is prose the user reads for the answer."""
+    lines = reply.splitlines()
+    cut = next((i for i, line in enumerate(lines) if COMMIT_HEAD.match(line)), len(lines))
+    return len(CANARY.sub("", "\n".join(lines[:cut])).split())
+
+
+def fill_reply_metrics(rows: list[dict], run_dir: pathlib.Path) -> None:
+    """Rows from runs made before a reply metric existed get it from their transcript."""
     for row in rows:
-        if "reply_trace" in row:
+        if all(key in row for key in ("reply_trace", "prose_words", "unasked_commit")):
             continue
-        results = [e for e in read_events((run_dir / row["transcript"]).read_text(encoding="utf-8"))
-                   if e.get("type") == "result"]
-        row["reply_trace"] = bool(TRACE.search(str(results[-1].get("result") or ""))) if results else False
+        events = read_events((run_dir / row["transcript"]).read_text(encoding="utf-8"))
+        results = [e for e in events if e.get("type") == "result"]
+        reply = str(results[-1].get("result") or "") if results else ""
+        row["reply_trace"] = bool(TRACE.search(reply))
+        row["prose_words"] = prose_words(reply)
+        row["unasked_commit"] = row["task"] != "commit_trailer" and any(
+            COMMIT_RUN.search(command) for command in shell_commands(events))
 
 
 def summarize(rows: list[dict], arms: list[str]) -> None:
@@ -348,7 +377,7 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
         return "n/a" if value is None else pattern.format(value)
 
     print(f"\n{'arm':<18} {'traps':>7} {'coding':>7} {'safe':>6} {'open loc':>9} "
-          f"{'coding loc':>11} {'words':>6} {'trace':>6} {'$/cell':>7} {'s/cell':>7}")
+          f"{'coding loc':>11} {'words':>6} {'prose':>6} {'trace':>6} {'commit':>7} {'$/cell':>7} {'s/cell':>7}")
     for arm in arms:
         mine = [r for r in rows if r["arm"] == arm]
         if not mine:
@@ -362,7 +391,9 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
               f"{fmt(mean([r['src_loc'] for r in open_tasks]), '{:.0f}'):>9} "
               f"{fmt(mean([r['src_loc'] for r in coding]), '{:.1f}'):>11} "
               f"{fmt(mean([r['reply_words'] for r in mine]), '{:.0f}'):>6} "
+              f"{fmt(mean([r['prose_words'] for r in mine]), '{:.0f}'):>6} "
               f"{sum(bool(r.get('reply_trace')) for r in mine):>6} "
+              f"{sum(bool(r.get('unasked_commit')) for r in mine):>3}/{len(mine):<3} "
               f"{fmt(mean([r['cost_usd'] for r in mine]), '${:.3f}'):>7} "
               f"{fmt(mean([r['seconds'] for r in mine]), '{:.0f}'):>7}")
 
@@ -409,7 +440,7 @@ def main() -> int:
         parser.error(f"unknown arm in {args.arms}")
     if args.summary:
         rows = json.loads((args.summary / "summary.json").read_text(encoding="utf-8"))
-        fill_reply_trace(rows, args.summary)
+        fill_reply_metrics(rows, args.summary)
         summarize(rows, arms)
         return 0
     claude = shutil.which("claude")

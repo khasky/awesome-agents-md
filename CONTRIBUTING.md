@@ -92,16 +92,15 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 - The plugin `Stop` hook (`hooks/verify.*`) holds a turn whose last edit no command followed, once, and lets every other turn end.
 - The plugin's `SessionStart` parts (`hooks/load-core.*`) each stay under Claude Code's inline limit for hook output, rebuild `AGENTS.md` in order, print the same parts in every shell, and each has a hook: a part over the limit reaches the session as a two-kilobyte preview.
 
-CI runs the script on Ubuntu and Windows, runs `evals/check_scoring.py` (the eval scorers against scripted outcomes, no agent), and installs the checkout as a plugin into empty Claude Code and Codex homes and as a Gemini CLI extension, failing unless each lists it enabled. A manifest can pass every schema check and still fail to install.
+CI runs the script on Ubuntu and Windows, runs `evals/benchmark/run.py --selftest` (every benchmark scorer against scripted good and bad outcomes, no agent), and installs the checkout as a plugin into empty Claude Code and Codex homes and as a Gemini CLI extension, failing unless each lists it enabled. A manifest can pass every schema check and still fail to install.
 
 ## Changing the core or a hook
 
-The evals are the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/run.py` on the changed tasks before and after the change, on the same model and with the same repeats, and put both tables in the PR.
+The benchmark against the other plugins is the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on its tasks, on the model of the published tables, and put the result next to those tables in the PR (`evals/benchmark/README.md`).
 
-- The change is accepted only if no task loses passes on any model it was run on. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone.
-- A change made to fix a failing task is tested on that task, and the PR says so; a new task tests it independently (`evals/README.md`, Reading the results).
-- A change to the communication rules is graded with `evals/judge.py` as well, and no rubric criterion drops for the variant that carries the ruleset.
-- A change to what the core loads, or how, also runs `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on all its tasks, and the PR compares it with the published tables in `evals/benchmark/README.md`: cost and code size count as well as passes. Three attempts per task miss a difference of one or two passes; a claim rests on ten.
+- The change is accepted only if no trap task loses passes. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone. Cost, code size and reply length count as well, and a change that trades trap passes for them is a decision for the maintainer, stated in the PR.
+- Three attempts per task miss a difference of one or two passes; a claim rests on ten. The published history in `evals/benchmark/README.md` has several changes that looked like wins at three and were losses at ten.
+- A change made to fix a failing task is tested on that task, and the PR says so; the numbers on the task a change was tuned for are not independent evidence.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 

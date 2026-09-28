@@ -396,6 +396,14 @@ GUARD_CASES = [
     ("cat /proc/1/environ", True),
     ("Get-ChildItem env:", True),
     ("git commit -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
+    ("$env:PAYMENTS_API_KEY; $env:DATABASE_URL", True),
+    ("echo $API_KEY", True),
+    ("Write-Host $env:GITHUB_TOKEN", True),
+    ("printf '%s' \"${DB_PASSWORD}\"", True),
+    ("Test-Path env:PAYMENTS_API_KEY", False),
+    ("[ -n \"$API_KEY\" ] && echo set", False),
+    ("curl -H \"Authorization: Bearer $API_TOKEN\" https://example.com", False),
+    ("$env:DATABASE_URL", False),
     ("git push origin main", False),
     ("git push --follow-tags", False),
     ("git commit -m 'verify the parser'", False),
@@ -406,22 +414,50 @@ GUARD_CASES = [
 ]
 
 
+# Each case is the session's user prompts, whether they are written with
+# non-ASCII escaped (as json.dumps does) or raw, a command, and whether the
+# guard must block it: a commit is blocked unless some prompt asks for one.
+GUARD_SESSION_CASES = [
+    (["fix the bug in pager.py"], True, "git add pager.py && git commit -m 'Fix pager'", True),
+    (["fix the bug and commit it"], True, "git commit -m 'Fix pager'", False),
+    (["Commit it."], True, "git -c user.name=x commit -qam 'Fix'", False),
+    (["почини баг и закоммить"], True, "git commit -m 'Fix'", False),
+    (["почини баг и закоммить"], False, "git commit -m 'Fix'", False),
+    (["почини баг"], False, "git commit -m 'Fix'", True),
+    (["fix the bug in pager.py"], True, "git log --oneline -3", False),
+    (["fix the bug in pager.py"], True, "git status && git diff", False),
+]
+
+
 def plugin_guard_blocks_what_it_names() -> list[str]:
     # Runs the real hook scripts the way the agents do: the tool call as JSON
     # on stdin, exit 2 meaning blocked.
     runtimes, found = hook_runtimes()
     with tempfile.TemporaryDirectory() as scratch:
         root = plugin_copy(scratch)
+        transcript = root / "session log.jsonl"
+        cases = [(command, expect_block, None) for command, expect_block in GUARD_CASES]
+        cases += [(command, expect_block, (prompts, escaped))
+                  for prompts, escaped, command, expect_block in GUARD_SESSION_CASES]
         for runtime in runtimes:
-            for command, expect_block in GUARD_CASES:
-                payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
-                run = run_hook(runtime, root, "guard", [], payload)
+            for command, expect_block, session in cases:
+                request = {"tool_name": "Bash", "tool_input": {"command": command}}
+                label = repr(command)
+                if session:
+                    prompts, escaped = session
+                    transcript.write_text("".join(
+                        json.dumps({"message": {"role": "user", "content": prompt}, "type": "user"},
+                                   ensure_ascii=escaped, separators=(",", ":")) + "\n"
+                        for prompt in prompts), encoding="utf-8")
+                    request["transcript_path"] = str(transcript)
+                    label += f" after {prompts!r}" + (" (escaped)" if escaped else " (raw)")
+                run = run_hook(runtime, root, "guard", [], json.dumps(request))
                 if run.returncode not in (0, 2):
-                    found.append(f"{runtime[0]} guard crashed on {command!r}: exit "
+                    found.append(f"{runtime[0]} guard crashed on {label}: exit "
                                  f"{run.returncode} {run.stderr.strip()}")
                 elif (run.returncode == 2) != expect_block:
                     verdict = "let through" if expect_block else "blocked"
-                    found.append(f"{runtime[0]} guard {verdict} {command!r}")
+                    found.append(f"{runtime[0]} guard {verdict} {label}")
     return found
 
 
