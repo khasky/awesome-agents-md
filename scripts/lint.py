@@ -9,6 +9,7 @@ whatever machine the contributor is sitting at.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -22,6 +23,10 @@ CORE = "AGENTS.md"
 CORE_LINE_LIMIT = 200
 CORE_BYTE_LIMIT = 32 * 1024
 INDEX_HEADING = "## On-demand rule modules"
+# The module index lives in its own file, read when a task leaves the core:
+# kept out of the always-loaded core, it costs nothing on a turn that needs
+# no module.
+INDEX_FILE = "rules/INDEX.md"
 
 
 def read(path: str) -> str:
@@ -35,7 +40,8 @@ def tracked_markdown() -> list[str]:
 
 
 def modules() -> list[str]:
-    return sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "rules").glob("*.md"))
+    return sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "rules").glob("*.md")
+                  if p.relative_to(ROOT).as_posix() != INDEX_FILE)
 
 
 def strip_comments(line: str) -> str:
@@ -121,9 +127,9 @@ def names_several_ecosystems(line: str) -> bool:
 
 
 def module_descriptions() -> list[tuple[str, int, str]]:
-    # Every place a module is described: its own file, its entry in the core
-    # index, and its entry in llms.txt. The core above the index has its own
-    # gate, so its lines start the count without being scanned.
+    # Every place a module is described: its own file, its entry in the index
+    # file and in the core's pointer to it, and its entry in llms.txt. The core
+    # above the index heading has its own gate, so it is not scanned here.
     lines = [(path, number, raw) for path in modules()
              for number, raw in enumerate(read(path).splitlines(), 1)]
     core = read(CORE).splitlines()
@@ -131,6 +137,8 @@ def module_descriptions() -> list[tuple[str, int, str]]:
                        len(core))
     lines += [(CORE, number, raw)
               for number, raw in enumerate(core[index_start:], index_start + 1)]
+    lines += [(INDEX_FILE, number, raw)
+              for number, raw in enumerate(read(INDEX_FILE).splitlines(), 1)]
     lines += [("llms.txt", number, raw)
               for number, raw in enumerate(read("llms.txt").splitlines(), 1)]
     return lines
@@ -149,13 +157,15 @@ def modules_name_no_stack() -> list[str]:
 
 
 def modules_listed_in_index() -> list[str]:
-    # Scoped to the index section: a module referenced only in the body of the
-    # core is still unlisted for a reader scanning the index. A core that lost
-    # the heading has no index at all, so every module is an orphan.
+    # A module missing from the index is never opened, since the agent picks
+    # modules from it; a core that no longer points at the index hides all of
+    # them at once.
     sections = read(CORE).split(INDEX_HEADING, 1)
-    index = sections[1] if len(sections) == 2 else ""
-    return [f"orphan: {path} is not in the On-demand module index of {CORE}"
-            for path in modules() if path not in index]
+    found = [] if len(sections) == 2 and INDEX_FILE in sections[1] else [
+        f"{CORE} has no {INDEX_HEADING!r} section pointing at {INDEX_FILE}"]
+    index = read(INDEX_FILE)
+    return found + [f"orphan: {path} is not in {INDEX_FILE}" for path in modules()
+                    if path not in index]
 
 
 def modules_open_with_trigger() -> list[str]:
@@ -479,10 +489,13 @@ def transcript_line(kind: str, name: str = "") -> str:
     return json.dumps(record, separators=(",", ":"))
 
 
-CREATED = "File created successfully at: C:\\repo with space\\{} (file state is current)"
-LONG_ANSWER = ("The bug was in the range bound of paginate, which stopped one item early, "
-               "so I changed it to run to the end of the list and then checked every page "
-               "size I could think of, and all of them now include the final item as expected.")
+# {root} becomes the plugin copy, where the harness writes a 60-line todo.py
+# and a 10-line tiny.py: the hook trims only a file past its size floor.
+CREATED = "File created successfully at: {{root}}{{sep}}{} (file state is current)"
+MID_ANSWER = ("The bug was in the range bound of paginate, which stopped one item early, "
+              "so I changed it to run to the end of the list and then checked every page "
+              "size I could think of, and all of them now include the final item as expected.")
+LONG_ANSWER = MID_ANSWER + " " + MID_ANSWER
 
 # Each case is a turn as the session transcript records it, whether the Stop
 # hook must send the agent back (True), and whether this is the second stop.
@@ -505,18 +518,21 @@ VERIFY_CASES = [
     # for, the commit proposal, code blocks and the canary are not counted.
     ([("prompt",), ("text", LONG_ANSWER)], False, True),
     ([("prompt",), ("text", " ".join(["word"] * 34))], False, False),
+    ([("prompt",), ("text", MID_ANSWER)], False, False),
     ([("prompt", "explain why the test failed"), ("text", LONG_ANSWER)], False, False),
     ([("prompt",), ("text", "Fixed, 2/2 pass.\n\n**Commit message:**\n```\nFix x\n\n" + LONG_ANSWER
                   + "\n```\n- pager.py")], False, False),
     ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```\n\n✓ awesome-agents-md")],
      False, False),
-    ([("prompt",), ("text", " ".join(["слово"] * 40))], False, True),
-    ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 40))], False, False),
+    ([("prompt",), ("text", " ".join(["слово"] * 70))], False, True),
+    ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 70))], False, False),
     ([("prompt",), ("text", LONG_ANSWER)], True, False),
     # A source file created in this turn gets one trimming pass; a test file,
     # a non-code file or an updated file does not.
     ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("tool", "Bash"),
       ("result",), ("text", "Done.")], False, True),
+    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("tiny.py")), ("tool", "Bash"),
+      ("result",), ("text", "Done.")], False, False),
     ([("prompt",), ("tool", "Write"), ("result", CREATED.format("test_todo.py")), ("tool", "Bash"),
       ("result",), ("text", "Done.")], False, False),
     ([("prompt",), ("tool", "Write"), ("result", CREATED.format("notes.md")), ("tool", "Bash"),
@@ -537,10 +553,17 @@ def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
     with tempfile.TemporaryDirectory() as scratch:
         root = plugin_copy(scratch)
         transcript = root / "session log.jsonl"
+        (root / "todo.py").write_text("".join(f"x{i} = {i}\n" for i in range(60)), encoding="utf-8")
+        (root / "tiny.py").write_text("".join(f"x{i} = {i}\n" for i in range(10)), encoding="utf-8")
+
+        def resolved(step: tuple) -> tuple:
+            return tuple(part.replace("{root}", str(root)).replace("{sep}", os.sep)
+                         for part in step)
+
         for runtime in runtimes:
             for turn, second_stop, expect_block in VERIFY_CASES:
-                transcript.write_text("\n".join(transcript_line(*step) for step in turn) + "\n",
-                                      encoding="utf-8")
+                transcript.write_text("\n".join(transcript_line(*resolved(step)) for step in turn)
+                                      + "\n", encoding="utf-8")
                 payload = json.dumps({"transcript_path": str(transcript),
                                       "stop_hook_active": second_stop})
                 run = run_hook(runtime, root, "verify", [], payload)
@@ -615,7 +638,7 @@ GATES = [
     (f"core {CORE} names no framework, library, or non-baseline CLI", core_names_no_tool),
     ("modules name stacks only as marked examples or across ecosystems",
      modules_name_no_stack),
-    (f"every rules module is listed in the {CORE} module index", modules_listed_in_index),
+    (f"every rules module is listed in {INDEX_FILE}, and {CORE} points at it", modules_listed_in_index),
     ("every rules module opens with its trigger line", modules_open_with_trigger),
     ("llms.txt stays in sync with rules/", llms_in_sync),
     ("llms.txt links point at files that exist", llms_links_exist),

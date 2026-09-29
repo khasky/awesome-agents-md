@@ -35,7 +35,7 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 - A completion claim you inherited is a claim, not evidence: a previous session's state file, a subagent's report, a summary that survived compaction, a checklist already ticked. Re-run the proving command before repeating any of it; an inherited "done" is the one claim nobody ever verified. After compaction, continue from the summary without redoing what it records as finished, but a summarized "done" gets its proving command run again before you repeat it.
 - Bug fix = re-run the original failing scenario and watch it pass. Fix the implementation, not the test, unless the test itself is provably wrong.
 - Verification impossible → say exactly what was not verified and why; never imply success.
-- Final response for code changes: at most three short lines, what changed, the evidence, what remains unverified or risky.
+- Final response for code changes: at most 35 words (code and the commit proposal not counted): what changed, the evidence, what remains unverified or risky.
 
 ## Coding
 
@@ -61,7 +61,7 @@ The best code is the code never written. Read the task and the code it touches f
 <!-- Compression mechanics adapted from https://github.com/JuliusBrussee/caveman (MIT). -->
 
 - Respond in the user's own language, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
-- Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
+- Answer in at most 35 words unless the user asks for an explanation. Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
 - No narration of tool calls, no recap of what you did, no decorative tables or emoji.
 
 ## Commits
@@ -72,46 +72,4 @@ After a task that changed files inside a git repository, end with a recommended 
 
 ## On-demand rule modules
 
-Read these only when the task matches. They live in the `rules/` folder next to this file; if it can't be located, proceed: the core above is sufficient.
-
-- `rules/workflow.md`: larger work, a plan, the last pass before "done", being stuck, debugging.
-- `rules/markdown.md`: editing Markdown documents.
-- `rules/code-comments.md`: writing, reviewing or cleaning up comments.
-- `rules/commit-messages.md`: any commit message, PR title or branch name.
-- `rules/planning.md`: a plan or spec as the deliverable; a decision record.
-- `rules/refactoring.md`: a dedicated refactor or cleanup.
-- `rules/debugging.md`: a fix failed twice or the same error keeps returning.
-- `rules/code-review.md`: reviewing a diff or PR, or preparing one.
-- `rules/testing.md`: writing or restructuring tests.
-- `rules/evidence-gates.md`: turning a verification rule into an enforced gate.
-- `rules/browser-automation.md`: driving a live browser or testing an extension.
-- `rules/frontend-design.md`: building, styling or reviewing web UI.
-- `rules/web-seo.md`: building or auditing public web pages.
-- `rules/i18n.md`: UI text in more than one language or locale.
-- `rules/backend-security.md`: server or API code, and what a shipped client may hold.
-- `rules/crypto.md`: hashing, encryption, signing, tokens, keys.
-- `rules/database.md`: schema, migrations, queries, connection pools.
-- `rules/caching.md`: adding or reviewing a cache, or clearing a stale one.
-- `rules/messaging.md`: queues, event streams, pub/sub, webhooks.
-- `rules/jobs.md`: cron, scheduled and batch work.
-- `rules/observability.md`: logging, health checks, metrics, alerts, shutdown, env config.
-- `rules/incident-response.md`: a live production incident.
-- `rules/public-api-design.md`: designing or evolving an HTTP API for external clients.
-- `rules/api-contracts.md`: machine-readable API schemas, contract packages, generated clients.
-- `rules/resilience.md`: calls to other services: timeouts, retries, circuit breakers.
-- `rules/rate-limiting.md`: rate limiters and quotas.
-- `rules/deployment.md`: shipping to a running environment, release branches, build artifacts, infrastructure definitions.
-- `rules/shell-scripts.md`: shell scripts beyond a one-liner.
-- `rules/ci-cd-security.md`: CI workflows and release automation.
-- `rules/monorepo.md`: a repository holding several packages built together.
-- `rules/git-hooks.md`: pre-commit, commit-msg or pre-push automation.
-- `rules/dependencies.md`: adding, upgrading or auditing packages, agent skills, MCP servers or plugins, or a lockfile conflict.
-- `rules/llm-agents.md`: code that calls an LLM, and configuring or pointing an agent's tools.
-- `rules/subagents.md`: spawning a subagent or writing an agent definition.
-- `rules/shared-machine.md`: heavy builds, suites or parallel work on a machine other sessions share.
-- `rules/memory.md`: the agent has persistent memory.
-- `rules/long-running-agents.md`: unattended runs across many iterations.
-- `rules/payments.md`: integrating a payment provider.
-- `rules/privacy.md`: personal data, analytics or tracking scripts, session-recording SDKs.
-- `rules/design-patterns.md`: structuring modules, adding state, wiring dependencies between modules, choosing a pattern.
-- `rules/performance.md`: making code faster or diagnosing latency.
+A task in an area this file does not cover (databases, payments, CI, UI, a plan, a review, a failed fix) → read `rules/INDEX.md`, pick the module that matches, read it.

@@ -4,7 +4,9 @@
 # another format, finds nothing and lets the turn end. scripts/lint.py runs both
 # scripts against the same turns.
 $ErrorActionPreference = 'Stop'
-$AnswerWordLimit = 35
+$AnswerWordTrigger = 60
+$AnswerWordTarget = 35
+$TrimMinLines = 40
 
 try {
   $payload = [Console]::In.ReadToEnd() | ConvertFrom-Json
@@ -44,7 +46,12 @@ if ($lastEdit -gt $turnStart -and $lastEdit -gt $lastCommand) {
 $lines = [System.IO.File]::ReadAllLines($transcript)
 foreach ($line in $lines[$turnStart..($lines.Length - 1)]) {
   foreach ($hit in [regex]::Matches($line, 'File created successfully at: [^"(]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|kt|swift)([^A-Za-z0-9]|$)')) {
-    if ($hit.Value -notmatch '(?i)(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.') {
+    if ($hit.Value -match '(?i)(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.') { continue }
+    # A file already within $TrimMinLines non-blank lines is lean enough that
+    # the pass would cost a turn and save little.
+    $file = ($hit.Value.Substring('File created successfully at: '.Length) -replace '[^A-Za-z0-9]$', '') -replace '\\\\', '\'
+    if ((Test-Path -LiteralPath $file -PathType Leaf) -and
+        @([System.IO.File]::ReadAllLines($file) | Where-Object { $_.Trim() }).Count -gt $TrimMinLines) {
       [Console]::Error.WriteLine('Before finishing, re-read the source file you created and delete what the request did not name: extra options, modes, tiers, checks, CLI parsing, persistence, docstrings. Keep input validation at trust boundaries, error handling that prevents data loss and one runnable check. Run it once more, then answer in at most three short lines.')
       exit 2
     }
@@ -71,8 +78,8 @@ foreach ($line in ($text -split "`r?`n")) {
   if ($fence -or $line -match 'awesome-agents-md') { continue }
   $words += @($line -split '\s+' | Where-Object { $_ }).Count
 }
-if ($words -gt $AnswerWordLimit) {
-  [Console]::Error.WriteLine("Your answer is $words words. Give it again in at most three short lines (what changed or happened, the evidence, what is unverified or the options); keep the commit proposal, code and warnings as they are.")
+if ($words -gt $AnswerWordTrigger) {
+  [Console]::Error.WriteLine("Your answer is $words words. Give it again in at most $AnswerWordTarget words: what changed or happened, the evidence, what is unverified or the options; keep the commit proposal, code and warnings as they are.")
   exit 2
 }
 exit 0

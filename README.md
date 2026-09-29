@@ -68,9 +68,9 @@ Fix typo in README: invoces → invoices
 
 ```text
 AGENTS.md        # the core ruleset — always loaded, under 200 instruction lines and 32 KiB (CI-enforced)
-rules/           # on-demand modules, read only when the task matches — the full list
-                 # with trigger conditions is the last section of AGENTS.md, and CI
-                 # fails if a module there is missing or a module here is unlisted
+rules/           # on-demand modules, read only when the task matches; rules/INDEX.md lists
+                 # them with their triggers, and CI fails if a module there is missing
+                 # or a module here is unlisted
 README.md        # setup and optional tooling (this file)
 llms.txt         # index of the core and every module for LLM consumption —
                  # CI keeps it two-way synced with rules/
@@ -124,7 +124,7 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 What the hooks do:
 
 - `guard` (before every shell command) blocks skipping git hooks (`--no-verify`, a `core.hooksPath` override), force-pushing, printing the environment or a secret variable, a `git commit` in a session where you never asked for one, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal.
-- `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit no command followed; a source file it created, to trim what the request did not name; an answer over 35 words when no explanation was asked for (code and the commit proposal not counted).
+- `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit no command followed; a source file it created past 40 lines, to trim what the request did not name; an answer over 60 words when no explanation was asked for, to cut it to 35 (code and the commit proposal not counted).
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI gets the core only, without hooks.
 
@@ -154,7 +154,7 @@ Then add one import line to the agent's global instructions file (create it if i
 
 ## How modules load
 
-Nothing loads a module automatically. The core ends with an index, one line per module naming the task that should open it, and the agent reads a module when the task in front of it matches that line. Loading is therefore the agent's judgment call, the same as any other instruction it follows. To check that a module was read, ask the agent which `rules/` files it opened for the task, or watch for the file read in the tool log.
+Nothing loads a module automatically. The core points at `rules/INDEX.md`, one line per module naming the task that should open it; the agent reads the index when a task leaves the core, then the module whose line matches. The index stays out of the always-loaded core, so a turn that needs no module does not pay for it. Loading is therefore the agent's judgment call, the same as any other instruction it follows. To check that a module was read, ask the agent which `rules/` files it opened for the task, or watch for the file read in the tool log.
 
 Conflicts resolve in a fixed order: the user's message, then the nearest project `AGENTS.md`/`CLAUDE.md`, then this core and the modules it indexes.
 
@@ -193,25 +193,25 @@ Every plugin is cloned at its commit and loaded with `--plugin-dir`; the owner's
 | | baseline | this ruleset | caveman | ponytail | i-have-adhd |
 |---|--:|--:|--:|--:|--:|
 | **Trap tasks passed, of 40** | | | | | |
-| `claude-haiku-4-5` | 14 | **29** | 13 | 14 | 13 |
-| `claude-sonnet-5` | 18 | **36** | 18 | 16 | 16 |
+| `claude-haiku-4-5` | 14 | **26** | 13 | 14 | 13 |
+| `claude-sonnet-5` | 18 | **33** | 18 | 16 | 16 |
 | `claude-opus-5-5` | 30 | **40** | 29 | 29 | 29 |
 | **Source lines on open requests** | | | | | |
-| `claude-haiku-4-5` | 116 | 81 | 101 | **64** | 81 |
+| `claude-haiku-4-5` | 116 | **60** | 101 | 64 | 81 |
 | `claude-sonnet-5` | 103 | **67** | 100 | 73 | 102 |
-| `claude-opus-5-5` | 144 | **36** | 144 | 48 | 113 |
+| `claude-opus-5-5` | 144 | **37** | 144 | 48 | 113 |
 | **Words in the answer** | | | | | |
 | `claude-haiku-4-5` | 55 | **25** | **25** | 36 | 32 |
-| `claude-sonnet-5` | 46 | **25** | 27 | 40 | 38 |
-| `claude-opus-5-5` | 142 | **59** | 119 | 109 | 127 |
+| `claude-sonnet-5` | 46 | **20** | 27 | 40 | 38 |
+| `claude-opus-5-5` | 142 | **42** | 119 | 109 | 127 |
 | **Cost per task** | | | | | |
-| `claude-haiku-4-5` | **$0.050** | $0.079 | $0.054 | $0.054 | $0.055 |
-| `claude-sonnet-5` | **$0.098** | $0.147 | $0.120 | $0.118 | $0.109 |
-| `claude-opus-5-5` | **$0.142** | $0.197 | $0.185 | $0.161 | $0.164 |
+| `claude-haiku-4-5` | **$0.050** | $0.074 | $0.054 | $0.054 | $0.055 |
+| `claude-sonnet-5` | **$0.098** | $0.131 | $0.120 | $0.118 | $0.109 |
+| `claude-opus-5-5` | **$0.142** | $0.166 | $0.185 | $0.161 | $0.164 |
 
-Where the trap gap comes from: on every model this ruleset alone left no `Co-Authored-By` trailer (5 of 5 against 0 or 1) and ran the suite before calling a one-line fix done (opus 5 of 5, every other arm 0); on haiku and sonnet it alone never printed the environment. Opus passes most other traps without any plugin. The bug-report task (fix the shared function, not the caller the report names) went 5 of 5 for this ruleset and ponytail on sonnet, 5 of 5 for every arm on opus, and 0 for every arm on haiku. Unasked commits happened on haiku only: 10 of 60 without a plugin, 1 with this ruleset. On haiku, the eleven safety and quality coding tasks (3 attempts) held against the adversarial input in every arm, with one miss for this ruleset (a `null` body, 32 of 33).
+Where the trap gap comes from: on every model this ruleset alone left no `Co-Authored-By` trailer (5 of 5 against 0 or 1) and ran the suite before calling a one-line fix done (opus 5 of 5, every other arm 0); on haiku and sonnet it alone never printed the environment. Opus passes most other traps without any plugin. The bug-report task (fix the shared function, not the caller the report names) went 5 of 5 for this ruleset and ponytail on sonnet, 5 of 5 for every arm on opus, and 0 for every arm on haiku. Unasked commits happened on haiku only: 10 of 60 without a plugin, 2 with this ruleset. On haiku, the eleven safety and quality coding tasks (3 attempts) held against the adversarial input in every arm, with one miss for this ruleset (a `null` body, 32 of 33).
 
-What it shows: the ruleset is the only arm that moves the trap tasks off the baseline, and on sonnet and opus it also writes the least code and the shortest answers; on haiku ponytail writes less code. It is the most expensive arm on every model: it runs the check that proves each change, and its `Stop` hook sends the agent back to shorten a long answer or trim a new file. Rewording the core toward caveman's and ponytail's rules moved length and code size but cost trap passes; the hooks moved them without that.
+What it shows: the ruleset is the only arm that moves the trap tasks off the baseline, and on every model it writes the least code; on sonnet and opus it also gives the shortest answers. It costs more than the other plugins except caveman on opus: 3% over ponytail on opus, 11% on sonnet, 37% on haiku. Most of that is the check it runs to prove each change, and on haiku the `Stop` hook sending the agent back. Two changes took 6 to 16% off its cost without touching those checks: the module index moved out of the always-loaded core into `rules/INDEX.md`, and the answer limit stated as a number of words, which the larger models meet on the first try instead of after a costly `Stop` return.
 
 Limits: five attempts per task, so a difference of one or two on a single task is noise; one Claude Code version at one effort level; the trap tasks are this repository's own, so they show the rules work where they aim, not that they are complete.
 

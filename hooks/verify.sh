@@ -7,9 +7,12 @@
 # hands stderr to the agent.
 set -euo pipefail
 
-# About the length of ponytail's and caveman's answers in the benchmark, where
-# this ruleset's ran near 45.
-ANSWER_WORD_LIMIT=35
+# An answer past ANSWER_WORD_TRIGGER words is sent back to be cut to
+# ANSWER_WORD_TARGET. Below the trigger a rewrite costs a whole turn and, on the
+# benchmark's larger models, came back about as long.
+ANSWER_WORD_TRIGGER=60
+ANSWER_WORD_TARGET=35
+TRIM_MIN_LINES=40
 
 payload=$(cat)
 
@@ -53,10 +56,20 @@ fi
 # A source file created in this turn gets one trimming pass: an open request is
 # where agents build tiers, modes and options nobody named. Test files and
 # non-code files are left alone.
-created=$(tail -n +"$(( ${turn_start:-0} + 1 ))" "$transcript" |
+# A file already within TRIM_MIN_LINES non-blank lines is lean enough that the
+# pass would cost a turn and save little.
+large=''
+while IFS= read -r hit; do
+  file=$(printf '%s' "${hit#File created successfully at: }" |
+    sed -E 's/[^[:alnum:]]$//; s/\\\\/\//g; s/\\/\//g')
+  if [ -f "$file" ] && [ "$(grep -c '[^[:space:]]' "$file" || true)" -gt "$TRIM_MIN_LINES" ]; then
+    large=$file
+    break
+  fi
+done < <(tail -n +"$(( ${turn_start:-0} + 1 ))" "$transcript" |
   grep -oE 'File created successfully at: [^"(]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|kt|swift)([^[:alnum:]]|$)' |
-  grep -viE '(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.' | head -n 1) || true
-if [ -n "$created" ]; then
+  grep -viE '(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.' || true)
+if [ -n "$large" ]; then
   printf '%s\n' 'Before finishing, re-read the source file you created and delete what the request did not name: extra options, modes, tiers, checks, CLI parsing, persistence, docstrings. Keep input validation at trust boundaries, error handling that prevents data loss and one runnable check. Run it once more, then answer in at most three short lines.' >&2
   exit 2
 fi
@@ -78,8 +91,8 @@ words=$(sed -n "${last_text}p" "$transcript" |
     fence || /awesome-agents-md/ { next }
     { words += NF }
     END { print words + 0 }')
-if [ "${words:-0}" -gt "$ANSWER_WORD_LIMIT" ]; then
-  printf 'Your answer is %s words. Give it again in at most three short lines (what changed or happened, the evidence, what is unverified or the options); keep the commit proposal, code and warnings as they are.\n' "$words" >&2
+if [ "${words:-0}" -gt "$ANSWER_WORD_TRIGGER" ]; then
+  printf 'Your answer is %s words. Give it again in at most %s words: what changed or happened, the evidence, what is unverified or the options; keep the commit proposal, code and warnings as they are.\n' "$words" "$ANSWER_WORD_TARGET" >&2
   exit 2
 fi
 exit 0

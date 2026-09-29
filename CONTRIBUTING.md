@@ -23,10 +23,10 @@ Adding to the core means removing from the core. A long line counts once toward 
 Everything conditional goes to `rules/` — a module is read only when the task matches, so it costs nothing until it is needed. A new module needs:
 
 1. The file, `rules/<topic>.md`.
-2. One entry in the **On-demand rule modules** list at the end of `AGENTS.md`, naming the trigger ("Read this when ..."). CI fails if a module is unlisted or a listed module is missing.
+2. One entry in `rules/INDEX.md`, naming the trigger ("Read this when ..."). CI fails if a module is unlisted or a listed module is missing.
 3. One entry in `llms.txt`.
 
-One module per bullet in the core index, in theme order. The index sits below the cap's cut-off, so a new module costs a line there and nothing from the instruction budget.
+One module per bullet in `rules/INDEX.md`, in theme order. The index is a separate file the core points at, so a new module costs a line there and nothing from the always-loaded core.
 
 ## Module format
 
@@ -82,7 +82,7 @@ Follow the repo's own `rules/markdown.md` — it applies to this repository firs
 - No ellipsis glyph (U+2026) in any tracked Markdown file; three plain dots stand in for it.
 - The core names no framework, library, or non-baseline CLI above the module index — a curated blocklist, so a tool name that belongs inside a presence check is added to the exception list in `scripts/lint.py`, never waved through.
 - Modules name blocklisted stacks only on a line marked as an example or on a line that names two or more ecosystems side by side — the same curated-blocklist approach, applied to every line of `rules/`, triggers included, and to each module's entry in the core index and in `llms.txt`.
-- Every `rules/*.md` appears in the On-demand module index of `AGENTS.md`, and every module referenced anywhere exists.
+- Every `rules/*.md` appears in `rules/INDEX.md`, the core's On-demand section points at that file, and every module referenced anywhere exists.
 - Every module opens with its `Read this when` trigger line.
 - `llms.txt` lists every module, carries no stale entry, and every file it links exists.
 - Relative links resolve and code fences are balanced.

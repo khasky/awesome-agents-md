@@ -75,5 +75,7 @@ jobs:
           mkdir -p "$GEMINI_CLI_HOME"
           gemini extensions validate .
           gemini extensions link . --consent
-          gemini extensions list | tee list.txt
+          # The CLI prints the list to stderr, so both streams go to the file.
+          gemini extensions list > list.txt 2>&1
+          cat list.txt
           grep -q 'AGENTS.md' list.txt

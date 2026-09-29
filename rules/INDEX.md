@@ -1,0 +1,45 @@
+# Rule modules
+
+Read a module only when the task matches its line. They live in this folder; if it can't be located, proceed: the core `AGENTS.md` is sufficient.
+
+- `rules/workflow.md`: larger work, a plan, the last pass before "done", being stuck, debugging.
+- `rules/markdown.md`: editing Markdown documents.
+- `rules/code-comments.md`: writing, reviewing or cleaning up comments.
+- `rules/commit-messages.md`: any commit message, PR title or branch name.
+- `rules/planning.md`: a plan or spec as the deliverable; a decision record.
+- `rules/refactoring.md`: a dedicated refactor or cleanup.
+- `rules/debugging.md`: a fix failed twice or the same error keeps returning.
+- `rules/code-review.md`: reviewing a diff or PR, or preparing one.
+- `rules/testing.md`: writing or restructuring tests.
+- `rules/evidence-gates.md`: turning a verification rule into an enforced gate.
+- `rules/browser-automation.md`: driving a live browser or testing an extension.
+- `rules/frontend-design.md`: building, styling or reviewing web UI.
+- `rules/web-seo.md`: building or auditing public web pages.
+- `rules/i18n.md`: UI text in more than one language or locale.
+- `rules/backend-security.md`: server or API code, and what a shipped client may hold.
+- `rules/crypto.md`: hashing, encryption, signing, tokens, keys.
+- `rules/database.md`: schema, migrations, queries, connection pools.
+- `rules/caching.md`: adding or reviewing a cache, or clearing a stale one.
+- `rules/messaging.md`: queues, event streams, pub/sub, webhooks.
+- `rules/jobs.md`: cron, scheduled and batch work.
+- `rules/observability.md`: logging, health checks, metrics, alerts, shutdown, env config.
+- `rules/incident-response.md`: a live production incident.
+- `rules/public-api-design.md`: designing or evolving an HTTP API for external clients.
+- `rules/api-contracts.md`: machine-readable API schemas, contract packages, generated clients.
+- `rules/resilience.md`: calls to other services: timeouts, retries, circuit breakers.
+- `rules/rate-limiting.md`: rate limiters and quotas.
+- `rules/deployment.md`: shipping to a running environment, release branches, build artifacts, infrastructure definitions.
+- `rules/shell-scripts.md`: shell scripts beyond a one-liner.
+- `rules/ci-cd-security.md`: CI workflows and release automation.
+- `rules/monorepo.md`: a repository holding several packages built together.
+- `rules/git-hooks.md`: pre-commit, commit-msg or pre-push automation.
+- `rules/dependencies.md`: adding, upgrading or auditing packages, agent skills, MCP servers or plugins, or a lockfile conflict.
+- `rules/llm-agents.md`: code that calls an LLM, and configuring or pointing an agent's tools.
+- `rules/subagents.md`: spawning a subagent or writing an agent definition.
+- `rules/shared-machine.md`: heavy builds, suites or parallel work on a machine other sessions share.
+- `rules/memory.md`: the agent has persistent memory.
+- `rules/long-running-agents.md`: unattended runs across many iterations.
+- `rules/payments.md`: integrating a payment provider.
+- `rules/privacy.md`: personal data, analytics or tracking scripts, session-recording SDKs.
+- `rules/design-patterns.md`: structuring modules, adding state, wiring dependencies between modules, choosing a pattern.
+- `rules/performance.md`: making code faster or diagnosing latency.
