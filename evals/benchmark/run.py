@@ -195,7 +195,8 @@ def plugin_dir(arm: str, cache: pathlib.Path) -> pathlib.Path | None:
 
 
 def agent_command(claude: str, prompt: str, model: str, call_budget: float,
-                  plugin: pathlib.Path | None, session: tuple[str, str]) -> list[str]:
+                  plugin: pathlib.Path | None, session: tuple[str, str],
+                  effort: str | None = None) -> list[str]:
     # No user-level settings, plugins or hooks, no global CLAUDE.md, and
     # exactly one plugin per arm. Every arm keeps its session on disk, because
     # a Stop hook reads the transcript and a scenario resumes it; the runner
@@ -206,13 +207,16 @@ def agent_command(claude: str, prompt: str, model: str, call_budget: float,
                "--setting-sources", "project,local", "--settings", isolation,
                "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "PowerShell",
                "--model", model, "--max-budget-usd", str(call_budget), *session]
+    if effort:
+        command += ["--effort", effort]
     if plugin is not None:
         command += ["--plugin-dir", str(plugin)]
     return command
 
 
 def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model: str,
-             call_budget: float, run_dir: pathlib.Path, repeat: int) -> dict:
+             call_budget: float, run_dir: pathlib.Path, repeat: int,
+             effort: str | None = None) -> dict:
     scratch = pathlib.Path(tempfile.mkdtemp(prefix=f"bench-{job.name}-"))
     workdir = scratch / "repo"
     session_id = str(uuid.uuid4())
@@ -228,7 +232,7 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
             if len(job.turns) > 1:
                 stdout += json.dumps({"type": "eval_turn", "turn": index, "prompt": prompt}) + "\n"
             text, exit_code = run_agent(agent_command(claude, prompt, model, call_budget, plugin,
-                                                      session), workdir, agent_env(job))
+                                                      session, effort), workdir, agent_env(job))
             stdout += text if text.endswith("\n") or not text else text + "\n"
             if exit_code:
                 break
@@ -247,7 +251,7 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
     reply = str(results[-1].get("result") or "") if results else ""
     return {
         "task": job.name, "kind": job.kind, "arm": arm, "repeat": repeat,
-        "model": init.get("model"), "claude_code": init.get("claude_code_version"),
+        "model": init.get("model"), "effort": effort, "claude_code": init.get("claude_code_version"),
         "plugins": [p.get("name") for p in init.get("plugins", []) if isinstance(p, dict)],
         **score,
         "cost_usd": total(results, lambda r: r.get("total_cost_usd")),
@@ -419,6 +423,8 @@ def main() -> int:
     parser.add_argument("--arms", default=",".join(ARMS), help=f"subset of {','.join(ARMS)}")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--effort", choices=("low", "medium", "high", "xhigh", "max"),
+                        help="passed to every agent session as --effort")
     parser.add_argument("--workers", type=int, default=4, help="cells run in parallel")
     parser.add_argument("--out", type=pathlib.Path, default=DEFAULT_OUT)
     parser.add_argument("--call-budget", type=float, default=CALL_BUDGET_USD)
@@ -453,7 +459,8 @@ def main() -> int:
         rows = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
     else:
         suffix = f"-{args.label}" if args.label else ""
-        run_dir = args.out.resolve() / f"{time.strftime('%Y%m%d-%H%M%S')}-{args.model}{suffix}"
+        effort = f"-{args.effort}" if args.effort else ""
+        run_dir = args.out.resolve() / f"{time.strftime('%Y%m%d-%H%M%S')}-{args.model}{effort}{suffix}"
         rows = []
     if REPO in run_dir.parents:
         parser.error("--out points inside the repository; results are kept outside it")
@@ -477,7 +484,8 @@ def main() -> int:
         if stopped.is_set() or (args.budget is not None and spent[0] >= args.budget):
             stopped.set()
             return
-        row = run_cell(claude, job, arm, plugins[arm], args.model, args.call_budget, run_dir, repeat)
+        row = run_cell(claude, job, arm, plugins[arm], args.model, args.call_budget, run_dir, repeat,
+                       args.effort)
         with lock:
             rows.append(row)
             spent[0] += row["cost_usd"] or 0
