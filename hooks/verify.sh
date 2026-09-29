@@ -12,7 +12,6 @@ set -euo pipefail
 # benchmark's larger models, came back about as long.
 ANSWER_WORD_TRIGGER=60
 ANSWER_WORD_TARGET=35
-TRIM_MIN_LINES=40
 
 payload=$(cat)
 
@@ -35,7 +34,8 @@ last_line() {
     tail -n 1 | cut -d: -f1
 }
 turn_start=$(last_line '"type":"user"' '"tool_result"')
-last_edit=$(last_line '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"')
+# Only an edit to code needs a check after it; a changelog or a note does not.
+last_edit=$(last_line '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"[^}]*"file_path":"[^"]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|h|kt|swift|sh|ps1|sql)"')
 last_command=$(last_line '"type":"tool_use"[^}]*"name":"(Bash|PowerShell)"')
 # Claude Code writes the record's own "type" after its message, so the reply
 # text is found by the message's role and block type, in either order.
@@ -53,26 +53,6 @@ if [ "${last_edit:-0}" -gt "${turn_start:-0}" ] && [ "${last_edit:-0}" -gt "${la
   exit 2
 fi
 
-# A source file created in this turn gets one trimming pass: an open request is
-# where agents build tiers, modes and options nobody named. Test files and
-# non-code files are left alone.
-# A file already within TRIM_MIN_LINES non-blank lines is lean enough that the
-# pass would cost a turn and save little.
-large=''
-while IFS= read -r hit; do
-  file=$(printf '%s' "${hit#File created successfully at: }" |
-    sed -E 's/[^[:alnum:]]$//; s/\\\\/\//g; s/\\/\//g')
-  if [ -f "$file" ] && [ "$(grep -c '[^[:space:]]' "$file" || true)" -gt "$TRIM_MIN_LINES" ]; then
-    large=$file
-    break
-  fi
-done < <(tail -n +"$(( ${turn_start:-0} + 1 ))" "$transcript" |
-  grep -oE 'File created successfully at: [^"(]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|kt|swift)([^[:alnum:]]|$)' |
-  grep -viE '(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.' || true)
-if [ -n "$large" ]; then
-  printf '%s\n' 'Before finishing, re-read the source file you created and delete what the request did not name: extra options, modes, tiers, checks, CLI parsing, persistence, docstrings. Keep input validation at trust boundaries, error handling that prevents data loss and one runnable check. Run it once more, then answer in at most three short lines.' >&2
-  exit 2
-fi
 
 # The answer itself stays short: words outside code blocks, before the commit
 # proposal and without the canary line. A prompt asking for an explanation lifts

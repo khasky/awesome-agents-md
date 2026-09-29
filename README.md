@@ -124,7 +124,9 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 What the hooks do:
 
 - `guard` (before every shell command) blocks skipping git hooks (`--no-verify`, a `core.hooksPath` override), force-pushing, printing the environment or a secret variable, a `git commit` in a session where you never asked for one, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal.
-- `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit no command followed; a source file it created past 40 lines, to trim what the request did not name; an answer over 60 words when no explanation was asked for, to cut it to 35 (code and the commit proposal not counted).
+- `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is kept under 60 lines unless the request names more and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
+- `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
+- `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed; an answer over 60 words when no explanation was asked for, to cut it to 35 (code and the commit proposal not counted).
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI gets the core only, without hooks.
 
@@ -193,25 +195,25 @@ Every plugin is cloned at its commit and loaded with `--plugin-dir`; the owner's
 | | baseline | this ruleset | caveman | ponytail | i-have-adhd |
 |---|--:|--:|--:|--:|--:|
 | **Trap tasks passed, of 40** | | | | | |
-| `claude-haiku-4-5` | 14 | **26** | 13 | 14 | 13 |
-| `claude-sonnet-5` | 18 | **33** | 18 | 16 | 16 |
+| `claude-haiku-4-5` | 14 | **33** | 13 | 14 | 13 |
+| `claude-sonnet-5` | 18 | **40** | 18 | 16 | 16 |
 | `claude-opus-5-5` | 30 | **40** | 29 | 29 | 29 |
 | **Source lines on open requests** | | | | | |
-| `claude-haiku-4-5` | 116 | **60** | 101 | 64 | 81 |
-| `claude-sonnet-5` | 103 | **67** | 100 | 73 | 102 |
-| `claude-opus-5-5` | 144 | **37** | 144 | 48 | 113 |
+| `claude-haiku-4-5` | 116 | 76 | 101 | **64** | 81 |
+| `claude-sonnet-5` | 103 | **63** | 100 | 73 | 102 |
+| `claude-opus-5-5` | 144 | **36** | 144 | 48 | 113 |
 | **Words in the answer** | | | | | |
-| `claude-haiku-4-5` | 55 | **25** | **25** | 36 | 32 |
-| `claude-sonnet-5` | 46 | **20** | 27 | 40 | 38 |
-| `claude-opus-5-5` | 142 | **42** | 119 | 109 | 127 |
+| `claude-haiku-4-5` | 55 | 29 | **25** | 36 | 32 |
+| `claude-sonnet-5` | 46 | **21** | 27 | 40 | 38 |
+| `claude-opus-5-5` | 142 | **41** | 119 | 109 | 127 |
 | **Cost per task** | | | | | |
-| `claude-haiku-4-5` | **$0.050** | $0.074 | $0.054 | $0.054 | $0.055 |
-| `claude-sonnet-5` | **$0.098** | $0.131 | $0.120 | $0.118 | $0.109 |
-| `claude-opus-5-5` | **$0.142** | $0.166 | $0.185 | $0.161 | $0.164 |
+| `claude-haiku-4-5` | **$0.050** | $0.064 | $0.054 | $0.054 | $0.055 |
+| `claude-sonnet-5` | **$0.098** | $0.120 | $0.120 | $0.118 | $0.109 |
+| `claude-opus-5-5` | **$0.142** | $0.159 | $0.185 | $0.161 | $0.164 |
 
-Where the trap gap comes from: on every model this ruleset alone left no `Co-Authored-By` trailer (5 of 5 against 0 or 1) and ran the suite before calling a one-line fix done (opus 5 of 5, every other arm 0); on haiku and sonnet it alone never printed the environment. Opus passes most other traps without any plugin. The bug-report task (fix the shared function, not the caller the report names) went 5 of 5 for this ruleset and ponytail on sonnet, 5 of 5 for every arm on opus, and 0 for every arm on haiku. Unasked commits happened on haiku only: 10 of 60 without a plugin, 2 with this ruleset. On haiku, the eleven safety and quality coding tasks (3 attempts) held against the adversarial input in every arm, with one miss for this ruleset (a `null` body, 32 of 33).
+Where the trap gap comes from: on every model this ruleset alone left no `Co-Authored-By` trailer and ran the suite before calling a one-line fix done; on haiku and sonnet it alone never printed the environment and re-checked a handoff's claim. Opus passes most other traps without any plugin. Unasked commits happened on haiku only: 10 of 60 without a plugin, 2 with this ruleset.
 
-What it shows: the ruleset is the only arm that moves the trap tasks off the baseline, and on every model it writes the least code; on sonnet and opus it also gives the shortest answers. It costs more than the other plugins except caveman on opus: 3% over ponytail on opus, 11% on sonnet, 37% on haiku. Most of that is the check it runs to prove each change, and on haiku the `Stop` hook sending the agent back. Two changes took 6 to 16% off its cost without touching those checks: the module index moved out of the always-loaded core into `rules/INDEX.md`, and the answer limit stated as a number of words, which the larger models meet on the first try instead of after a costly `Stop` return.
+What it shows: the ruleset is the only arm that moves the trap tasks off the baseline, all 40 on sonnet and opus. On sonnet and opus it also writes the least code and the shortest answers, and costs the same as ponytail and caveman or less: on opus less than both, on sonnet within 2%. On haiku it costs about a fifth more than ponytail and caveman and writes more code than ponytail. On the tasks where every arm reaches the same outcome it costs no more than ponytail on sonnet and opus; the rest of its cost is the check it runs where the other plugins skip it and fail the task. Hooks moved the cost down, prose rules did not: guidance given the moment a file is written, the test command and the shell syntax stated at session start, and a `Stop` return kept for an answer past 60 words.
 
 Limits: five attempts per task, so a difference of one or two on a single task is noise; one Claude Code version at one effort level; the trap tasks are this repository's own, so they show the rules work where they aim, not that they are complete.
 

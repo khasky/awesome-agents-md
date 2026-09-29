@@ -484,14 +484,14 @@ def transcript_line(kind: str, name: str = "") -> str:
         record = {"message": {"role": "assistant", "content": [
             {"type": "text", "text": name}]}, "type": "assistant"}
     else:
+        tool, _, target = name.partition(":")
+        tool_input = {"file_path": "C:\\repo\\" + (target or "pager.py")} if tool in (
+            "Edit", "Write", "MultiEdit", "NotebookEdit") else {}
         record = {"message": {"role": "assistant", "content": [
-            {"type": "tool_use", "id": "t", "name": name, "input": {}}]}, "type": "assistant"}
+            {"type": "tool_use", "id": "t", "name": tool, "input": tool_input}]}, "type": "assistant"}
     return json.dumps(record, separators=(",", ":"))
 
 
-# {root} becomes the plugin copy, where the harness writes a 60-line todo.py
-# and a 10-line tiny.py: the hook trims only a file past its size floor.
-CREATED = "File created successfully at: {{root}}{{sep}}{} (file state is current)"
 MID_ANSWER = ("The bug was in the range bound of paginate, which stopped one item early, "
               "so I changed it to run to the end of the list and then checked every page "
               "size I could think of, and all of them now include the final item as expected.")
@@ -527,22 +527,8 @@ VERIFY_CASES = [
     ([("prompt",), ("text", " ".join(["слово"] * 70))], False, True),
     ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 70))], False, False),
     ([("prompt",), ("text", LONG_ANSWER)], True, False),
-    # A source file created in this turn gets one trimming pass; a test file,
-    # a non-code file or an updated file does not.
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("tool", "Bash"),
-      ("result",), ("text", "Done.")], False, True),
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("tiny.py")), ("tool", "Bash"),
-      ("result",), ("text", "Done.")], False, False),
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("test_todo.py")), ("tool", "Bash"),
-      ("result",), ("text", "Done.")], False, False),
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("notes.md")), ("tool", "Bash"),
-      ("result",), ("text", "Done.")], False, False),
-    ([("prompt",), ("tool", "Edit"), ("result", "The file C:\\repo\\todo.py has been updated successfully."),
-      ("tool", "Bash"), ("result",), ("text", "Done.")], False, False),
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("tool", "Bash"),
-      ("result",), ("text", "Done.")], True, False),
-    ([("prompt",), ("tool", "Write"), ("result", CREATED.format("todo.py")), ("prompt", "now list it"),
-      ("tool", "Bash"), ("result",), ("text", "Done.")], False, False),
+    # An edit to a changelog or a note needs no check after it.
+    ([("prompt",), ("tool", "Edit:CHANGELOG.md"), ("result",), ("text", "Done.")], False, False),
 ]
 
 
@@ -553,16 +539,9 @@ def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
     with tempfile.TemporaryDirectory() as scratch:
         root = plugin_copy(scratch)
         transcript = root / "session log.jsonl"
-        (root / "todo.py").write_text("".join(f"x{i} = {i}\n" for i in range(60)), encoding="utf-8")
-        (root / "tiny.py").write_text("".join(f"x{i} = {i}\n" for i in range(10)), encoding="utf-8")
-
-        def resolved(step: tuple) -> tuple:
-            return tuple(part.replace("{root}", str(root)).replace("{sep}", os.sep)
-                         for part in step)
-
         for runtime in runtimes:
             for turn, second_stop, expect_block in VERIFY_CASES:
-                transcript.write_text("\n".join(transcript_line(*resolved(step)) for step in turn)
+                transcript.write_text("\n".join(transcript_line(*step) for step in turn)
                                       + "\n", encoding="utf-8")
                 payload = json.dumps({"transcript_path": str(transcript),
                                       "stop_hook_active": second_stop})
@@ -631,6 +610,67 @@ def plugin_loads_whole_core() -> list[str]:
     return found
 
 
+def hook_repo(scratch: str) -> pathlib.Path:
+    # A git repository with a Python test file, under a path with a space.
+    repo = pathlib.Path(scratch) / "repo with space"
+    repo.mkdir()
+    (repo / "pager.py").write_text("x = 1\n", encoding="utf-8")
+    (repo / "test_pager.py").write_text("import pager\n", encoding="utf-8")
+    (repo / "big.py").write_text("".join(f"x{i} = {i}\n" for i in range(70)), encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "pager.py", "test_pager.py"], cwd=repo, check=True)
+    return repo
+
+
+def plugin_shape_hook_guides_in_flow() -> list[str]:
+    # Each case: the tool call, the file, and the phrase the guidance must
+    # carry, or None for silence. Every shell must say the same.
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        repo = hook_repo(scratch)
+        cases = [("Edit", "update", repo / "pager.py", "has tests (test_pager.py)"),
+                 ("Write", "create", repo / "big.py", "under 60 lines"),
+                 ("Write", "update", repo / "big.py", "has tests (test_pager.py)"),
+                 ("Write", "create", repo / "test_extra.py", None),
+                 ("Edit", "update", repo / "notes.md", None)]
+        for tool, kind, file, phrase in cases:
+            payload = json.dumps({"tool_name": tool, "tool_input": {"file_path": str(file)},
+                                  "tool_response": {"type": kind, "filePath": str(file)}})
+            outputs = set()
+            for runtime in runtimes:
+                run = run_hook(runtime, root, "shape", [], payload)
+                note = ""
+                if run.returncode:
+                    found.append(f"{runtime[0]} shape hook exited {run.returncode} on {tool} {file.name}")
+                elif run.stdout.strip():
+                    try:
+                        note = json.loads(run.stdout)["hookSpecificOutput"]["additionalContext"]
+                    except (ValueError, KeyError):
+                        found.append(f"{runtime[0]} shape hook printed no valid JSON on {file.name}")
+                if (phrase is None) != (note == "") or (phrase and phrase not in note):
+                    found.append(f"{runtime[0]} shape hook on {tool} {kind} {file.name}: {note[:60]!r}")
+                outputs.add(note)
+            if len(outputs) > 1:
+                found.append(f"the shape hooks say different things on {tool} {file.name}")
+    return found
+
+
+def plugin_facts_hook_names_the_runner() -> list[str]:
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        repo = hook_repo(scratch)
+        for runtime in runtimes:
+            _, launcher, suffix = runtime
+            run = subprocess.run([*launcher, str(root / "hooks" / f"facts{suffix}")], input="{}",
+                                 capture_output=True, text=True, encoding="utf-8", cwd=repo)
+            if run.returncode or "test_pager.py) run with `python -m" not in run.stdout:
+                found.append(f"{runtime[0]} facts hook does not name the test runner: "
+                             f"exit {run.returncode} {run.stdout.strip()[:80]!r}")
+    return found
+
+
 GATES = [
     (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
     (f"core {CORE} stays under {CORE_BYTE_LIMIT} bytes", core_under_byte_limit),
@@ -650,6 +690,9 @@ GATES = [
     ("the plugin SessionStart hooks deliver the whole core under the output limit",
      plugin_loads_whole_core),
     ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),
+    ("the plugin shape hook guides a created or edited file, the same in every shell",
+     plugin_shape_hook_guides_in_flow),
+    ("the plugin facts hook names how the repository's tests run", plugin_facts_hook_names_the_runner),
     ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
      plugin_verify_hook_holds_unchecked_edits),
 ]

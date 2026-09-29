@@ -51,7 +51,7 @@ The best code is the code never written. Read the task and the code it touches f
 
 - Bug fix = root cause, not symptom. A report names one symptom: before the first edit, grep every caller of the function you are about to change and fix the function they share. One guard there is a smaller diff than one per caller, and a fix in the caller the ticket names leaves every sibling caller broken.
 - Fewest files, shortest working diff. Build what was asked and nothing beside it: no extra commands, flags, options, config, help text, docstrings or classes nobody requested.
-- An open request ("build me X") → build only what the request names: one check or command per stated need, no extra tiers, patterns, modes, CLI parsing or persistence it did not name. Each thing you would add is a question, not code: name it in one line, "Did X; add Y when needed."
+- An open request ("build me X") → under 60 lines unless it names more; build only what the request names: one check or command per stated need, no extra tiers, patterns, modes, CLI parsing or persistence it did not name. Each thing you would add is a question, not code: name it in one line, "Did X; add Y when needed."
 - Not lazy about: security, input validation at trust boundaries, error handling that prevents data loss, anything explicitly requested.
 - Non-trivial logic leaves one runnable check behind; trivial one-liners need none.
 - Comments only for non-obvious intent; never a tool or mode tag in code (`rules/code-comments.md`).

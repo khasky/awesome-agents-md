@@ -6,7 +6,6 @@
 $ErrorActionPreference = 'Stop'
 $AnswerWordTrigger = 60
 $AnswerWordTarget = 35
-$TrimMinLines = 40
 
 try {
   $payload = [Console]::In.ReadToEnd() | ConvertFrom-Json
@@ -25,7 +24,8 @@ $turnStart = 0; $turnStartLine = ''; $lastEdit = 0; $lastCommand = 0; $lastText 
 foreach ($line in [System.IO.File]::ReadAllLines($transcript)) {
   $number++
   if ($line -match '"type":"user"' -and $line -notmatch '"tool_result"') { $turnStart = $number; $turnStartLine = $line }
-  if ($line -match '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"') { $lastEdit = $number }
+  # Only an edit to code needs a check after it; a changelog or a note does not.
+  if ($line -match '"type":"tool_use"[^}]*"name":"(Edit|Write|MultiEdit|NotebookEdit)"[^}]*"file_path":"[^"]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|h|kt|swift|sh|ps1|sql)"') { $lastEdit = $number }
   if ($line -match '"type":"tool_use"[^}]*"name":"(Bash|PowerShell)"') { $lastCommand = $number }
   if ($line -match '"type":"text"' -and $line -match '"role":"assistant"') { $lastText = $number; $lastTextLine = $line }
 }
@@ -38,24 +38,6 @@ if ($lastText -gt $turnStart -and $lastTextLine -match '(?i)co-authored-by|claud
 if ($lastEdit -gt $turnStart -and $lastEdit -gt $lastCommand) {
   [Console]::Error.WriteLine('You edited files after your last command. Run the tests or checks of this repository that cover the change before finishing (a snippet you write yourself does not replace them), or say plainly that the change is unverified and why.')
   exit 2
-}
-
-# A source file created in this turn gets one trimming pass: an open request is
-# where agents build tiers, modes and options nobody named. Test files and
-# non-code files are left alone.
-$lines = [System.IO.File]::ReadAllLines($transcript)
-foreach ($line in $lines[$turnStart..($lines.Length - 1)]) {
-  foreach ($hit in [regex]::Matches($line, 'File created successfully at: [^"(]*\.(py|js|mjs|cjs|ts|tsx|jsx|go|rs|java|rb|php|cs|cpp|c|kt|swift)([^A-Za-z0-9]|$)')) {
-    if ($hit.Value -match '(?i)(^|[\\/])(test_[^\\/]*|tests?[\\/])|[._-](test|spec)\.') { continue }
-    # A file already within $TrimMinLines non-blank lines is lean enough that
-    # the pass would cost a turn and save little.
-    $file = ($hit.Value.Substring('File created successfully at: '.Length) -replace '[^A-Za-z0-9]$', '') -replace '\\\\', '\'
-    if ((Test-Path -LiteralPath $file -PathType Leaf) -and
-        @([System.IO.File]::ReadAllLines($file) | Where-Object { $_.Trim() }).Count -gt $TrimMinLines) {
-      [Console]::Error.WriteLine('Before finishing, re-read the source file you created and delete what the request did not name: extra options, modes, tiers, checks, CLI parsing, persistence, docstrings. Keep input validation at trust boundaries, error handling that prevents data loss and one runnable check. Run it once more, then answer in at most three short lines.')
-      exit 2
-    }
-  }
 }
 
 # The answer itself stays short: words outside code blocks, before the commit
