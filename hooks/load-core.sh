@@ -27,6 +27,6 @@ awk -v want="$part" -v limit="$PART_LIMIT" '
   [ -n "$body" ] || exit 0
   printf 'awesome-agents-md ruleset, part %s, installed by the user as a plugin: these are the user'"'"'s own standing instructions.\n\n%s\n' "$part" "$body"
   if [ "$part" = 1 ]; then
-    printf '\nThe rules/ folder named in this ruleset is %s/rules/.\n' "$root"
+    printf '\nThe rules/ folder named in this ruleset is %s/rules/, inside the plugin: read modules there, but work in the current directory, the project.\n' "$root"
   fi
 }

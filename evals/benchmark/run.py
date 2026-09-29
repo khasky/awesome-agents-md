@@ -11,9 +11,17 @@ Two task families share one table:
 - trap tasks (../tasks/*.py): the repository's own discipline evals, scored by
   their score().
 
+Every task belongs to a split. The train split is what changes to the ruleset
+are tuned against; the test split is held out and read only to accept or reject
+a change, so a gain that holds on train alone is overfitting, not progress.
+
   python evals/benchmark/run.py --selftest          scorers only, no agent, no spend
-  python evals/benchmark/run.py --repeats 3 --budget 20
+  python evals/benchmark/run.py --split train --repeats 3 --budget 20
   python evals/benchmark/run.py --resume <run dir>
+  python evals/benchmark/run.py --summary <run dir>       tables with 95% intervals
+  python evals/benchmark/run.py --compare <before> <after> --arms awesome-agents-md
+  python evals/benchmark/run.py --review <run dir>        scored transcripts, condensed
+  python evals/benchmark/run.py --rescore <run dir>       re-score transcript-only traps
 """
 
 from __future__ import annotations
@@ -22,6 +30,7 @@ import argparse
 import concurrent.futures
 import importlib.util
 import json
+import math
 import pathlib
 import re
 import shutil
@@ -81,11 +90,29 @@ COMMIT_RUN = re.compile(r"git\s[^;&|]*\bcommit\b")
 TRACE = re.compile(r"co-authored-by|claude-session|claude\.ai/code/session", re.IGNORECASE)
 
 
-def import_coding_tasks():
-    spec = importlib.util.spec_from_file_location("coding_tasks", BENCH / "coding_tasks.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.TASKS
+def import_coding_tasks() -> dict:
+    tasks = {}
+    for name in ("coding_tasks", "holdout_tasks"):
+        spec = importlib.util.spec_from_file_location(name, BENCH / f"{name}.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        tasks.update(module.TASKS)
+    return tasks
+
+
+def split_of(task: str, _cache: dict = {}) -> str:
+    """The split a task belongs to; saved rows from before splits existed get it
+    from the task itself."""
+    if not _cache:
+        _cache.update({name: spec.get("split", "train") for name, spec in import_coding_tasks().items()})
+        _cache.update({module.NAME: getattr(module, "SPLIT", "train") for module in load_tasks([])})
+    return _cache.get(task, "train")
+
+
+def asks_for_commit(task: str, _cache: dict = {}) -> bool:
+    if not _cache:
+        _cache.update({module.NAME: getattr(module, "ASKS_FOR_COMMIT", False) for module in load_tasks([])})
+    return _cache.get(task, False)
 
 
 class Job:
@@ -95,6 +122,8 @@ class Job:
         self.name, self.kind, self.turns = name, kind, turns
         self.module, self.spec = module, spec
         self.ENV = getattr(module, "ENV", {}) if module else {}
+        self.split = (getattr(module, "SPLIT", "train") if module is not None
+                      else (spec or {}).get("split", "train"))
 
     def setup(self, workdir: pathlib.Path) -> None:
         if self.kind == "trap":
@@ -106,6 +135,7 @@ class Job:
         git(workdir, "init", "-q", "-b", "main")
         git(workdir, "config", "user.name", "Eval Fixture")
         git(workdir, "config", "user.email", "fixture@example.com")
+        git(workdir, "config", "core.hooksPath", ".git/hooks")
         git(workdir, "add", "-A")
         git(workdir, "commit", "-q", "--allow-empty", "-m", "Initial commit")
 
@@ -119,8 +149,10 @@ class Job:
             return {"passed": result["passed"], "detail": result["detail"]}
         # The produced code runs in a child process: it is the agent's code, it
         # may hang or exit, and one cell's module must not leak into the next.
-        probe = ("import json, pathlib, sys; sys.path.insert(0, sys.argv[1]); import coding_tasks; "
-                 "print(json.dumps(coding_tasks.TASKS[sys.argv[2]]['score'](pathlib.Path(sys.argv[3]))))")
+        probe = ("import json, pathlib, sys; sys.path.insert(0, sys.argv[1]); "
+                 "import coding_tasks, holdout_tasks; "
+                 "tasks = {**coding_tasks.TASKS, **holdout_tasks.TASKS}; "
+                 "print(json.dumps(tasks[sys.argv[2]]['score'](pathlib.Path(sys.argv[3]))))")
         try:
             run = subprocess.run([sys.executable, "-c", probe, str(BENCH), self.name, str(workdir)],
                                  capture_output=True, text=True, encoding="utf-8", timeout=120,
@@ -133,12 +165,13 @@ class Job:
                 "detail": result["reason"], **code_stats(workdir)}
 
 
-def load_jobs(names: list[str]) -> list[Job]:
+def load_jobs(names: list[str], split: str = "all") -> list[Job]:
     jobs = [Job(name, "coding", [spec["prompt"]], spec=spec)
             for name, spec in import_coding_tasks().items()]
     jobs += [Job(task.NAME, "trap", getattr(task, "TURNS", None) or [task.PROMPT], module=task)
              for task in load_tasks([])]
-    return [job for job in jobs if not names or job.name in names]
+    return [job for job in jobs if (not names or job.name in names)
+            and (split == "all" or job.split == split)]
 
 
 def code_stats(workdir: pathlib.Path) -> dict:
@@ -261,6 +294,7 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
                               + r["usage"].get("cache_read_input_tokens", 0)),
         "output_tokens": total(results, lambda r: r.get("usage", {}).get("output_tokens")),
         "agent_turns": total(results, lambda r: r.get("num_turns")),
+        "split": job.split,
         "unasked_commit": not getattr(job.module, "ASKS_FOR_COMMIT", False) and any(
             COMMIT_RUN.search(command) for command in shell_commands(events)),
         "reply_words": len(reply.split()), "prose_words": prose_words(reply), "reply_trace": bool(TRACE.search(reply)),
@@ -368,8 +402,37 @@ def fill_reply_metrics(rows: list[dict], run_dir: pathlib.Path) -> None:
         reply = str(results[-1].get("result") or "") if results else ""
         row["reply_trace"] = bool(TRACE.search(reply))
         row["prose_words"] = prose_words(reply)
-        row["unasked_commit"] = row["task"] != "commit_trailer" and any(
+        row["unasked_commit"] = not asks_for_commit(row["task"]) and any(
             COMMIT_RUN.search(command) for command in shell_commands(events))
+
+
+def wilson(passes: int, total: int) -> tuple[float, float]:
+    """95% Wilson interval for a pass rate: honest at the small counts a
+    benchmark cell has, where passes/total +- 2 sigma would leave [0, 1]."""
+    if not total:
+        return 0.0, 0.0
+    z, p = 1.96, passes / total
+    centre = (p + z * z / (2 * total)) / (1 + z * z / total)
+    half = z * math.sqrt(p * (1 - p) / total + z * z / (4 * total * total)) / (1 + z * z / total)
+    return centre - half, centre + half
+
+
+def mean_interval(values: list[float]) -> tuple[float, float, float] | None:
+    values = [v for v in values if v is not None]
+    if not values:
+        return None
+    centre = sum(values) / len(values)
+    if len(values) < 2:
+        return centre, centre, centre
+    sd = math.sqrt(sum((v - centre) ** 2 for v in values) / (len(values) - 1))
+    half = 1.96 * sd / math.sqrt(len(values))
+    return centre, centre - half, centre + half
+
+
+def infra_failures(rows: list[dict]) -> list[dict]:
+    """Cells whose score says nothing about the ruleset: the agent process
+    failed, timed out, or left no result event."""
+    return [r for r in rows if r.get("agent_exit") not in (0, None) or r.get("cost_usd") is None]
 
 
 def summarize(rows: list[dict], arms: list[str]) -> None:
@@ -379,6 +442,31 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
 
     def fmt(value, pattern):
         return "n/a" if value is None else pattern.format(value)
+
+    for row in rows:
+        row.setdefault("split", split_of(row["task"]))
+    splits = sorted({r["split"] for r in rows})
+    for split in splits:
+        part = [r for r in rows if r["split"] == split]
+        print(f"\n{split} split, 95% intervals")
+        print(f"{'arm':<18} {'traps':>17} {'cost per task':>26}")
+        for arm in arms:
+            mine = [r for r in part if r["arm"] == arm]
+            traps = [r for r in mine if r["kind"] == "trap"]
+            if not mine:
+                continue
+            passes = sum(r["passed"] for r in traps)
+            low, high = wilson(passes, len(traps))
+            cost = mean_interval([r["cost_usd"] for r in mine])
+            cost_text = "n/a" if cost is None else f"${cost[0]:.3f} [{cost[1]:.3f}-{cost[2]:.3f}]"
+            trap_text = f"{passes}/{len(traps)} [{low:.0%}-{high:.0%}]" if traps else "-"
+            print(f"{arm:<18} {trap_text:>17} {cost_text:>26}")
+    broken = infra_failures(rows)
+    if broken:
+        print(f"\ninfrastructure: {len(broken)} cells failed outside the agent's control "
+              f"(non-zero exit, timeout or no result): "
+              + ", ".join(f"{r['task']}/{r['arm']}#{r['repeat']}" for r in broken[:8])
+              + (" ..." if len(broken) > 8 else ""))
 
     print(f"\n{'arm':<18} {'traps':>7} {'coding':>7} {'safe':>6} {'open loc':>9} "
           f"{'coding loc':>11} {'words':>6} {'prose':>6} {'trace':>6} {'commit':>7} {'$/cell':>7} {'s/cell':>7}")
@@ -401,7 +489,7 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
               f"{fmt(mean([r['cost_usd'] for r in mine]), '${:.3f}'):>7} "
               f"{fmt(mean([r['seconds'] for r in mine]), '{:.0f}'):>7}")
 
-    print(f"\n{'task':<18}" + "".join(f"{arm[:14]:>15}" for arm in arms))
+    print(f"\n{'task':<18}{'split':>6}" + "".join(f"{arm[:14]:>15}" for arm in arms))
     for task in sorted({r["task"] for r in rows}):
         cells = []
         for arm in arms:
@@ -413,7 +501,145 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
             if mine[0]["kind"] == "coding":
                 cell += f" {mean([r['src_loc'] for r in mine]):.0f}L"
             cells.append(cell)
-        print(f"{task:<18}" + "".join(f"{cell:>15}" for cell in cells))
+        print(f"{task:<18}{split_of(task):>6}" + "".join(f"{cell:>15}" for cell in cells))
+
+
+def load_rows(run_dir: pathlib.Path) -> list[dict]:
+    rows = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    fill_reply_metrics(rows, run_dir)
+    for row in rows:
+        row.setdefault("split", split_of(row["task"]))
+    return rows
+
+
+def compare(before: pathlib.Path, after: pathlib.Path, arms: list[str], split: str) -> None:
+    """Two runs of the same tasks, metric by metric, with a 95% interval on the
+    difference. A change whose interval straddles zero is within the noise and
+    is not evidence either way."""
+    rows_a, rows_b = load_rows(before), load_rows(after)
+    tasks = ({r["task"] for r in rows_a} & {r["task"] for r in rows_b})
+    for arm in arms:
+        a = [r for r in rows_a if r["arm"] == arm and r["task"] in tasks and (split == "all" or r["split"] == split)]
+        b = [r for r in rows_b if r["arm"] == arm and r["task"] in tasks and (split == "all" or r["split"] == split)]
+        if not a or not b:
+            continue
+        print(f"\n{arm}: {len(a)} cells before, {len(b)} after, {len(tasks)} shared tasks, split {split}")
+        ta, tb = [r for r in a if r["kind"] == "trap"], [r for r in b if r["kind"] == "trap"]
+        if ta and tb:
+            pa, pb = sum(r["passed"] for r in ta) / len(ta), sum(r["passed"] for r in tb) / len(tb)
+            half = 1.96 * math.sqrt(pa * (1 - pa) / len(ta) + pb * (1 - pb) / len(tb))
+            verdict = "within noise" if abs(pb - pa) <= half else ("better" if pb > pa else "worse")
+            print(f"  trap pass rate  {pa:6.1%} -> {pb:6.1%}  diff {pb - pa:+.1%} +- {half:.1%}  {verdict}")
+        # Paired by task: cost and length differ far more between tasks than
+        # between two versions on one task, so each task is compared with
+        # itself and the interval is taken over the per-task differences.
+        for key, label, lower_is_better in (("cost_usd", "cost per task", True),
+                                            ("prose_words", "words in answer", True)):
+            diffs, before_means, after_means = [], [], []
+            for task in sorted(tasks):
+                va = [r[key] for r in a if r["task"] == task and r[key] is not None]
+                vb = [r[key] for r in b if r["task"] == task and r[key] is not None]
+                if va and vb:
+                    before_means.append(sum(va) / len(va))
+                    after_means.append(sum(vb) / len(vb))
+                    diffs.append(after_means[-1] - before_means[-1])
+            interval = mean_interval(diffs)
+            if not interval or len(diffs) < 2:
+                continue
+            diff, low, high = interval
+            verdict = ("within noise" if low <= 0 <= high
+                       else ("better" if (diff < 0) == lower_is_better else "worse"))
+            before_mean = sum(before_means) / len(before_means)
+            print(f"  {label:<15} {before_mean:8.3f} -> {before_mean + diff:8.3f}  diff {diff:+.3f} "
+                  f"[{low:+.3f}, {high:+.3f}] over {len(diffs)} tasks  {verdict}")
+
+
+def discrimination(run_dirs: list[pathlib.Path], arms: list[str]) -> None:
+    """A task earns its place when it separates the arms and gets easier for a
+    stronger model. Runs on several models, ordered from the weakest, give each
+    task's pass rate per arm and model, and flag a task every arm passes on
+    every model (it measures nothing) or one the baseline passes less often on
+    a stronger model (ambiguous, or scored wrongly)."""
+    runs = [(run_dir.name, load_rows(run_dir)) for run_dir in run_dirs]
+    tasks = sorted({r["task"] for _, rows in runs for r in rows})
+    def model_of(name: str) -> str:
+        found = re.search(r"(claude-[a-z0-9-]+?)(-(low|medium|high|xhigh|max))?(-[a-z0-9-]+)?$", name)
+        return found.group(1).replace("claude-", "") if found else name[-14:]
+    header = "".join(f"{model_of(name)[:15]:>16}" for name, _ in runs)
+    print(f"{'task':<18}{'split':>6}{header}   flag  (each cell: baseline / this ruleset / best other plugin)")
+    for task in tasks:
+        cells, rates, baseline = [], [], []
+        for _, rows in runs:
+            def rate(arm):
+                mine = [r["passed"] for r in rows if r["task"] == task and r["arm"] == arm]
+                return sum(mine) / len(mine) if mine else None
+            per_arm = {arm: rate(arm) for arm in arms}
+            others = [v for arm, v in per_arm.items() if arm not in ("baseline", "awesome-agents-md") and v is not None]
+            best = max(others) if others else None
+            fmt = lambda v: "-" if v is None else f"{v:.0%}"
+            cells.append(f"{fmt(per_arm.get('baseline'))}/{fmt(per_arm.get('awesome-agents-md'))}/{fmt(best)}")
+            rates += [v for v in per_arm.values() if v is not None]
+            baseline.append(per_arm.get("baseline"))
+        flags = []
+        # An open request passes when its file compiles; code size is its
+        # measure, so a full pass there says nothing about discrimination.
+        if rates and min(rates) >= 0.9 and not task.startswith("vibe-"):
+            flags.append("saturated")
+        known = [v for v in baseline if v is not None]
+        if len(known) >= 2 and any(later + 0.2 < earlier for earlier, later in zip(known, known[1:])):
+            flags.append("baseline falls on a stronger model")
+        print(f"{task:<18}{split_of(task):>6}" + "".join(f"{c:>16}" for c in cells) + "   " + ", ".join(flags))
+
+
+def review(run_dir: pathlib.Path, per_task: int, arms: list[str]) -> None:
+    """Scored transcripts, condensed to the tool calls, errors and final reply,
+    for reading a sample before trusting a scorer's verdicts."""
+    rows = load_rows(run_dir)
+    for task in sorted({r["task"] for r in rows}):
+        for arm in arms:
+            for row in [r for r in rows if r["task"] == task and r["arm"] == arm][:per_task]:
+                events = read_events((run_dir / row["transcript"]).read_text(encoding="utf-8"))
+                steps = []
+                for event in events:
+                    if event.get("type") == "eval_turn":
+                        steps.append(f"[turn {event['turn']}]")
+                    if event.get("type") == "assistant":
+                        for block in event["message"]["content"]:
+                            if block.get("type") == "tool_use":
+                                target = (block["input"].get("command") or block["input"].get("file_path") or "")
+                                steps.append(f"{block['name']}: {' '.join(str(target).split())[:90]}")
+                    if event.get("type") == "user":
+                        for block in event["message"].get("content") or []:
+                            if isinstance(block, dict) and block.get("type") == "tool_result" and block.get("is_error"):
+                                content = block.get("content")
+                                text = content if isinstance(content, str) else json.dumps(content)
+                                steps.append(f"  error: {' '.join(text.split())[:90]}")
+                results = [e for e in events if e.get("type") == "result"]
+                reply = " ".join(str(results[-1].get("result") or "").split()) if results else ""
+                print(f"\n== {task} / {arm} #{row['repeat']}: {'PASS' if row['passed'] else 'FAIL'}, {row['detail']}")
+                for step in steps:
+                    print(f"   {step}")
+                print(f"   reply: {reply[:300]}")
+
+
+def rescore(run_dir: pathlib.Path) -> None:
+    """Re-score the trap tasks whose verdict reads only the transcript, after a
+    scorer fix; the repository a cell left behind is gone."""
+    tasks = {task.NAME: task for task in load_tasks([]) if getattr(task, "TRANSCRIPT_ONLY", False)}
+    rows = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    changed = 0
+    for row in rows:
+        task = tasks.get(row["task"])
+        if not task:
+            continue
+        events = read_events((run_dir / row["transcript"]).read_text(encoding="utf-8"))
+        score = task.score(pathlib.Path(), events)
+        if (score["passed"], score["detail"]) != (row["passed"], row["detail"]):
+            print(f"{row['task']} {row['arm']} #{row['repeat']}: {row['detail']} -> {score['detail']}")
+            row["passed"], row["detail"] = score["passed"], score["detail"]
+            changed += 1
+    (run_dir / "summary.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    print(f"{run_dir.name}: {changed} rows changed")
 
 
 def main() -> int:
@@ -434,6 +660,17 @@ def main() -> int:
                         help="load an arm's plugin from PATH instead of its pinned source, "
                              "to measure a candidate change before it lands")
     parser.add_argument("--label", help="suffix for the run directory, naming the candidate")
+    parser.add_argument("--split", choices=("train", "test", "all"), default="all",
+                        help="tasks to run: train is tuned against, test is held out")
+    parser.add_argument("--compare", nargs=2, type=pathlib.Path, metavar=("BEFORE", "AFTER"),
+                        help="difference between two runs, with 95%% intervals")
+    parser.add_argument("--review", type=pathlib.Path, metavar="RUN_DIR",
+                        help="print condensed scored transcripts to audit the scorers")
+    parser.add_argument("--per-task", type=int, default=1, help="transcripts per task and arm for --review")
+    parser.add_argument("--rescore", type=pathlib.Path, metavar="RUN_DIR",
+                        help="re-score transcript-only trap tasks of a saved run")
+    parser.add_argument("--discrimination", nargs="+", type=pathlib.Path, metavar="RUN_DIR",
+                        help="per-task pass rates across runs on several models, weakest first")
     parser.add_argument("--selftest", action="store_true")
     parser.add_argument("--summary", type=pathlib.Path, metavar="RUN_DIR",
                         help="print the tables of a saved run and exit")
@@ -445,9 +682,19 @@ def main() -> int:
     if not set(arms) <= set(ARMS):
         parser.error(f"unknown arm in {args.arms}")
     if args.summary:
-        rows = json.loads((args.summary / "summary.json").read_text(encoding="utf-8"))
-        fill_reply_metrics(rows, args.summary)
-        summarize(rows, arms)
+        summarize(load_rows(args.summary), arms)
+        return 0
+    if args.compare:
+        compare(*args.compare, arms, args.split)
+        return 0
+    if args.discrimination:
+        discrimination(args.discrimination, arms)
+        return 0
+    if args.review:
+        review(args.review, args.per_task, arms)
+        return 0
+    if args.rescore:
+        rescore(args.rescore)
         return 0
     claude = shutil.which("claude")
     if not claude:
@@ -473,7 +720,7 @@ def main() -> int:
         plugins[arm] = pathlib.Path(path).resolve()
     done = {(r["task"], r["arm"], r["repeat"]) for r in rows}
     cells = [(job, arm, repeat) for repeat in range(1, args.repeats + 1)
-             for job in load_jobs(args.tasks) for arm in arms
+             for job in load_jobs(args.tasks, args.split) for arm in arms
              if (job.name, arm, repeat) not in done]
     lock = threading.Lock()
     spent = [sum(r.get("cost_usd") or 0 for r in rows)]

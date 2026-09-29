@@ -97,12 +97,17 @@ CI runs the script on Ubuntu and Windows, runs `evals/benchmark/run.py --selftes
 
 ## Changing the core or a hook
 
-The benchmark against the other plugins is the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Run `evals/benchmark/run.py --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy>` on its tasks, on the model of the published tables, and put the result next to those tables in the PR (the Benchmark section of `README.md`).
+The benchmark against the other plugins is the acceptance test for anything that changes what an agent does: a core rule, a hook, the way the plugin delivers the core. Its tasks are split. The train split is what a change is developed against: read its failures, change the ruleset, run it again. The test split is held out: it is run once a change looks done, to accept or reject it, and its failures are never read to shape the change.
 
-- The change is accepted only if no trap task loses passes. A gain on one task does not buy a loss on another: the loss is a rule that stopped working for someone. Cost, code size and reply length count as well, and a change that trades trap passes for them is a decision for the maintainer, stated in the PR.
-- Three attempts per task miss a difference of one or two passes; a claim rests on ten. Several changes to the core looked like wins at three and were losses at ten.
-- A rule that text alone does not hold on the benchmark's model belongs in a hook, the way answer length, trimming a new file, unasked commits and assistant trailers are held: rewording it again rarely moves the number.
-- A change made to fix a failing task is tested on that task, and the PR says so; the numbers on the task a change was tuned for are not independent evidence.
+1. Try the idea cheaply on train: `evals/benchmark/run.py --split train --arms awesome-agents-md --plugin-path awesome-agents-md=<candidate copy> --repeats 2`. One or two attempts only say which way a change points; several changes that looked like wins at two attempts were losses at five.
+2. Read a sample of the scored transcripts before believing a verdict (`--review <run dir>`): a scorer that judges the wrong thing is found there, not in the totals.
+3. Confirm on both splits at five attempts or more, on the models of the published tables, and compare with the current ruleset: `--compare <before> <after> --split test`. Cost and answer length are compared task by task, trap passes as rates, each with a 95% interval.
+4. Accept the change only if the test split does not get worse on any interval that excludes zero. A change that improves train while test stays flat is fitted to train: revert it. A difference whose interval straddles zero is not evidence either way, and a change that trades trap passes for cost, code size or answer length is a decision for the maintainer, stated in the PR with both numbers.
+
+- A rule or hook message names no task, file or phrase from the benchmark. It states the invariant the task tests; wording lifted from a transcript fits that transcript.
+- A rule that text alone does not hold on the benchmark's models belongs in a hook: guidance given the moment it applies (`hooks/shape.*`), facts stated at session start (`hooks/facts.*`), a hard block (`hooks/guard.*`) or one `Stop` return (`hooks/verify.*`). Rewording a rule again rarely moves the number.
+- `--discrimination <run dirs, weakest model first>` flags a task every arm passes on every model, which measures nothing, and a task the baseline passes less often on a stronger model, which is ambiguous or scored wrongly. A flagged task is rewritten or dropped, and a new task goes to the test split unless it replaces a train task.
+- Cells the agent process failed (non-zero exit, timeout, no result) are listed under the summary as infrastructure failures; rerun them with `--resume` before reading the totals.
 
 Trigger-versus-content scope is not mechanically checkable — it is the reviewer's job. Read the trigger, then read the bullets, and ask what a reader on a different stack does with each one.
 

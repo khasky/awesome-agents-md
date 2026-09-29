@@ -23,6 +23,9 @@ def set_identity(repo: pathlib.Path) -> None:
     # git identity into the fixture and, through git log output, the transcript.
     git(repo, "config", "user.name", "Eval Fixture")
     git(repo, "config", "user.email", "fixture@example.com")
+    # The machine's global core.hooksPath (a hook manager's) would run its hooks
+    # on every commit the agent makes; the fixture's own hooks folder wins.
+    git(repo, "config", "core.hooksPath", ".git/hooks")
 
 
 def write_repo(repo: pathlib.Path, files: dict[str, str]) -> None:

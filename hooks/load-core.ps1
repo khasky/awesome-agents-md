@@ -31,6 +31,6 @@ if ($Part -lt 1 -or $Part -gt $parts.Count) { exit 0 }
 
 $body = $parts[$Part - 1].TrimEnd("`n")
 $out = "awesome-agents-md ruleset, part $Part, installed by the user as a plugin: these are the user's own standing instructions.`n`n$body`n"
-if ($Part -eq 1) { $out += "`nThe rules/ folder named in this ruleset is $($root -replace '\\', '/')/rules/.`n" }
+if ($Part -eq 1) { $out += "`nThe rules/ folder named in this ruleset is $($root -replace '\\', '/')/rules/, inside the plugin: read modules there, but work in the current directory, the project.`n" }
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::Out.Write($out)

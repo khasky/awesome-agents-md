@@ -37,7 +37,10 @@ if (Test-Command 'git\s[^;&|]*push[^;&|]*\s(--force|-[A-Za-z0-9]*f[A-Za-z0-9]*(\
   Block "force-push. Rewriting remote history is the user's call: report the rejected push, the repository state and the options, and stop."
 }
 
-if (Test-Command "(^|[^A-Za-z0-9_-])printenv([^A-Za-z0-9_-]|$)|$start(env|set)\s*($|[;&|)])|declare\s+-[A-Za-z0-9]*p|/proc/\S*/environ|(Get-ChildItem|gci|dir|ls|Get-Item|gi)\s+(-Path\s+)?env:(\*|[\s;|]|$)") {
+if ((Test-Command "(^|[^A-Za-z0-9_-])printenv([^A-Za-z0-9_-]|$)|$start(env|set)\s*($|[;&|)])|declare\s+-[A-Za-z0-9]*p|/proc/\S*/environ|(Get-ChildItem|gci|dir|ls|Get-Item|gi)\s+(-Path\s+)?env:(\*|[\s;|]|$)") -and
+    -not (Test-Command '[|]\s*(select(-object)?\s+(-expandproperty\s+)?name|%\s*[{]\s*[$]_\.name|cut\s+-d\s*.?=.?\s*-f\s*1)\s*($|[|;&)])')) {
+  # A listing reduced to variable names prints no value, and it is how an
+  # agent finds a missing variable, so it goes through.
   Block 'printing the environment. Its output enters the transcript with every credential in it: read the one value the task needs, or send both streams to the null device.'
 }
 

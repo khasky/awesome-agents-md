@@ -414,6 +414,10 @@ GUARD_CASES = [
     ("[ -n \"$API_KEY\" ] && echo set", False),
     ("curl -H \"Authorization: Bearer $API_TOKEN\" https://example.com", False),
     ("$env:DATABASE_URL", False),
+    ("env | cut -d= -f1 | sort", False),
+    ("Get-ChildItem env: | Select-Object -ExpandProperty Name", False),
+    ("Get-ChildItem env: | Select-Object Name, Value", True),
+    ("env | cut -d= -f1,2", True),
     ("git push origin main", False),
     ("git push --follow-tags", False),
     ("git commit -m 'verify the parser'", False),
@@ -577,7 +581,7 @@ def plugin_loads_whole_core() -> list[str]:
                      f"{sorted(wired_windows)} differ")
 
     def root_neutral(text: str) -> str:
-        return re.sub(r"ruleset is .+/rules/\.\n", "ruleset is <root>/rules/.\n",
+        return re.sub(r"ruleset is .+?/rules/", "ruleset is <root>/rules/",
                       text.replace("\r\n", "\n"))
 
     with tempfile.TemporaryDirectory() as scratch:
