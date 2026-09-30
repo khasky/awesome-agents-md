@@ -37,8 +37,6 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 
 ## Coding
 
-<!-- The ladder, the root-cause fix and the output cap adapted from https://github.com/DietrichGebert/ponytail (MIT). -->
-
 The best code is the code never written. Read the task and the code it touches first, then stop at the first rung that holds:
 
 1. Does this need to exist at all? A speculative need is skipped, said in one line.
@@ -55,8 +53,6 @@ The best code is the code never written. Read the task and the code it touches f
 - Comments only for non-obvious intent; never a tool or mode tag in code (`rules/code-comments.md`).
 
 ## Communication
-
-<!-- Compression mechanics adapted from https://github.com/JuliusBrussee/caveman (MIT). -->
 
 - Respond in the user's own language, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
 - Answer in at most 35 words unless the user asks for an explanation. Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.

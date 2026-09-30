@@ -2,8 +2,6 @@
 
 Read this when writing or reviewing server-side code (HTTP APIs, auth, database access) or the trust boundary between a server and the clients it ships. Scheduled and background jobs: `rules/jobs.md`.
 
-<!-- Distilled in own words from goldbergyoni/nodebestpractices (CC BY-SA 4.0), jesusprubio/strong-node (archived), ryanmcdermott/clean-code-javascript and airbnb/javascript; auth, caching, error-envelope, and runtime additions from the khasky/*-playbook suite; shipped-client rules from OWASP MASVS. -->
-
 - Error responses: never send `err.message`, stack traces, or internal details to the client (information disclosure) — log them server-side, return a generic message (with a correlation ID if the stack has one).
 - One global error handler maps domain errors to statuses — services never speak HTTP codes. Stable error JSON (`code`, `message`, `request_id`); pick 400 vs 422 once per API.
 - Crash policy for operational errors (bad input, timeouts, unavailable dependencies): handle, respond, and stay up — don't crash on malformed user input.

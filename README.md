@@ -23,6 +23,7 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
   - [Benchmark](#benchmark)
   - [Related](#related)
   - [Contributing](#contributing)
+  - [Sources](#sources)
   - [License](#license)
 
 ## Repository layout
@@ -205,6 +206,44 @@ Companion repositories, each a separate layer; pick the ones you need:
 
 A rule earns its line only if an agent would get it wrong without it, and the core `AGENTS.md` stays under 200 instruction lines and 32 KiB — see [CONTRIBUTING.md](CONTRIBUTING.md) for the format of a new `rules/` module and the checks CI runs.
 
+## Sources
+
+Where the rules were distilled from, per file.
+
+- `AGENTS.md`: the coding ladder, the root-cause fix and the output cap adapted from [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) (MIT); the compression mechanics, also in `rules/workflow.md`, from [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT).
+- `rules/api-contracts.md`: Distilled from khasky/backend-architecture-playbook and khasky/frontend-architecture-playbook.
+- `rules/backend-security.md`: Distilled in own words from goldbergyoni/nodebestpractices (CC BY-SA 4.0), jesusprubio/strong-node (archived), ryanmcdermott/clean-code-javascript and airbnb/javascript; auth, caching, error-envelope, and runtime additions from the khasky/*-playbook suite; shipped-client rules from OWASP MASVS.
+- `rules/caching.md`: Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice; cache layers and per-family metrics from khasky/caching-playbook.
+- `rules/ci-cd-security.md`: Distilled from TupleType/awesome-cicd-attacks (poisoned pipeline execution, dependency confusion, runner compromise), GitHub's hardening guide for Actions, zizmor/actionlint rule sets, and Trail of Bits' research on auditing AI-agent workflows in CI.
+- `rules/code-review.md`: Style left to tooling follows Google's engineering practices; self-refuting findings follow khasky/ai-assisted-engineering-playbook.
+- `rules/crypto.md`: Distilled from sobolevn/awesome-cryptography, paragonie/awesome-appsec, the OWASP Password Storage and Cryptographic Storage cheat sheets, and libsodium's design guidance; the bcrypt input limit from Okta's 2024 cache-key advisory.
+- `rules/database.md`: Distilled from the Twelve-Factor App (config, backing services), Prisma and Drizzle docs, use-the-index-luke.com, the expand/contract migration pattern, GitHub's replication-lag throttling practice (freno), the sqlcheck SQL anti-pattern catalog (jarulraj), and Azure's SaaS tenancy pattern matrix; cross-checked against production reference implementations.
+- `rules/debugging.md`: The reload check is distilled from khasky/sysadmin-operations-playbook.
+- `rules/dependencies.md`: Distilled from TupleType/awesome-cicd-attacks (dependency confusion, typosquatting), lirantal/awesome-nodejs-security, npm/PyPI provenance documentation, and trickest/cve automation practice; lockfile conflicts from the npm package-lock documentation; update grouping from Renovate's group presets.
+- `rules/deployment.md`: Distilled from continuous-delivery practice (deploy/release separation, progressive delivery), the expand/contract pattern, and feature-flag lifecycle guidance; cross-checked against production reference implementations; upstream-first backports from the Linux kernel, systemd and OpenStack stable-branch policies; infrastructure state from Terraform's state and backend documentation.
+- `rules/design-patterns.md`: Distilled from python-patterns.guide (Brandon Rhodes), rust-unofficial/patterns, refactoring.guru, Martin Fowler's P of EAA and GUI Architectures, faif/python-patterns, and Game Programming Patterns (Nystrom); coupling kinds from Myers and Constantine's structured design; acyclic dependencies from Robert C. Martin; ports and adapters from Alistair Cockburn.
+- `rules/evidence-gates.md`: Distilled from the artifact-contract gate in MaxMiksa/Auto-Company (run-identity binding, placeholder rejection, derived-flag recomputation) and from provenance practice for build attestations.
+- `rules/frontend-design.md`: Distilled from vercel-labs/web-interface-guidelines, nextlevelbuilder/ui-ux-pro-max-skill, anthropics/skills frontend-design, Anthropic's Opus 5.5 prompting guide (frontend design defaults), and khasky/marketing-and-seo-playbook (permission prompts, layout reservation); automated accessibility coverage from Deque's axe coverage study.
+- `rules/git-hooks.md`: Distilled from the husky and lint-staged docs and pre-commit-hook practice; cross-checked against production reference implementations.
+- `rules/i18n.md`: Distilled from ICU MessageFormat guidance, CLDR plural rules, and i18n review practice.
+- `rules/incident-response.md`: Distilled from meirwah/awesome-incident-response, OTRF/ThreatHunter-Playbook (hypothesis-driven hunts), Cugu/awesome-forensics (evidence preservation), and Google SRE incident practice.
+- `rules/jobs.md`: Distilled from Google SRE (distributed periodic scheduling), job-runner practice, and the idempotent-rerun pattern; cross-checked against production reference implementations.
+- `rules/llm-agents.md`: Distilled from OWASP LLM01:2025 (prompt injection), Meta's "Agents Rule of Two", the SoK on the prompt-injection landscape and "The Attacker Moves Second" (adaptive breaks of 12 published defenses), MCP tool-poisoning research, and the Snyk agent-scan issue taxonomy (tool shadowing, toxic flows, hidden-Unicode payloads), and Anthropic's Opus 5.5 prompting guide (pasted-text marking, effort, reasoning blocks, time signals); remote tool servers from the MCP specification; one tool per capability from Anthropic's tool-writing guidance; sandboxing untrusted targets from khasky/claude-code-security-audit.
+- `rules/long-running-agents.md`: Distilled from the loop engine of MaxMiksa/Auto-Company (state validation, soft timeout, quota-vs-error branching, self-mutation guard), standard supervisor practice for restart backoff and log rotation, and Anthropic's Opus 5.5 prompting guide (text-only turn ends, continuation caps, named early stops).
+- `rules/messaging.md`: Distilled from Enterprise Integration Patterns (Hohpe & Woolf), microservices.io (Transactional Outbox, Idempotent Consumer), Stripe's webhook/signing docs, and at-least-once delivery practice; cross-checked against production reference implementations; consumer error classification from khasky/messaging-and-async-playbook.
+- `rules/monorepo.md`: Distilled from khasky/monorepo-architecture-playbook; phantom dependencies from the pnpm and Rush documentation.
+- `rules/observability.md`: Distilled from the Twelve-Factor App, Google SRE (health checking, graceful degradation), OpenTelemetry, and the RED method (Tom Wilkie); cross-checked against production reference implementations; runbook links from the Google SRE Workbook.
+- `rules/payments.md`: Distilled from Stripe's official integration guides (webhook signature verification, idempotency, fulfillment) and PCI-DSS handling basics; cross-checked against production reference implementations.
+- `rules/performance.md`: Pool saturation is distilled from khasky/nodejs-runtime-performance-playbook.
+- `rules/planning.md`: Distilled from the plan-mode instructions in a public collection of Codex system prompts, and from spec-handoff practice; decision records from Michael Nygard's ADR format.
+- `rules/privacy.md`: Distilled from GDPR/CCPA engineering practice: deletion propagation, retention enforcement, data mapping; consent from the ePrivacy Directive, the Planet49 ruling and EDPB guidance; session-replay masking from vendor privacy documentation.
+- `rules/public-api-design.md`: Distilled from Stripe's API design, Google AIP, RFC 9457 (Problem Details), RFC 8594 (Sunset), RFC 7232 (conditional requests), RFC 9111 (HTTP caching), and the IETF RateLimit-header draft; cross-checked against production reference implementations; long-running operations from the Microsoft REST API Guidelines; header naming from RFC 6648.
+- `rules/rate-limiting.md`: Distilled from Stripe's rate-limiter taxonomy, the standard limiter algorithms, and multi-instance counter practice; cross-checked against production reference implementations.
+- `rules/resilience.md`: Distilled from the Azure Architecture Center cloud design patterns, microservices.io (Chris Richardson), Reactive Design Patterns (Kuhn), Enterprise Integration Patterns (Hohpe/Woolf), and Mark Richards' "Microservices Antipatterns and Pitfalls".
+- `rules/shell-scripts.md`: Distilled from the classic Stack Overflow shell best-practices thread (question 78497), the ShellCheck wiki, and PowerShell strict-mode guidance.
+- `rules/testing.md`: Distilled from khasky/testing-strategy-playbook and khasky/backend-architecture-playbook; load-testing practice from Slack engineering's continuous load testing; characterization tests from Michael Feathers.
+- `rules/web-seo.md`: Distilled from AgriciDaniel/claude-seo, nowork-studio/NotFair, coreyhaines31/marketingskills, seb1n seo-optimization; corrected against current guidance (INP replaced FID in 2024; keyword-density advice dropped as dated). hreflang, redirect, and interstitial rules from khasky/marketing-and-seo-playbook; robots.txt, noindex and faceted navigation from Google Search Central documentation.
+
 ## License
 
-Released under the [MIT license](LICENSE). `AGENTS.md` adapts MIT-licensed material from two projects — [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (output compression) and [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) (lazy senior dev mode) — with credit kept inline where each is used.
+Released under the [MIT license](LICENSE). Third-party material is credited under [Sources](#sources).

@@ -2,8 +2,6 @@
 
 Read this when writing or restructuring tests, or deciding what kind of test a change needs.
 
-<!-- Distilled from khasky/testing-strategy-playbook and khasky/backend-architecture-playbook; load-testing practice from Slack engineering's continuous load testing; characterization tests from Michael Feathers. -->
-
 - Placement ladder: unit tests for pure logic, transformations, and policy decisions; integration tests where systems meet (database, queue, cache, HTTP handlers) — against real infrastructure in containers where practical; E2E for a handful of business-critical paths only, never the default answer to a coverage gap.
 - Mock external services only, never your own app; a test with more mocking than logic verifies the mock (shared rule with `rules/code-review.md`, repeated because a test author never opens the review module).
 - Assert behavior, not implementation trivia: a test that breaks on a rename without a behavior change tests the wrong thing.

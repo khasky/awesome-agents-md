@@ -2,8 +2,6 @@
 
 Read this when writing schema, migrations, queries, or data-access code — raw SQL or an ORM. The invariants hold for any relational database; the SQL examples use PostgreSQL syntax, and every major engine has the equivalent.
 
-<!-- Distilled from the Twelve-Factor App (config, backing services), Prisma and Drizzle docs, use-the-index-luke.com, the expand/contract migration pattern, GitHub's replication-lag throttling practice (freno), the sqlcheck SQL anti-pattern catalog (jarulraj), and Azure's SaaS tenancy pattern matrix; cross-checked against production reference implementations. -->
-
 - Client/pool is one long-lived instance shared by the process, never created per request or per module reload — a runtime that re-executes modules on hot-reload opens a new pool each time and exhausts connections. Serverless: cap the pool (often `max: 1`) and reuse it across invocations.
 - Size the pool against the database's connection limit, not the app's concurrency: connections summed across every instance, worker, and migration job stay under `max_connections` with headroom for an admin session. A pool wider than the work the database can actually run in parallel adds queueing, not throughput — put a pooler (PgBouncer, RDS Proxy, or the platform's equivalent) in front instead of raising the number.
 - One datasource selected by env (`DATABASE_URL`), one documented switch point between environments, and the same engine and major version locally as in production — no per-file connection strings.

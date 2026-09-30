@@ -2,8 +2,6 @@
 
 Read this when code hashes, encrypts, signs, or generates anything security-bearing: passwords, tokens, sessions, signatures, encrypted fields.
 
-<!-- Distilled from sobolevn/awesome-cryptography, paragonie/awesome-appsec, the OWASP Password Storage and Cryptographic Storage cheat sheets, and libsodium's design guidance; the bcrypt input limit from Okta's 2024 cache-key advisory. -->
-
 - Never implement a primitive, a mode, or a protocol yourself. Use libsodium, the platform's audited API (`crypto` in Node.js, `cryptography` in Python, Web Crypto in browsers), or a maintained wrapper — "we only wrote the padding" is how it breaks.
 - Banned in a security role: MD5 and SHA-1 (signatures, tokens, integrity), ECB mode, a static or reused IV/nonce, and any non-cryptographic RNG (`Math.random`, `rand()`, `System.currentTimeMillis` as a seed). MD5 for a cache key or file dedup is fine — the role decides, not the function.
 - Passwords use argon2id (memory-hard) or bcrypt; the cost factor is a tuned number with a comment naming when it was last measured, re-tuned as hardware moves — a constant copied from a 2015 blog post is a finding. Enforce a length floor (≥12) plus a breached-password check rather than composition rules.

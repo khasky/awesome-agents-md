@@ -2,8 +2,6 @@
 
 Read this when reviewing a diff/PR or preparing your own changes for review.
 
-<!-- Style left to tooling follows Google's engineering practices; self-refuting findings follow khasky/ai-assisted-engineering-playbook. -->
-
 ## Requesting review
 
 - Package context precisely: BASE and HEAD commits, what the change claims to do, and the plan/requirements it implements, leaving out the full session history, whose reasoning talks a reviewer into agreeing with it.

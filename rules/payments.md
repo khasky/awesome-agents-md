@@ -2,8 +2,6 @@
 
 Read this when integrating any payment provider: checkout, webhooks, fulfillment, refunds, subscriptions.
 
-<!-- Distilled from Stripe's official integration guides (webhook signature verification, idempotency, fulfillment) and PCI-DSS handling basics; cross-checked against production reference implementations. -->
-
 - Never trust client-sent prices, currencies, or totals: the client sends product ids and quantities; the server re-derives every line item and amount from the canonical database/catalog before creating the payment session.
 - Verify webhook signatures against the raw, unparsed request body with the provider SDK; reject (400) if the signature header is missing or invalid. A parsed then re-serialized body fails verification. The general inbound-webhook contract — replay window, fast 2xx, async work — is in `rules/messaging.md`; repeated here because the payment path is where getting it wrong costs money.
 - Fulfill only from the provider's payment-succeeded webhook event, never on the browser success/redirect page — the redirect is display-only and unreliable (tab closed, network dropped). Mark the success page `noindex`.

@@ -2,8 +2,6 @@
 
 Read this when shipping a change to a running environment or to a release or support branch: rollout strategy, rollbacks, feature flags, migration ordering, build artifacts, runtime hardening, and infrastructure definitions with their state and plans.
 
-<!-- Distilled from continuous-delivery practice (deploy/release separation, progressive delivery), the expand/contract pattern, and feature-flag lifecycle guidance; cross-checked against production reference implementations; upstream-first backports from the Linux kernel, systemd and OpenStack stable-branch policies; infrastructure state from Terraform's state and backend documentation. -->
-
 - Deploy and release are separate events: deploying puts code in production dark; releasing turns it on (flag, router weight). Coupling them makes every rollback a redeploy under incident pressure.
 - Every deploy has a tested rollback path before it starts: the previous artifact still deployable, migrations compatible one version back. A change that can't roll back (data rewrite, destructive migration) is declared as such and ships alone, never bundled.
 - Expand/contract ordering is a deploy contract, not just a schema pattern: ship code tolerating both shapes → expand/migrate → switch reads and writes → contract only after every consumer is off the old shape. It applies to API fields, event schemas, and config keys the same as columns (`rules/database.md`, `rules/messaging.md`).

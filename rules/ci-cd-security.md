@@ -2,8 +2,6 @@
 
 Read this when writing or changing CI workflows, release automation, or anything that runs with repository credentials — on any CI platform.
 
-<!-- Distilled from TupleType/awesome-cicd-attacks (poisoned pipeline execution, dependency confusion, runner compromise), GitHub's hardening guide for Actions, zizmor/actionlint rule sets, and Trail of Bits' research on auditing AI-agent workflows in CI. -->
-
 - Pin every third-party pipeline component — actions, orbs, included templates — to an immutable revision (a full commit SHA), never a tag or branch: a tag is mutable and repointing it is the documented supply-chain vector. Keep the human-readable version in a trailing comment and let the update bot bump both.
 - A workflow that runs with repository secrets and write scope against input from an untrusted fork never checks out or executes the fork's code — that combination is what a poisoned pipeline execution attack exploits. A fork contribution that genuinely needs a secret goes through a gated environment with a required reviewer.
 - Know which of the platform's triggers run with secrets and write scope in response to a fork event; those are the jobs where fork code must never run.

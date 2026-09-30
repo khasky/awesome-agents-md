@@ -2,8 +2,6 @@
 
 Read this when code stores, copies, or deletes personal data (user deletion, retention policies, PII handling, data export), or when adding analytics, tracking scripts, ad pixels, or a session-recording or error-reporting SDK to a client. The engineering invariants hold under any privacy regime; a rule that depends on a jurisdiction names it, and the legal call stays the user's.
 
-<!-- Distilled from GDPR/CCPA engineering practice: deletion propagation, retention enforcement, data mapping; consent from the ePrivacy Directive, the Planet49 ruling and EDPB guidance; session-replay masking from vendor privacy documentation. -->
-
 - Deletion propagates to every copy or it isn't deletion: primary rows, caches, search indexes, analytics/warehouse, queues and DLQs, logs, and backups each need an explicit answer — delete now, expire by retention, or crypto-shred (destroy a per-user key). "Deleted from the users table" alone is a compliance bug (`rules/caching.md`, `rules/messaging.md`).
 - Backups are append-only by design, so deletion there is policy, not a row operation: bounded retention plus re-deletion after any restore (replay the deletion log), or per-user encryption with key destruction.
 - Collect at the minimum: a field is stored only when the feature in front of you reads it, and the purpose is recorded where the schema lives — data never collected needs no deletion path, no retention window, and no breach disclosure.

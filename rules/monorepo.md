@@ -2,8 +2,6 @@
 
 Read this when working in a repository that holds several packages, modules or services built together, in any ecosystem (JS/TS workspaces, Cargo workspaces, Go workspaces, Gradle multi-project, uv workspaces, or equivalent).
 
-<!-- Distilled from khasky/monorepo-architecture-playbook; phantom dependencies from the pnpm and Rush documentation. -->
-
 - Declare a dependency in the package that uses it, never at the root; the root holds repository-level tooling only.
 - Import another package through its public entry point, never by a deep path into its internals, which can change without notice.
 - No new `shared`/`common`/`utils` dumping-ground packages: extend the package that owns the domain, or propose a named, scoped package.

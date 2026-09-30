@@ -2,8 +2,6 @@
 
 Read this when adding or reviewing a cache (in-process, a shared cache server, or a cached computation), or chasing data that stays stale after a change. The rules hold for any cache. HTTP/CDN response caching lives in `rules/public-api-design.md`.
 
-<!-- Distilled from the Azure Cache-Aside pattern, Redis's own anti-patterns guidance (redis.io/learn/howtos/antipatterns), and production Redis practice; cache layers and per-family metrics from khasky/caching-playbook. -->
-
 - Cache-aside is the default: read → miss → load from the source of truth → set with TTL. The write path invalidates the key rather than updating the cached value in place — two writers updating a value race; a delete is idempotent.
 - Choose the write strategy by read-follows-write distance, before writing code: cache-aside covers most cases; write-through when a read follows its write immediately and staleness is unacceptable; write-behind only for loss-tolerant counters and metrics — it acknowledges before the store write, so a crash loses data.
 - Invalidation is designed before the cache is added, not after the first stale bug: every entry gets a TTL as the guardrail, and the domain event that makes the value wrong is named and invalidated on (`rules/backend-security.md`). A cache "invalidated" only by expiry serves known-stale data for the whole window.

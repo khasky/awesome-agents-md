@@ -2,8 +2,6 @@
 
 Read this when the agent works unattended across many iterations: a loop, a scheduled routine, a daemon-driven session, or work handed from one session to the next.
 
-<!-- Distilled from the loop engine of MaxMiksa/Auto-Company (state validation, soft timeout, quota-vs-error branching, self-mutation guard), standard supervisor practice for restart backoff and log rotation, and Anthropic's Opus 5.5 prompting guide (text-only turn ends, continuation caps, named early stops). -->
-
 - One state file carries everything between iterations, with a fixed section skeleton the next iteration can rely on. An iteration that ends without rewriting it produced nothing its successor can use.
 - Each iteration starts from an empty context: no decision, dead end, or open question survives except what the state file records. Anything worth not rediscovering goes in the file, including the options already ruled out and why.
 - Judge the iteration on the state file, not the exit code. A zero exit over a state file missing its required sections is a failed iteration, and a runner that reads only exit codes reports progress nobody made.

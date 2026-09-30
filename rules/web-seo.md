@@ -2,8 +2,6 @@
 
 Read this when building, modifying, or auditing public-facing web pages.
 
-<!-- Distilled from AgriciDaniel/claude-seo, nowork-studio/NotFair, coreyhaines31/marketingskills, seb1n seo-optimization; corrected against current guidance (INP replaced FID in 2024; keyword-density advice dropped as dated). hreflang, redirect, and interstitial rules from khasky/marketing-and-seo-playbook; robots.txt, noindex and faceted navigation from Google Search Central documentation. -->
-
 ## Indexability first
 
 - Before any other SEO work, verify the page can be indexed: no accidental `noindex`, no robots.txt block, canonical not pointing elsewhere. An unindexable page makes everything else moot — if blocked, lead the report with that.

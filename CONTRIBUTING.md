@@ -35,8 +35,6 @@ One module per bullet in `rules/INDEX.md`, in theme order. The index is a separa
 
 Read this when <the exact trigger — a task type, not a technology fan club>.
 
-<!-- Distilled from <sources>. -->
-
 - <one rule per bullet, imperative, specific enough to act on>
 ```
 
@@ -46,6 +44,7 @@ Read this when <the exact trigger — a task type, not a technology fan club>.
 - A prohibition names what to do instead, where an alternative exists: "never parse a completion with a regex; validate against a schema" steers, "never parse a completion with a regex" leaves the agent guessing.
 - State the outcome and the check that proves it, not the procedure. Numbered steps belong only where the order itself matters; a step list for a task the model can plan narrows its search and reads as mechanical.
 - One rule per bullet. A bullet that needs a third sentence to state its rule is two rules.
+- Sources go in one line under Sources in `README.md`, never in the module: an agent reads a comment in a rule file like any other text, and pays for it every time the module loads.
 - Plain register, no emphasis. Current models follow system and project instructions closely, and CRITICAL, MUST or a line in capitals makes them over-apply that rule everywhere ([Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)). Emphasis goes on one line at most, and only after the agent was seen skipping that line; emphasis spread over many lines marks none of them.
 - No rule contradicts another, in its own module or elsewhere: a model given two conflicting rules follows one of them at random ([Claude Code memory docs](https://code.claude.com/docs/en/memory)), and a model that follows instructions literally is hurt more ([GPT-5 prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide)). Before adding a rule, search `rules/` and the core for rules it could collide with; where two apply to the same case, the narrower rule names the exception or the precedence itself.
 - Cross-reference sibling modules inline as `` (`rules/<sibling>.md`) `` instead of repeating their content. Repeat a rule across modules only when its absence at that moment would cause the mistake, and say why it is repeated.

@@ -2,8 +2,6 @@
 
 Read this when writing cron jobs, scheduled tasks, or batch processing — anything that runs on a timer rather than on a request or a message.
 
-<!-- Distilled from Google SRE (distributed periodic scheduling), job-runner practice, and the idempotent-rerun pattern; cross-checked against production reference implementations. -->
-
 - N replicas run N copies of an in-process schedule: single execution needs an external guarantee — the platform's singleton scheduler (e.g. one CronJob, one beat process) or a lock in shared storage, never a per-instance timer.
 - A job lock is a lease with a TTL plus a fencing check, not a boolean: a crashed holder must not block the next run forever, and an expired holder must not land its write after a new holder started (`rules/resilience.md` fencing tokens).
 - Overlap policy is explicit: a run that outlives its interval either skips the next tick, queues it, or kills the predecessor — pick one; running both concurrently corrupts shared state.

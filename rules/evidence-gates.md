@@ -2,8 +2,6 @@
 
 Read this when turning a verification rule into an enforced gate, or when a completion claim has to survive review by someone who was not watching it being made.
 
-<!-- Distilled from the artifact-contract gate in MaxMiksa/Auto-Company (run-identity binding, placeholder rejection, derived-flag recomputation) and from provenance practice for build attestations. -->
-
 - Evidence is an artifact, not a sentence: the command, its exit code, the revision it ran against, and when it ran. Extends the core Verification gate to what the claim has to leave behind for a reader who arrives later.
 - Bind the receipt to the run that produced it (commit sha, run id, attempt) and have the gate compare each field against its own context, rejecting a mismatch. A receipt carried over from an earlier run is the easiest false pass to produce and the hardest to catch in review.
 - A placeholder in a required field fails the gate. One that accepts a pending marker "until the real value arrives" never fires, and the artifact ships carrying the hole it was written to document.

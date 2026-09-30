@@ -2,8 +2,6 @@
 
 Read this when the task is to produce a plan or spec rather than the change itself — a design handed to someone else, an approach agreed before editing, or an open-ended request that has to be pinned down first. Also when writing or updating an architecture decision record.
 
-<!-- Distilled from the plan-mode instructions in a public collection of Codex system prompts, and from spec-handoff practice; decision records from Michael Nygard's ADR format. -->
-
 - The plan is finished when it is decision complete: whoever implements it — another person, another agent, you tomorrow — makes no further decisions. Every open choice left in the plan gets made twice, differently.
 - Planning is read-only. Searching, reading, static inspection, dry runs, and builds or tests that touch only caches and generated output refine a plan; editing files, running a formatter or codegen that rewrites them, or applying a migration is executing it. Asked mid-planning for something that would execute the plan, plan that work instead — unless the user is switching the task to implementation, which their next instruction, not your reading of it, decides.
 - Explore before asking, always in that order: run at least one targeted pass over the repository — entry points, configuration, schemas, call sites — before the first question. A question the repository answers spends the user's attention on something you could have read.

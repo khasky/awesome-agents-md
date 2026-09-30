@@ -2,8 +2,6 @@
 
 Read this when writing or reviewing performance-sensitive code, or when asked to make something faster or to explain rising latency — any language, any stack. Domain-specific hot paths live in their own modules: queries and indexes in `rules/database.md`, caches in `rules/caching.md`, animation in `rules/frontend-design.md`.
 
-<!-- Pool saturation is distilled from khasky/nodejs-runtime-performance-playbook. -->
-
 - Measure first: profile the real workload and name the hot spot before changing code. An optimization without a before/after number is a style change, and the bottleneck is routinely not where it was guessed to be — speed claims pass the same evidence gate as correctness claims (core Verification rule).
 - Fix the complexity class before the constants: a quadratic pair of nested loops over user-sized data outgrows any micro-tuning of its body. Replace the inner scan with a hash index built once before the loop — that is the two-line change that turns O(n²) into O(n).
 - Pick the data structure by the dominant operation: membership test → hash set, key lookup → map, FIFO → queue/deque, priority → heap, range or ordered scan → sorted structure. A linear `contains` inside a loop is the standard accidental O(n²).

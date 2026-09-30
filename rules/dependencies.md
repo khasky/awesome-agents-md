@@ -2,8 +2,6 @@
 
 Read this when adding, upgrading, or auditing third-party packages, configuring an update bot, resolving a lockfile conflict, or enabling an agent skill, MCP server, plugin or hook, in any ecosystem (npm, PyPI, Go modules, Cargo, Maven).
 
-<!-- Distilled from TupleType/awesome-cicd-attacks (dependency confusion, typosquatting), lirantal/awesome-nodejs-security, npm/PyPI provenance documentation, and trickest/cve automation practice; lockfile conflicts from the npm package-lock documentation; update grouping from Renovate's group presets. -->
-
 - Adding a dependency is an "ask first" decision (core Boundaries rule). Before proposing one, walk the coding ladder: stdlib, a native platform feature, or an already-installed package usually covers it.
 - One lockfile per repo, committed, matching the declared package manager; CI installs frozen (`npm ci`, `pnpm install --frozen-lockfile`, `pip install -r requirements.txt --require-hashes`) — never a resolving install, which can silently pick different versions than the lockfile pins.
 - Prefer `--ignore-scripts` on install; a package's postinstall script runs with your shell's privileges before any code is imported.

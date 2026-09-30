@@ -2,8 +2,6 @@
 
 Read this when building async messaging: message queues, event streams, pub/sub, or inbound/outbound webhooks.
 
-<!-- Distilled from Enterprise Integration Patterns (Hohpe & Woolf), microservices.io (Transactional Outbox, Idempotent Consumer), Stripe's webhook/signing docs, and at-least-once delivery practice; cross-checked against production reference implementations; consumer error classification from khasky/messaging-and-async-playbook. -->
-
 - Never publish to a broker inside the request path or transaction: write the domain change and an outbox row in the same DB transaction, then a separate relay reads the outbox and publishes. The commit is the single source of truth — the message can't exist without the state change or vice versa.
 - The relay drains the outbox with `SELECT ... FOR UPDATE SKIP LOCKED` plus a `dispatched` flag, so multiple worker instances poll concurrently without double-sending.
 - Delivery is at-least-once, so consumers must be idempotent: carry a stable event id, dedupe on it (unique constraint or seen-set), and make the handler safe to run twice. Derive queue job ids deterministically (`endpointId:eventId`) so a re-enqueue can't double-deliver.

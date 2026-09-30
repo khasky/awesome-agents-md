@@ -2,8 +2,6 @@
 
 Read this when designing or evolving an HTTP API that external clients consume: versioning, pagination, idempotency, concurrency, deprecation. Pairs with `rules/api-contracts.md` (schemas and generated clients).
 
-<!-- Distilled from Stripe's API design, Google AIP, RFC 9457 (Problem Details), RFC 8594 (Sunset), RFC 7232 (conditional requests), RFC 9111 (HTTP caching), and the IETF RateLimit-header draft; cross-checked against production reference implementations; long-running operations from the Microsoft REST API Guidelines; header naming from RFC 6648. -->
-
 - Version in the URL path (`/v1`, `/v2`) as independent route trees with their own schemas. Additive changes go in place; a breaking change only ever creates a new version — an existing version's response shape never changes under clients.
 - Publish a breaking-vs-non-breaking taxonomy so consumers know what's safe: adding a field or optional param is non-breaking; removing/renaming a field, tightening validation, or changing a type is breaking.
 - Evolve by layering, never by forced migration: a redesigned abstraction ships as a new version or resource beside the old one, and existing integrations keep working until their owners move — migration is announced through the deprecation lifecycle below, never imposed by an in-place change.

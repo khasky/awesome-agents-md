@@ -2,8 +2,6 @@
 
 Read this when a service calls other services — HTTP/RPC clients, retries, timeouts, cross-service transactions, or deciding failure behavior under a slow or dead dependency.
 
-<!-- Distilled from the Azure Architecture Center cloud design patterns, microservices.io (Chris Richardson), Reactive Design Patterns (Kuhn), Enterprise Integration Patterns (Hohpe/Woolf), and Mark Richards' "Microservices Antipatterns and Pitfalls". -->
-
 - A timeout alone is not resilience. Every synchronous cross-service call gets an explicit timeout, a circuit breaker, and a named fallback — cached value, default, degraded feature, or a clean fast failure surfaced to the caller.
 - Retry only transient failures (timeouts, 5xx, connection resets) with jittered backoff and a capped total budget — never 4xx, never unbounded (`rules/backend-security.md` for the outbound retry contract). The circuit breaker is what stops retrying a persistently dead dependency.
 - Retrying a non-idempotent call requires an idempotency key; without one a retry is a duplicate side-effect, not resilience.

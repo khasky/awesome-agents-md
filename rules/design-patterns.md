@@ -2,8 +2,6 @@
 
 Read this when structuring a new module or service, adding state that other code reads, wiring dependencies between modules or between runtime environments, choosing or reviewing a design pattern, or naming an app architecture (MVC/MVP, layered, hexagonal).
 
-<!-- Distilled from python-patterns.guide (Brandon Rhodes), rust-unofficial/patterns, refactoring.guru, Martin Fowler's P of EAA and GUI Architectures, faif/python-patterns, and Game Programming Patterns (Nystrom); coupling kinds from Myers and Constantine's structured design; acyclic dependencies from Robert C. Martin; ports and adapters from Alistair Cockburn. -->
-
 - A pattern needs a named recurring problem. Apply one only after the simplest working code has demonstrably recurred as a problem (core coding ladder); a pattern justified by "best practice" instead of a problem is over-engineering.
 - Reuse the vocabulary the codebase already speaks: identify the incumbent patterns (Repository, Active Record vs Data Mapper, Unit of Work, MVC/MVP, event bus) and stay consistent with them. A second competing pattern for the same concern is a defect even when it is "better".
 - Composition over inheritance. Inheritance only for genuine is-a substitution a caller relies on; a hierarchy deeper than two levels, or a base class that exists only to share code, gets refactored to composition.

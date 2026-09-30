@@ -2,8 +2,6 @@
 
 Read this when building, styling, or reviewing web UI: pages, components, dashboards. The craft and accessibility numbers hold for any UI; the CSS and DOM APIs are web-only.
 
-<!-- Distilled from vercel-labs/web-interface-guidelines, nextlevelbuilder/ui-ux-pro-max-skill, anthropics/skills frontend-design, Anthropic's Opus 5.5 prompting guide (frontend design defaults), and khasky/marketing-and-seo-playbook (permission prompts, layout reservation); automated accessibility coverage from Deque's axe coverage study. -->
-
 ## Numbers agents get wrong
 
 - Contrast: 4.5:1 body text, 3:1 large text and UI components against adjacent colors. Test dark mode separately — desaturated tonal variants, never inverted colors.

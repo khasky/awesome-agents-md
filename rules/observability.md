@@ -2,8 +2,6 @@
 
 Read this when adding logging, health checks, metrics, alerts, graceful shutdown, or environment configuration to a running service.
 
-<!-- Distilled from the Twelve-Factor App, Google SRE (health checking, graceful degradation), OpenTelemetry, and the RED method (Tom Wilkie); cross-checked against production reference implementations; runbook links from the Google SRE Workbook. -->
-
 - Validate all environment variables at boot against a schema; fail loud listing every missing/invalid key, then expose a typed, cached config object. No raw environment reads scattered through the code, no silent default for anything that matters.
 - Two liveness endpoints, not one: `/healthz` (or `/livez`) returns 200 whenever the process is up and calls no dependencies; `/readyz` probes each dependency and returns 503 with a per-dependency status map. Load balancers poll liveness; orchestrator readiness gates traffic on readiness.
 - Structured logs (JSON) to stdout only — the destination is deployment config, never a hardcoded file transport. One log line per request: method, route, status, latency.

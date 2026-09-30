@@ -2,8 +2,6 @@
 
 Read this when a production system is currently broken, degraded, or suspected compromised — before the postmortem, while the fire is burning.
 
-<!-- Distilled from meirwah/awesome-incident-response, OTRF/ThreatHunter-Playbook (hypothesis-driven hunts), Cugu/awesome-forensics (evidence preservation), and Google SRE incident practice. -->
-
 - Preserve before you remediate. A restart destroys the state that explains the outage: capture logs, a heap/thread dump, process and connection state, queue depths, and the current config first. Five seconds of capture buys the root cause; skipping it usually costs a second incident.
 - Suspected compromise changes the order: isolate the host or rotate the credential before anything else, and do not power-cycle — memory is where the evidence lives.
 - Contain, then fix. Stop the bleeding (disable the feature flag, drain the node, revoke the token) before diagnosing. A mitigation that is not a fix is still the right first move.

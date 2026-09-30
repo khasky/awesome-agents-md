@@ -2,8 +2,6 @@
 
 Read this when the repo has a machine-readable API schema (OpenAPI or similar), a contract package, or generated API clients — or before hand-writing types for API data.
 
-<!-- Distilled from khasky/backend-architecture-playbook and khasky/frontend-architecture-playbook. -->
-
 - The schema is the source of truth: change the spec, re-run codegen. Never hand-edit generated files — they are build output and the next run overwrites them.
 - Before hand-writing a DTO or request/response type, look for an existing contract package or your ecosystem's schema-to-client generator; duplicating shapes by hand is how client and server drift.
 - Schema change → regenerate in the same change and fix all consumers; a stale generated client compiles but lies.

@@ -2,8 +2,6 @@
 
 Read this when the work is larger than a couple of files, a feature, a migration or a plan, before the last pass before "done", when stuck, or when a fix failed twice.
 
-<!-- Moved out of the always-loaded core; the core keeps the gates, this holds the procedure. -->
-
 ## Steps
 
 1. Understand the task; surface assumptions as an explicit block ("Assumptions: 1..3, correct me now or I proceed with these"). Small reversible task → clarify only when ambiguity blocks safe progress, and on minor forks pick a sensible default and state it instead of asking.
@@ -41,8 +39,6 @@ Final response for code changes: at most three short lines, what changed, the ev
 When a fix fails twice or the same approach repeats, switch method instead of parameters: read the exact error, form three hypotheses and test the likeliest with a check built to disprove it, trace the bad value back to where it originates, and after a third failed fix question the architecture. Close the loop by re-running the original failing scenario (full ladder: `rules/debugging.md`).
 
 ## Communication in full
-
-<!-- Compression mechanics distilled from https://github.com/JuliusBrussee/caveman (MIT). -->
 
 - Concise, no filler, no corporate AI tone. Commands, paths, errors, and API names exact. Respond in the user's own language.
 - Before recommending or running a non-baseline CLI (`gh`, `docker`, `jq`, `uv`, ...), confirm it's installed (`gh --version`, exit 0); missing or unverified → check first, or offer a tool-agnostic path. Assumable baseline: git and the OS shell.

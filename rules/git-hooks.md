@@ -2,8 +2,6 @@
 
 Read this when setting up or changing pre-commit, commit-msg or pre-push automation, with any hook manager.
 
-<!-- Distilled from the husky and lint-staged docs and pre-commit-hook practice; cross-checked against production reference implementations. -->
-
 - Pre-commit runs on staged files only, not the whole repo — fast enough that nobody is tempted by `--no-verify`. Whole-repo lint/typecheck/test belongs in CI, not the commit hook.
 - Hooks install as part of the project's normal setup step, so every clone gets them without a manual step.
 - The hook runs the formatter and linter with zero tolerance on the staged set; auto-fixable issues fix-and-restage, non-fixable ones block the commit.

@@ -2,8 +2,6 @@
 
 Read this when writing or editing a shell script — bash/sh or PowerShell — anything beyond a single command.
 
-<!-- Distilled from the classic Stack Overflow shell best-practices thread (question 78497), the ShellCheck wiki, and PowerShell strict-mode guidance. -->
-
 - Bash starts with `set -euo pipefail`. Handle the known escape hatches (`|| true`, `if cmd; then`) where a non-zero exit is legitimate, instead of dropping the flags for the whole script.
 - Quote every expansion: `"$var"`, `"$@"`, `"$(cmd)"`. Unquoted expansion is word-splitting and globbing — the classic path-with-spaces bug.
 - Build argument lists in arrays, not concatenated strings, which reintroduces the same splitting bug.

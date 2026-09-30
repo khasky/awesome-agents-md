@@ -2,8 +2,6 @@
 
 Read this when the code you write calls an LLM, builds an agent, exposes tools to a model, or ingests retrieved content (RAG, MCP servers, tool-using assistants). Also when configuring an agent's own tools and servers, or pointing agentic tooling at a repository you did not write.
 
-<!-- Distilled from OWASP LLM01:2025 (prompt injection), Meta's "Agents Rule of Two", the SoK on the prompt-injection landscape and "The Attacker Moves Second" (adaptive breaks of 12 published defenses), MCP tool-poisoning research, and the Snyk agent-scan issue taxonomy (tool shadowing, toxic flows, hidden-Unicode payloads), and Anthropic's Opus 5.5 prompting guide (pasted-text marking, effort, reasoning blocks, time signals); remote tool servers from the MCP specification; one tool per capability from Anthropic's tool-writing guidance; sandboxing untrusted targets from khasky/claude-code-security-audit. -->
-
 - Rule of Two. In one agent run, allow at most two of: untrusted input, access to sensitive data or credentials, the ability to change state or communicate outward. All three at once needs a human approval gate in the path — not a stronger prompt.
 - The dangerous injection class is indirect, not direct: retrieved documents, tool and API responses, RAG chunks, web pages, file contents, and MCP tool descriptions all carry text an attacker wrote. Every one of them is data at every layer; none of them can grant permissions, change the task, or name a new tool to call.
 - No single filter is a defense. Classifiers, delimiter tags, and "ignore previous instructions" guards were adaptively broken in published work — the mitigation that holds is a sandbox plus information-flow control (what this agent may read cannot reach what it may send).
