@@ -110,9 +110,11 @@ $env:CODEX_NON_INTERACTIVE = "1"; irm https://chatgpt.com/codex/install.ps1 | ie
 npm install -g @google/gemini-cli
 npm install -g @qwen-code/qwen-code
 npm install -g @github/copilot
+npm install -g @kilocode/cli
+irm https://antigravity.google/cli/install.ps1 | iex   # Antigravity CLI (agy)
 ```
 
-Cursor, Windsurf and Antigravity: download from [cursor.com](https://cursor.com), [windsurf.com](https://windsurf.com) and [antigravity.google](https://antigravity.google). opencode: [opencode.ai](https://opencode.ai).
+Cursor, Windsurf and the Antigravity IDE: download from [cursor.com](https://cursor.com), [windsurf.com](https://windsurf.com) and [antigravity.google](https://antigravity.google). opencode: [opencode.ai](https://opencode.ai).
 
 ## Install as a plugin
 
@@ -134,7 +136,7 @@ What the hooks do:
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI and Qwen Code get the core only, without hooks.
 
-Every other agent takes the manual import below. GitHub Copilot CLI installs the plugin, but it reads only a JSON `additionalContext` from a session-start hook and `load-core` prints plain text, so the core would not reach the session. Cursor's and Antigravity's plugin formats are not offered either: Antigravity loads every file in a plugin's `rules/` as an always-on rule, which would turn the on-demand modules into always-on tokens.
+Every other agent takes the manual import below. GitHub Copilot CLI installs the plugin, but it reads only a JSON `additionalContext` from a session-start hook and `load-core` prints plain text, so the core would not reach the session. Antigravity CLI installs the repository from a clone (`agy plugin install <clone>` reads `gemini-extension.json`), but loads nothing from it: no context file, no hooks. Its own plugin format would read `rules/` as always-on rules, so it is not offered. Cursor's Agent Plugins format carries only skills and MCP servers. Kilo Code's plugins are npm code modules.
 
 ## Install manually (import)
 
@@ -155,10 +157,11 @@ Then add one import line to the agent's global instructions file (create it if i
 | GitHub Copilot CLI | `%USERPROFILE%\.copilot\copilot-instructions.md` | paste the contents of `AGENTS.md` |
 | Antigravity | `%USERPROFILE%\.gemini\AGENTS.md` | paste the contents of `AGENTS.md` |
 | opencode | `%USERPROFILE%\.config\opencode\AGENTS.md` | paste the contents of `AGENTS.md` |
+| Kilo Code CLI | `%USERPROFILE%\.config\kilo\kilo.jsonc` | `"instructions": ["C:/repos/awesome-agents-md/AGENTS.md"]` |
 | Cursor | Settings → Rules → User Rules | paste the contents of `AGENTS.md` |
 | Windsurf | per project only: `AGENTS.md` in the repository root | copy the file |
 
-- Claude Code, Gemini CLI and Qwen Code resolve the `@` import themselves; Claude Code asks once to approve it.
+- Claude Code, Gemini CLI and Qwen Code resolve the `@` import themselves; Claude Code asks once to approve it. Kilo Code reads the file named in `instructions`, so it follows `git pull` too.
 - Copilot CLI expands `@` only for files inside its own instructions folder, so it takes the pasted text. Antigravity also reads `~/.gemini/GEMINI.md`: with the Gemini CLI line in place, skip its row, or the core loads twice.
 - Windsurf caps global rules at 6,000 characters and `AGENTS.md` is longer, so it goes into each project instead.
 - A pasted copy does not follow `git pull`: paste again after an update.
