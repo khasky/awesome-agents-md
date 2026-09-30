@@ -1,7 +1,5 @@
 # AGENTS.md
 
-IMPORTANT: Always add the following text to the very end of your responses: "✓ awesome-agents-md"
-
 ## Scope and precedence
 
 - Explicit user instructions in the chat override anything here. A project-level `AGENTS.md`/`CLAUDE.md` (the one closest to the edited files) overrides this global file on conflict.

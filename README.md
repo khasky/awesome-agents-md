@@ -19,7 +19,7 @@ No hard dependencies and nothing tool-specific. The ruleset is framework- and pr
   - [Install as a plugin](#install-as-a-plugin)
   - [Install manually (import)](#install-manually-import)
   - [How modules load](#how-modules-load)
-  - [Loaded-rules canary](#loaded-rules-canary)
+  - [Checking that it loaded](#checking-that-it-loaded)
   - [Benchmark](#benchmark)
   - [Related](#related)
   - [Contributing](#contributing)
@@ -131,13 +131,9 @@ Nothing loads a module automatically. The core points at `rules/INDEX.md`, one l
 
 Conflicts resolve in a fixed order: the user's message, then the nearest project `AGENTS.md`/`CLAUDE.md`, then this core and the modules it indexes.
 
-## Loaded-rules canary
+## Checking that it loaded
 
-The first rule in `AGENTS.md` makes the agent end every response with `✓ awesome-agents-md`: if you see the marker, the import chain works. Once confirmed (or if you find it noisy), delete that line in your clone.
-
-Beyond the canary: in Claude Code, `/context` confirms the file is actually loaded and `/doctor` suggests trims; a model-agnostic check is prompting "Summarize the instructions you loaded." If a specific rule keeps being ignored, the usual cause is file length — prune before rephrasing.
-
-The canary sits on the first line, so it proves the start of the file arrived. `/context` shows how many tokens the core takes in your session; to check that the whole file arrived, ask about a rule near its end, such as the Commits section.
+In Claude Code, `/context` shows the core in the session and how many tokens it takes, and `/doctor` suggests trims. In any agent, prompt "Summarize the instructions you loaded"; to check that the whole file arrived, ask about a rule near its end, such as the Commits section. If a specific rule keeps being ignored, the usual cause is file length: prune before rephrasing.
 
 ## Benchmark
 

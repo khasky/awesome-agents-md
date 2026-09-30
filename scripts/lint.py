@@ -541,7 +541,7 @@ VERIFY_CASES = [
     ([("prompt", "explain why the test failed"), ("text", LONG_ANSWER)], False, False),
     ([("prompt",), ("text", "Fixed, 2/2 pass.\n\n**Commit message:**\n```\nFix x\n\n" + LONG_ANSWER
                   + "\n```\n- pager.py")], False, False),
-    ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```\n\n✓ awesome-agents-md")],
+    ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```")],
      False, False),
     ([("prompt",), ("text", " ".join(["слово"] * 70))], False, False),
     ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 70))], False, False),
