@@ -534,9 +534,8 @@ VERIFY_CASES = [
     ([("prompt",), ("text", "Proposed commit:\n\nFix x")], False, False),
     ([("prompt",), ("text", "Fix x\n\nco-authored-by: Bot <b@x.io>")], True, False),
     ([("prompt",), ("text", "Co-Authored-By: Bot"), ("prompt",), ("text", "Done.")], False, False),
-    # The answer's length: past the limit it is sent back; an explanation asked
-    # for, the commit proposal, code blocks and the canary are not counted.
-    ([("prompt",), ("text", LONG_ANSWER)], False, True),
+    # Answer length is the remind hook's: a long answer ends the turn.
+    ([("prompt",), ("text", LONG_ANSWER)], False, False),
     ([("prompt",), ("text", " ".join(["word"] * 34))], False, False),
     ([("prompt",), ("text", MID_ANSWER)], False, False),
     ([("prompt", "explain why the test failed"), ("text", LONG_ANSWER)], False, False),
@@ -544,12 +543,34 @@ VERIFY_CASES = [
                   + "\n```\n- pager.py")], False, False),
     ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```\n\n✓ awesome-agents-md")],
      False, False),
-    ([("prompt",), ("text", " ".join(["слово"] * 70))], False, True),
+    ([("prompt",), ("text", " ".join(["слово"] * 70))], False, False),
     ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 70))], False, False),
     ([("prompt",), ("text", LONG_ANSWER)], True, False),
     # An edit to a changelog or a note needs no check after it.
     ([("prompt",), ("tool", "Edit:CHANGELOG.md"), ("result",), ("text", "Done.")], False, False),
 ]
+
+
+def plugin_remind_hook_states_the_limit() -> list[str]:
+    # Every prompt gets the answer-length line as context, the same from every
+    # shell, so the limit holds without a Stop hook sending an answer back.
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        notes = set()
+        for runtime in runtimes:
+            run = run_hook(runtime, root, "remind", [], json.dumps({"prompt": "fix the bug"}))
+            try:
+                note = json.loads(run.stdout)["hookSpecificOutput"]["additionalContext"]
+            except (ValueError, KeyError):
+                found.append(f"{runtime[0]} remind hook printed no valid JSON: {run.stdout.strip()[:80]!r}")
+                continue
+            if run.returncode or "35 words" not in note:
+                found.append(f"{runtime[0]} remind hook exited {run.returncode} with {note[:60]!r}")
+            notes.add(note)
+        if len(notes) > 1:
+            found.append("the remind hooks say different things")
+    return found
 
 
 def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
@@ -716,6 +737,7 @@ GATES = [
     ("the plugin facts hook names how the repository's tests run", plugin_facts_hook_names_the_runner),
     ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
      plugin_verify_hook_holds_unchecked_edits),
+    ("the UserPromptSubmit hook states the answer limit", plugin_remind_hook_states_the_limit),
 ]
 
 
