@@ -389,11 +389,20 @@ def plugin_copy(scratch: str) -> pathlib.Path:
     return root
 
 
+# The pre-commit hook runs with GIT_INDEX_FILE and GIT_DIR pointing at this
+# repository's commit in progress. A fixture repository's git calls would
+# otherwise inherit them and write the fixture's files into that commit.
+FIXTURE_ENV = {key: value for key, value in os.environ.items()
+               if key not in subprocess.run(["git", "rev-parse", "--local-env-vars"],
+                                            capture_output=True, text=True).stdout.split()}
+
+
 def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
              args: list[str], payload: str = "") -> subprocess.CompletedProcess:
     _, launcher, suffix = runtime
     return subprocess.run([*launcher, str(root / "hooks" / f"{name}{suffix}"), *args],
-                          input=payload, capture_output=True, text=True, encoding="utf-8")
+                          input=payload, capture_output=True, text=True, encoding="utf-8",
+                          env=FIXTURE_ENV)
 
 
 # Each case is a command the plugin's PreToolUse guard must block (True) or let
@@ -628,8 +637,8 @@ def hook_repo(scratch: str) -> pathlib.Path:
     (repo / "pager.py").write_text("x = 1\n", encoding="utf-8")
     (repo / "test_pager.py").write_text("import pager\n", encoding="utf-8")
     (repo / "big.py").write_text("".join(f"x{i} = {i}\n" for i in range(70)), encoding="utf-8")
-    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
-    subprocess.run(["git", "add", "pager.py", "test_pager.py"], cwd=repo, check=True)
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True, env=FIXTURE_ENV)
+    subprocess.run(["git", "add", "pager.py", "test_pager.py"], cwd=repo, check=True, env=FIXTURE_ENV)
     return repo
 
 
@@ -675,7 +684,8 @@ def plugin_facts_hook_names_the_runner() -> list[str]:
         for runtime in runtimes:
             _, launcher, suffix = runtime
             run = subprocess.run([*launcher, str(root / "hooks" / f"facts{suffix}")], input="{}",
-                                 capture_output=True, text=True, encoding="utf-8", cwd=repo)
+                                 capture_output=True, text=True, encoding="utf-8", cwd=repo,
+                                 env=FIXTURE_ENV)
             if run.returncode or "test_pager.py) run with `python -m" not in run.stdout:
                 found.append(f"{runtime[0]} facts hook does not name the test runner: "
                              f"exit {run.returncode} {run.stdout.strip()[:80]!r}")
