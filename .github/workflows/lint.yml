@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: install the agent CLIs
-        run: npm install -g @anthropic-ai/claude-code@2.1.283 @openai/codex@0.156.0 @google/gemini-cli@0.45.1
+        run: npm install -g @anthropic-ai/claude-code@2.1.283 @openai/codex@0.156.0 @google/gemini-cli@0.45.1 @qwen-code/qwen-code@0.24.7
 
       - name: Claude Code
         env:
@@ -78,4 +78,13 @@ jobs:
           # The CLI prints the list to stderr, so both streams go to the file.
           gemini extensions list > list.txt 2>&1
           cat list.txt
+          grep -q 'AGENTS.md' list.txt
+
+      - name: Qwen Code
+        run: |
+          export HOME="$RUNNER_TEMP/qwen"
+          mkdir -p "$HOME"
+          # link asks to confirm the context file it appends; there is no flag for it.
+          echo y | qwen extensions link .
+          qwen extensions list 2>&1 | tee list.txt
           grep -q 'AGENTS.md' list.txt

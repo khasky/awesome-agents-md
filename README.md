@@ -82,6 +82,7 @@ hooks/           # plugin-hooks.json and load-core — the SessionStart hooks th
                  # marketplace too
 .codex-plugin/   # plugin.json for the Codex plugin
 gemini-extension.json  # the Gemini CLI extension: loads AGENTS.md as a context file, no hooks
+qwen-extension.json    # the same for Qwen Code
 scripts/         # lint.py — every gate above, run by CI and by the optional
                  # pre-commit hook that install-hooks.py sets up
 evals/           # benchmark/ runs this ruleset, caveman, ponytail and i-have-adhd on the same
@@ -107,9 +108,11 @@ The agents themselves:
 winget install -e --id Anthropic.ClaudeCode
 $env:CODEX_NON_INTERACTIVE = "1"; irm https://chatgpt.com/codex/install.ps1 | iex
 npm install -g @google/gemini-cli
+npm install -g @qwen-code/qwen-code
+npm install -g @github/copilot
 ```
 
-Cursor: download from [cursor.com](https://cursor.com).
+Cursor, Windsurf and Antigravity: download from [cursor.com](https://cursor.com), [windsurf.com](https://windsurf.com) and [antigravity.google](https://antigravity.google). opencode: [opencode.ai](https://opencode.ai).
 
 ## Install as a plugin
 
@@ -120,6 +123,7 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 | Claude Code | `/plugin marketplace add khasky/awesome-agents-md`, then `/plugin install awesome-agents-md@awesome-agents-md` | `/plugin marketplace update awesome-agents-md`, or turn on auto-update under `/plugin` → Marketplaces | `/plugin uninstall awesome-agents-md@awesome-agents-md` |
 | Codex | `codex plugin marketplace add khasky/awesome-agents-md`, then `codex plugin add awesome-agents-md@awesome-agents-md` | `codex plugin marketplace upgrade awesome-agents-md`, then the `add` again | `codex plugin remove awesome-agents-md@awesome-agents-md` |
 | Gemini CLI | `gemini extensions install https://github.com/khasky/awesome-agents-md` (add `--auto-update` to follow the repository) | `gemini extensions update awesome-agents-md` | `gemini extensions uninstall awesome-agents-md` |
+| Qwen Code | `qwen extensions install https://github.com/khasky/awesome-agents-md` | `qwen extensions update awesome-agents-md` | `qwen extensions uninstall awesome-agents-md` |
 
 What the hooks do:
 
@@ -128,7 +132,9 @@ What the hooks do:
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed; an answer over 60 words when no explanation was asked for, to cut it to 35 (code and the commit proposal not counted).
 
-Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI gets the core only, without hooks.
+Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI and Qwen Code get the core only, without hooks.
+
+Every other agent takes the manual import below. GitHub Copilot CLI installs the plugin, but it reads only a JSON `additionalContext` from a session-start hook and `load-core` prints plain text, so the core would not reach the session. Cursor's and Antigravity's plugin formats are not offered either: Antigravity loads every file in a plugin's `rules/` as an always-on rule, which would turn the on-demand modules into always-on tokens.
 
 ## Install manually (import)
 
@@ -145,9 +151,17 @@ Then add one import line to the agent's global instructions file (create it if i
 | Claude Code | `%USERPROFILE%\.claude\CLAUDE.md` | `@C:/repos/awesome-agents-md/AGENTS.md` |
 | Codex | `%USERPROFILE%\.codex\AGENTS.md` | `@C:/repos/awesome-agents-md/AGENTS.md` |
 | Gemini CLI | `%USERPROFILE%\.gemini\GEMINI.md` | `@C:/repos/awesome-agents-md/AGENTS.md` |
+| Qwen Code | `%USERPROFILE%\.qwen\QWEN.md` | `@C:/repos/awesome-agents-md/AGENTS.md` |
+| GitHub Copilot CLI | `%USERPROFILE%\.copilot\copilot-instructions.md` | paste the contents of `AGENTS.md` |
+| Antigravity | `%USERPROFILE%\.gemini\AGENTS.md` | paste the contents of `AGENTS.md` |
+| opencode | `%USERPROFILE%\.config\opencode\AGENTS.md` | paste the contents of `AGENTS.md` |
 | Cursor | Settings → Rules → User Rules | paste the contents of `AGENTS.md` |
+| Windsurf | per project only: `AGENTS.md` in the repository root | copy the file |
 
-- Claude Code and Gemini CLI resolve the `@` import themselves; Claude Code asks once to approve it.
+- Claude Code, Gemini CLI and Qwen Code resolve the `@` import themselves; Claude Code asks once to approve it.
+- Copilot CLI expands `@` only for files inside its own instructions folder, so it takes the pasted text. Antigravity also reads `~/.gemini/GEMINI.md`: with the Gemini CLI line in place, skip its row, or the core loads twice.
+- Windsurf caps global rules at 6,000 characters and `AGENTS.md` is longer, so it goes into each project instead.
+- A pasted copy does not follow `git pull`: paste again after an update.
 - Codex has no import syntax: it reads the `@` line as text and follows it. For guaranteed loading, paste the file itself (Codex reads up to 32 KiB of instructions).
 - Per project instead of globally: copy `AGENTS.md` into the repository root. For Gemini CLI, add `"contextFileName": ["GEMINI.md", "AGENTS.md"]` to `~/.gemini/settings.json`.
 - Never copy `rules/` into `.claude/rules/`: Claude Code loads every file there at session start, which turns the on-demand modules into always-on tokens.

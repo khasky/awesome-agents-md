@@ -284,18 +284,19 @@ def plugin_hooks() -> list[dict]:
 
 
 def plugin_manifests_resolve() -> list[str]:
-    # Claude Code and Codex install the repository as a plugin, Gemini CLI as an
-    # extension. Nothing in a session fails loudly when a manifest names a file
+    # Claude Code and Codex install the repository as a plugin, Gemini CLI and
+    # Qwen Code as an extension. Nothing in a session fails loudly when a manifest names a file
     # that moved - the ruleset just goes missing - so the gate is that the
     # manifests agree and that every path a hook runs still exists.
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
     codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
     gemini = json.loads((ROOT / "gemini-extension.json").read_text(encoding="utf-8"))
+    qwen = json.loads((ROOT / "qwen-extension.json").read_text(encoding="utf-8"))
 
     found = []
     for source, manifest in (("plugin.json", plugin), (".codex-plugin/plugin.json", codex),
-                             ("gemini-extension.json", gemini)):
+                             ("gemini-extension.json", gemini), ("qwen-extension.json", qwen)):
         if manifest.get("name") != "awesome-agents-md":
             found.append(f"{source} name is {manifest.get('name')!r}")
     entries = [p.get("name") for p in market.get("plugins", [])]
@@ -315,8 +316,14 @@ def plugin_manifests_resolve() -> list[str]:
     # event names and without the plugin-root variables these hooks rely on.
     if (ROOT / "hooks" / "hooks.json").exists():
         found.append("hooks/hooks.json exists - Gemini CLI would run it as extension hooks")
-    if gemini.get("contextFileName") != CORE:
-        found.append(f"gemini-extension.json loads {gemini.get('contextFileName')!r}, not {CORE}")
+    for source, manifest in (("gemini-extension.json", gemini), ("qwen-extension.json", qwen)):
+        if manifest.get("contextFileName") != CORE:
+            found.append(f"{source} loads {manifest.get('contextFileName')!r}, not {CORE}")
+    # A root plugin.json makes Antigravity, Cursor and Copilot CLI read the repo
+    # as an Agent Plugin; Antigravity would then load every rules/ module as an
+    # always-on rule, the cost the on-demand index exists to avoid.
+    if (ROOT / "plugin.json").exists():
+        found.append("plugin.json exists - Antigravity would load every rules/ module as an always-on rule")
 
     hooks = plugin_hooks()
     if not any("load-core.sh" in hook.get("command", "") for hook in hooks):
