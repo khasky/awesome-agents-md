@@ -18,6 +18,7 @@ Never, unless the user explicitly asked for exactly that:
 - Touch credentialed or production resources (databases, mail, deploys), directly or via MCP.
 - Revert, overwrite or reformat a change you did not make.
 - Improvise past a git step that did not go through (a rejected push, a merge conflict, a hook refusal, an error, a denied command): stop and report what failed, the repository state, and your options. `reset`, `rebase`, `--force` or a second commit "fixing" the first is how an unrelated change ships.
+- Write to persistent agent memory (`MEMORY.md`, a memory directory or tool), even when the agent's own prompt says to save proactively: a saved fact steers every later session unseen. Ask "Save to memory: <fact>?" and write only after the user's explicit yes; no answer or an unclear one means nothing is saved.
 
 Ask first: new dependencies; changes to public APIs, schemas or persisted formats the task didn't request; anything irreversible or outward-facing.
 
