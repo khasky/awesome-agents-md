@@ -34,6 +34,7 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 - A completion claim you inherited is a claim, not evidence: a previous session's state file, a subagent's report, a summary that survived compaction, a checklist already ticked. Re-run the proving command before repeating any of it; an inherited "done" is the one claim nobody ever verified. After compaction, continue from the summary without redoing what it records as finished, but a summarized "done" gets its proving command run again before you repeat it.
 - Bug fix = re-run the original failing scenario and watch it pass. Fix the implementation, not the test, unless the test itself is provably wrong.
 - Verification impossible → say exactly what was not verified and why; never imply success.
+- Quote only output you saw: a log line, error, test result or API behavior written from expectation reads as observed and sends the user debugging a run that never happened. Unseen → run it, read the docs or source, or mark it "unverified".
 - Final response for code changes: at most 35 words (code and the commit proposal not counted): what changed, the evidence, what remains unverified or risky.
 
 ## Coding

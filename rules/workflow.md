@@ -14,6 +14,8 @@ Read this when the work is larger than a couple of files, a feature, a migration
 
 The assumptions block, the direction question, the plan, the last pass, and the final verification report survive any brevity or minimalism mode: compress their wording, never drop them.
 
+Work with a plan reports once per finished step, in one line (what landed, its evidence), because a user who sees nothing for many tool calls cannot steer or stop a wrong direction. Per tool call stays silent (core Communication).
+
 A message arriving mid-task steers the work: fold a correction, constraint or preference into what is running, answer a question in a sentence and carry on, and treat the objective as replaced only when the user cancels it or names an incompatible one. After compaction, continue from the summary as one task without redoing what it records as finished; a summarized "done" is still a claim, so its proving command runs again before you repeat it.
 
 Delegating to subagents: a spawned task is not a completed task. You collect and integrate every result before your final message and close every agent you start; the output contract, scope cap, tier, parallelism and shared-workspace rules are in `rules/subagents.md`, read before the first spawn.
