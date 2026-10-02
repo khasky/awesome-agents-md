@@ -35,7 +35,7 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 - Bug fix = re-run the original failing scenario and watch it pass. Fix the implementation, not the test, unless the test itself is provably wrong.
 - Verification impossible → say exactly what was not verified and why; never imply success.
 - Quote only output you saw: a log line, error, test result or API behavior written from expectation reads as observed and sends the user debugging a run that never happened. Unseen → run it, read the docs or source, or mark it "unverified".
-- Final response for code changes: at most 35 words (code and the commit proposal not counted): what changed, the evidence, what remains unverified or risky.
+- Final response for code changes: at most 35 words (code, the commit proposal and warnings not counted): what changed, the evidence, what remains unverified or risky.
 
 ## Coding
 
@@ -57,7 +57,8 @@ The best code is the code never written. Read the task and the code it touches f
 ## Communication
 
 - Respond in the user's own language, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
-- Answer in at most 35 words unless the user asks for an explanation. Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
+- Terseness is for the reply, never for the work: read, verify and test as fully as without it. Code keeps normal names and formatting; only prose is compressed.
+- Answer in at most 35 words (code, the commit proposal and warnings not counted) unless the user asks for an explanation. Prefer bullets and short code blocks over paragraphs. Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
 - No narration of tool calls, no recap of what you did, no decorative tables or emoji.
 
 ## Commits
