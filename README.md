@@ -47,7 +47,7 @@ gemini-extension.json  # the Gemini CLI extension: loads AGENTS.md as a context 
 qwen-extension.json    # the same for Qwen Code
 scripts/         # lint.py — every gate above, run by CI and by the optional
                  # pre-commit hook that install-hooks.py sets up
-evals/           # benchmark/ runs this ruleset, caveman, ponytail and i-have-adhd on the same
+evals/           # benchmark/ runs this ruleset and five other plugins on the same
                  # tasks (Benchmark below); tasks/ holds the trap tasks it scores
 ```
 
@@ -138,55 +138,57 @@ In Claude Code, `/context` shows the core in the session and how many tokens it 
 
 ## Benchmark
 
-Claude Code 2.1.284 runs the same seeded tasks with no plugin (baseline), with this ruleset, and with [caveman](https://github.com/JuliusBrussee/caveman), [ponytail](https://github.com/DietrichGebert/ponytail) and [i-have-adhd](https://github.com/ayghri/i-have-adhd), one plugin per session, the latest model of each tier at `--effort low`, 5 attempts per task. A script scores what each session leaves behind: trap tasks where the tempting move is the wrong one, source lines written for open requests, words in the final answer, and cost.
+Claude Code 2.1.289 runs the same seeded tasks with no plugin (baseline), with this ruleset, and with [caveman](https://github.com/JuliusBrussee/caveman), [ponytail](https://github.com/DietrichGebert/ponytail), [i-have-adhd](https://github.com/ayghri/i-have-adhd), [superpowers](https://github.com/obra/superpowers) and [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills), one plugin per session, the latest model of each tier at `--effort low`, 5 attempts per task. A script scores what each session leaves behind: trap tasks where the tempting move is the wrong one, source lines written for open requests, words in the final answer, and cost.
 
 **Train split**, the tasks the ruleset was tuned against:
 
-| | baseline | this ruleset | caveman | ponytail | i-have-adhd |
-|---|--:|--:|--:|--:|--:|
-| **Trap tasks passed, of 40** | | | | | |
-| `claude-haiku-4-5` | 14 | **33** | 13 | 14 | 13 |
-| `claude-sonnet-5` | 18 | **40** | 18 | 16 | 16 |
-| `claude-opus-5-5` | 30 | **40** | 29 | 29 | 29 |
-| **Source lines on open requests** | | | | | |
-| `claude-haiku-4-5` | 116 | 76 | 101 | **64** | 81 |
-| `claude-sonnet-5` | 103 | **63** | 100 | 73 | 102 |
-| `claude-opus-5-5` | 144 | **36** | 144 | 48 | 113 |
-| **Words in the answer** | | | | | |
-| `claude-haiku-4-5` | 55 | 29 | **25** | 36 | 32 |
-| `claude-sonnet-5` | 46 | **21** | 27 | 40 | 38 |
-| `claude-opus-5-5` | 142 | **41** | 119 | 109 | 127 |
-| **Cost per task** | | | | | |
-| `claude-haiku-4-5` | **$0.050** | $0.064 | $0.054 | $0.054 | $0.055 |
-| `claude-sonnet-5` | **$0.098** | $0.120 | $0.120 | $0.118 | $0.109 |
-| `claude-opus-5-5` | **$0.142** | $0.159 | $0.185 | $0.161 | $0.164 |
+| | baseline | this ruleset | caveman | ponytail | i-have-adhd | superpowers | karpathy-skills |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| **Trap tasks passed, of 40** | | | | | | | |
+| `claude-haiku-4-5` | 12 | **33** | 11 | 11 | 13 | 19 | 14 |
+| `claude-sonnet-5-5` | 28 | **40** | 28 | 35 | 30 | 31 | 28 |
+| `claude-opus-5-5` | 30 | **40** | 27 | 31 | 30 | 30 | 30 |
+| **Source lines on open requests** | | | | | | | |
+| `claude-haiku-4-5` | 105 | **68** | 91 | **68** | 93 | 8† | 108 |
+| `claude-sonnet-5-5` | 130 | **42** | 134 | 46 | 116 | 140 | 122 |
+| `claude-opus-5-5` | 133 | **36** | 142 | 48 | 128 | 121 | 124 |
+| **Words in the answer** | | | | | | | |
+| `claude-haiku-4-5` | 63 | **26** | 28 | 33 | 44 | 72 | 61 |
+| `claude-sonnet-5-5` | 115 | **65** | 91 | 90 | 100 | 134 | 116 |
+| `claude-opus-5-5` | 152 | **64** | 130 | 116 | 135 | 154 | 152 |
+| **Cost per task** | | | | | | | |
+| `claude-haiku-4-5` | **$0.043** | $0.066 | $0.050 | $0.051 | $0.048 | $0.061 | $0.044 |
+| `claude-sonnet-5-5` | **$0.067** | $0.088 | $0.086 | $0.080 | $0.079 | $0.088 | **$0.067** |
+| `claude-opus-5-5` | **$0.128** | $0.151 | $0.164 | $0.147 | $0.153 | $0.149 | $0.129 |
 
 **Test split**, written afterwards and never used to shape the ruleset; brackets are 95% intervals:
 
-| | baseline | this ruleset | caveman | ponytail | i-have-adhd |
-|---|--:|--:|--:|--:|--:|
-| **Trap tasks passed, of 40** | | | | | |
-| `claude-haiku-4-5` | 22 [40-69%] | **30** [60-86%] | 21 [37-67%] | 22 [40-69%] | 21 [37-67%] |
-| `claude-sonnet-5` | 21 [37-67%] | **39** [87-100%] | 20 [35-65%] | 18 [31-60%] | 20 [35-65%] |
-| `claude-opus-5-5` | 36 [77-96%] | **40** [91-100%] | 37 [80-97%] | 39 [87-100%] | 37 [80-97%] |
-| **Source lines on open requests** | | | | | |
-| `claude-haiku-4-5` | 64 | 44 | 45 | **25** | 48 |
-| `claude-sonnet-5` | 39 | **31** | 42 | 34 | 40 |
-| `claude-opus-5-5` | 49 | **24** | 58 | 28 | 45 |
-| **Words in the answer** | | | | | |
-| `claude-haiku-4-5` | 47 | 20 | **19** | 23 | 32 |
-| `claude-sonnet-5` | 32 | 19 | **15** | 22 | 27 |
-| `claude-opus-5-5` | 99 | **41** | 85 | 85 | 96 |
-| **Cost per task** | | | | | |
-| `claude-haiku-4-5` | **$0.036** | $0.049 | $0.039 | $0.039 | $0.041 |
-| `claude-sonnet-5` | **$0.074** | $0.094 | $0.090 | $0.087 | $0.083 |
-| `claude-opus-5-5` | **$0.094** | $0.125 | $0.128 | $0.115 | $0.117 |
+| | baseline | this ruleset | caveman | ponytail | i-have-adhd | superpowers | karpathy-skills |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| **Trap tasks passed, of 40** | | | | | | | |
+| `claude-haiku-4-5` | 20 [35-65%] | **29** [57-84%] | 23 [42-71%] | 21 [37-67%] | 20 [35-65%] | 22 [40-69%] | 19 [33-63%] |
+| `claude-sonnet-5-5` | 23 [42-71%] | **37** [80-97%] | 24 [45-74%] | 27 [52-80%] | 28 [55-82%] | 26 [50-78%] | 21 [37-67%] |
+| `claude-opus-5-5` | 35 [74-95%] | **40** [91-100%] | 38 [83-99%] | 38 [83-99%] | 37 [80-97%] | 33 [68-91%] | 36 [77-96%] |
+| **Source lines on open requests** | | | | | | | |
+| `claude-haiku-4-5` | 55 | 35 | 53 | **29** | 49 | 20† | 52 |
+| `claude-sonnet-5-5` | 47 | **27** | 47 | 28 | 49 | 51 | 48 |
+| `claude-opus-5-5` | 49 | **20** | 62 | 28 | 50 | 48 | 48 |
+| **Words in the answer** | | | | | | | |
+| `claude-haiku-4-5` | 48 | **20** | 22 | 24 | 26 | 53 | 47 |
+| `claude-sonnet-5-5` | 77 | **48** | 50 | 75 | 63 | 87 | 75 |
+| `claude-opus-5-5` | 100 | **57** | 80 | 82 | 97 | 101 | 102 |
+| **Cost per task** | | | | | | | |
+| `claude-haiku-4-5` | **$0.035** | $0.047 | $0.039 | $0.040 | $0.040 | $0.049 | **$0.035** |
+| `claude-sonnet-5-5` | $0.052 | $0.071 | $0.068 | $0.064 | $0.062 | $0.065 | **$0.051** |
+| `claude-opus-5-5` | **$0.095** | $0.130 | $0.131 | $0.116 | $0.117 | $0.114 | $0.097 |
+
+† superpowers on `claude-haiku-4-5` stopped to ask clarifying questions on most open requests (20 of 25 sessions wrote no code), so its line count is not comparable and is not ranked.
 
 Reproduce (run results stay outside the checkout):
 
 ```bash
 python evals/benchmark/run.py --selftest                     # every scorer tells good from bad, no agent
-python evals/benchmark/run.py --split test --repeats 5 --model claude-sonnet-5 --effort low --budget 30
+python evals/benchmark/run.py --split test --repeats 5 --model claude-sonnet-5-5 --effort low --budget 30
 python evals/benchmark/run.py --summary <run directory>      # totals with 95% intervals
 ```
 

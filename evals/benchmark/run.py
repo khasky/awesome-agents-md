@@ -66,6 +66,10 @@ ARMS = {
                  "commit": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"},
     "i-have-adhd": {"url": "https://github.com/ayghri/i-have-adhd.git",
                     "commit": "839872f9d1cd634fed642b4589ce7226199cc15f"},
+    "superpowers": {"url": "https://github.com/obra/superpowers.git",
+                    "commit": "8ca22dba9a94f28898bbce59f2537ff4d87c747d"},
+    "karpathy-skills": {"url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
+                        "commit": "2c606141936f1eeef17fa3043a72095b4765b9c2"},
 }
 
 # The plugins keep mode flags in the Claude config directory, the same one the
