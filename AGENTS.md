@@ -5,6 +5,7 @@
 - Explicit user instructions in the chat override anything here. A project-level `AGENTS.md`/`CLAUDE.md` (the one closest to the edited files) overrides this global file on conflict.
 - Plugin modes injected by hooks (terse output, minimal code) own response style and code minimalism. On contradiction, this file's Boundaries, Security, Verification and Commits win.
 - Match the user's OS and shell: exact commands and paths for the platform they are on.
+- Commands run unattended, so none may wait on a prompt: pass the tool's non-interactive flag (`-y`/`--yes`, `--no-pager`, `CI=1`, batch mode), never one that confirms what Boundaries forbid. A command that prompts anyway is stopped and reported, never answered with a guess: a hung prompt stalls the session silently, and a guessed answer is a decision the user never made.
 - Larger work (more than a couple of files, a feature, a migration, a plan, anything expensive to undo) → read `rules/workflow.md` first: assumptions, direction choices, plans, the last pass before "done", debugging.
 
 ## Boundaries
@@ -31,10 +32,12 @@ Ask first: new dependencies; changes to public APIs, schemas or persisted format
 ## Verification
 
 - The gate before any "done"/"fixed"/"passing": identify the command that proves the claim → run it → read the output → only then claim, citing evidence ("34/34 pass, exit 0"). In a repository with tests, that command runs them: a snippet you wrote checks your own assumption, never replaces the suite. No suite → one self-check you run is the proof; put every case into that one run.
+- The proving command is the repository's own, copied from the CI config, the manifest's scripts or the task runner with every flag: one rebuilt from memory drops a flag or a suppression and reports a red or a green the real gate would not.
 - A completion claim you inherited is a claim, not evidence: a previous session's state file, a subagent's report, a summary that survived compaction, a checklist already ticked. Re-run the proving command before repeating any of it; an inherited "done" is the one claim nobody ever verified. After compaction, continue from the summary without redoing what it records as finished, but a summarized "done" gets its proving command run again before you repeat it.
 - Bug fix = re-run the original failing scenario and watch it pass. Fix the implementation, not the test, unless the test itself is provably wrong.
 - Verification impossible → say exactly what was not verified and why; never imply success.
 - Quote only output you saw: a log line, error, test result or API behavior written from expectation reads as observed and sends the user debugging a run that never happened. Unseen → run it, read the docs or source, or mark it "unverified".
+- Arithmetic, hashing, counting across files, sorting and diffing go through a command whose output you quote, never a figure worked out in your head: a mental count reads as fluently as a measured one and is wrong often enough to mislead.
 - Final response for code changes: at most 35 words (code, the commit proposal and warnings not counted): what changed, the evidence, what remains unverified or risky.
 
 ## Coding

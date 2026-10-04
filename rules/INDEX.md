@@ -11,7 +11,7 @@ Read a module only when the task matches its line. They live in this folder; if 
 - `rules/debugging.md`: a fix failed twice or the same error keeps returning.
 - `rules/code-review.md`: reviewing a diff or PR, or preparing one.
 - `rules/testing.md`: writing or restructuring tests.
-- `rules/evidence-gates.md`: turning a verification rule into an enforced gate.
+- `rules/evidence-gates.md`: turning a verification rule into an enforced gate, or writing an instruction that must hold on every run.
 - `rules/browser-automation.md`: driving a live browser or testing an extension.
 - `rules/frontend-design.md`: building, styling or reviewing web UI.
 - `rules/web-seo.md`: building or auditing public web pages.

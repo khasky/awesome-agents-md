@@ -17,7 +17,7 @@
 - [rules/commit-messages.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/commit-messages.md): commit messages, PR titles and branch names — house style, proposal shape, type choice, security-neutral wording, body prose.
 - [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.
 - [rules/testing.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/testing.md): test placement ladder, fixtures, flakiness, fuzz and property tests.
-- [rules/evidence-gates.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/evidence-gates.md): turning a verification rule into an enforced gate — run-bound receipts, placeholder rejection, unavailable-not-pass.
+- [rules/evidence-gates.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/evidence-gates.md): turning a verification rule into an enforced gate — hooks over prose, run-bound receipts, placeholder rejection, unavailable-not-pass.
 - [rules/browser-automation.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/browser-automation.md): driving a live browser — shadow DOM, trusted events, waits, real sessions, extension harnesses.
 - [rules/frontend-design.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/frontend-design.md): web UI craft, accessibility numbers, motion, animation performance, microcopy.
 - [rules/web-seo.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/web-seo.md): indexability, head tags, structured data, Core Web Vitals.
