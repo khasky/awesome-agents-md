@@ -30,10 +30,6 @@ matches() {
 # next separator, so [^;&|]* keeps a flag tied to the git call it belongs to.
 start='(^|[;&|(]|\$\()[[:space:]]*'
 
-if matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
-  block 'skipping git hooks. A failing hook is a check: fix what it reports, or name the hook, say why you believe it is wrong, and stop.'
-fi
-
 if matches "git[[:space:]][^;&|]*push[^;&|]*[[:space:]](--force|-[[:alnum:]]*f[[:alnum:]]*([[:space:]]|$)|\+[^[:space:];&|])"; then
   block 'force-push. Rewriting remote history is the user'"'"'s call: report the rejected push, the repository state and the options, and stop.'
 fi
@@ -57,10 +53,17 @@ if matches 'git[[:space:]][^;&|]*commit' && matches 'Co-Authored-By|Claude-Sessi
   block 'an assistant trailer or session link in a commit. Commits carry no assistant trace: drop the trailer and the link.'
 fi
 
-# A commit is the user's call. Whether a prompt asked for one cannot be read
-# from its words in every language, so the user confirms the call itself.
-if matches 'git([[:space:]][^;&|]*)?[[:space:]]commit([[:space:]]|$)'; then
-  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: a commit is the user'"'"'s call. Approve only if you asked for it."}}'
+ask() {
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: %s"}}\n' "$1"
+}
+
+# Skipping git hooks and committing are the user's call. Whether a prompt asked
+# for either cannot be read from its words in every language, so the user
+# confirms the call itself. They come after the blocks, which win.
+if matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
+  ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
+elif matches 'git([[:space:]][^;&|]*)?[[:space:]]commit([[:space:]]|$)'; then
+  ask 'a commit is the user'"'"'s call. Approve only if you asked for it.'
 fi
 
 exit 0

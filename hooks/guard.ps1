@@ -1,5 +1,5 @@
 # PowerShell twin of guard.sh for agents that run Windows hooks through
-# PowerShell (Codex): the same five blocks and commit prompt, the same messages,
+# PowerShell (Codex): the same four blocks and two prompts, the same messages,
 # exit 2 to block.
 # scripts/lint.py runs both scripts against the same commands.
 $ErrorActionPreference = 'Stop'
@@ -30,10 +30,6 @@ function Test-Command([string]$pattern) {
 # next separator, so [^;&|]* keeps a flag tied to the git call it belongs to.
 $start = '(^|[;&|(]|\$\()\s*'
 
-if (Test-Command 'git\s[^;&|]*(--no-verify|core\.hooksPath)') {
-  Block 'skipping git hooks. A failing hook is a check: fix what it reports, or name the hook, say why you believe it is wrong, and stop.'
-}
-
 if (Test-Command 'git\s[^;&|]*push[^;&|]*\s(--force|-[A-Za-z0-9]*f[A-Za-z0-9]*(\s|$)|\+[^\s;&|])') {
   Block "force-push. Rewriting remote history is the user's call: report the rejected push, the repository state and the options, and stop."
 }
@@ -57,10 +53,17 @@ if ((Test-Command 'git\s[^;&|]*commit') -and (Test-Command 'Co-Authored-By|Claud
   Block 'an assistant trailer or session link in a commit. Commits carry no assistant trace: drop the trailer and the link.'
 }
 
-# A commit is the user's call. Whether a prompt asked for one cannot be read
-# from its words in every language, so the user confirms the call itself.
-if (Test-Command 'git(\s[^;&|]*)?\scommit(\s|$)') {
-  [Console]::Out.WriteLine('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: a commit is the user''s call. Approve only if you asked for it."}}')
+function Ask([string]$reason) {
+  [Console]::Out.WriteLine('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: ' + $reason + '"}}')
+}
+
+# Skipping git hooks and committing are the user's call. Whether a prompt asked
+# for either cannot be read from its words in every language, so the user
+# confirms the call itself. They come after the blocks, which win.
+if (Test-Command 'git\s[^;&|]*(--no-verify|core\.hooksPath)') {
+  Ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
+} elseif (Test-Command 'git(\s[^;&|]*)?\scommit(\s|$)') {
+  Ask "a commit is the user's call. Approve only if you asked for it."
 }
 
 exit 0

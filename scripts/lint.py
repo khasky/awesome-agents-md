@@ -409,8 +409,7 @@ def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
 # through (False). Each allowed one sits next to a blocked pattern: a neighbour
 # that trips the guard would stall ordinary work.
 GUARD_CASES = [
-    ("git commit --no-verify -m 'x'", True),
-    ("git -c core.hooksPath=/dev/null commit -m x", True),
+    ("git push --no-verify --force origin main", True),
     ("git push --force origin main", True),
     ("git push --force-with-lease", True),
     ("git push -f", True),
@@ -445,9 +444,12 @@ GUARD_CASES = [
 
 
 # Each case is a command and whether the guard must hand it to the user to
-# confirm: every commit asks, whatever language the request was in, and a git
-# call that only reads or names a commit does not.
+# confirm: every commit and every hook skip asks, whatever language the request
+# was in, and a git call that only reads or names a commit does not.
 GUARD_ASK_CASES = [
+    ("git commit --no-verify -m 'x'", True),
+    ("git -c core.hooksPath=/dev/null commit -m x", True),
+    ("git push --no-verify origin main", True),
     ("git add pager.py && git commit -m 'Fix pager'", True),
     ("git -c user.name=x commit -qam 'Fix'", True),
     ("git log --oneline -3", False),
