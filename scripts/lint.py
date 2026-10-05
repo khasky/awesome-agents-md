@@ -444,43 +444,31 @@ GUARD_CASES = [
 ]
 
 
-# Each case is the session's user prompts, whether they are written with
-# non-ASCII escaped (as json.dumps does) or raw, a command, and whether the
-# guard must block it: a commit is blocked unless some prompt asks for one.
-GUARD_SESSION_CASES = [
-    (["fix the bug in pager.py"], True, "git add pager.py && git commit -m 'Fix pager'", True),
-    (["fix the bug and commit it"], True, "git commit -m 'Fix pager'", False),
-    (["Commit it."], True, "git -c user.name=x commit -qam 'Fix'", False),
-    (["почини баг и закоммить"], True, "git commit -m 'Fix'", False),
-    (["почини баг и закоммить"], False, "git commit -m 'Fix'", False),
-    (["почини баг"], False, "git commit -m 'Fix'", True),
-    (["fix the bug in pager.py"], True, "git log --oneline -3", False),
-    (["fix the bug in pager.py"], True, "git status && git diff", False),
+# Each case is a command and whether the guard must hand it to the user to
+# confirm: every commit asks, whatever language the request was in, and a git
+# call that only reads or names a commit does not.
+GUARD_ASK_CASES = [
+    ("git add pager.py && git commit -m 'Fix pager'", True),
+    ("git -c user.name=x commit -qam 'Fix'", True),
+    ("git log --oneline -3", False),
+    ("git status && git diff", False),
+    ("git show HEAD --stat", False),
 ]
 
 
 def plugin_guard_blocks_what_it_names() -> list[str]:
     # Runs the real hook scripts the way the agents do: the tool call as JSON
-    # on stdin, exit 2 meaning blocked.
+    # on stdin, exit 2 meaning blocked, a permissionDecision "ask" on stdout
+    # meaning the user confirms it.
     runtimes, found = hook_runtimes()
     with tempfile.TemporaryDirectory() as scratch:
         root = plugin_copy(scratch)
-        transcript = root / "session log.jsonl"
         cases = [(command, expect_block, None) for command, expect_block in GUARD_CASES]
-        cases += [(command, expect_block, (prompts, escaped))
-                  for prompts, escaped, command, expect_block in GUARD_SESSION_CASES]
+        cases += [(command, False, expect_ask) for command, expect_ask in GUARD_ASK_CASES]
         for runtime in runtimes:
-            for command, expect_block, session in cases:
+            for command, expect_block, expect_ask in cases:
                 request = {"tool_name": "Bash", "tool_input": {"command": command}}
                 label = repr(command)
-                if session:
-                    prompts, escaped = session
-                    transcript.write_text("".join(
-                        json.dumps({"message": {"role": "user", "content": prompt}, "type": "user"},
-                                   ensure_ascii=escaped, separators=(",", ":")) + "\n"
-                        for prompt in prompts), encoding="utf-8")
-                    request["transcript_path"] = str(transcript)
-                    label += f" after {prompts!r}" + (" (escaped)" if escaped else " (raw)")
                 run = run_hook(runtime, root, "guard", [], json.dumps(request))
                 if run.returncode not in (0, 2):
                     found.append(f"{runtime[0]} guard crashed on {label}: exit "
@@ -488,6 +476,12 @@ def plugin_guard_blocks_what_it_names() -> list[str]:
                 elif (run.returncode == 2) != expect_block:
                     verdict = "let through" if expect_block else "blocked"
                     found.append(f"{runtime[0]} guard {verdict} {label}")
+                elif run.returncode == 0 and expect_ask is not None:
+                    asked = bool(run.stdout.strip()) and json.loads(run.stdout)[
+                        "hookSpecificOutput"]["permissionDecision"] == "ask"
+                    if asked != expect_ask:
+                        verdict = "did not ask about" if expect_ask else "asked about"
+                        found.append(f"{runtime[0]} guard {verdict} {label}")
     return found
 
 
