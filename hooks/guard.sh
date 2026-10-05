@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # PreToolUse guard for shell tools: blocks the commands the core Boundaries,
-# Security and Commits rules forbid outright, so they no longer depend on the
-# model remembering them. Exit 2 blocks the call and hands stderr to the agent
-# as the reason.
+# Security and Commits rules forbid outright, and asks the user to confirm the
+# ones that are only theirs to allow, so neither depends on the model
+# remembering them. Exit 2 blocks the call and hands stderr to the agent as the
+# reason.
 set -euo pipefail
 
 payload=$(cat)
@@ -30,10 +31,6 @@ matches() {
 # next separator, so [^;&|]* keeps a flag tied to the git call it belongs to.
 start='(^|[;&|(]|\$\()[[:space:]]*'
 
-if matches "git[[:space:]][^;&|]*push[^;&|]*[[:space:]](--force|-[[:alnum:]]*f[[:alnum:]]*([[:space:]]|$)|\+[^[:space:];&|])"; then
-  block 'force-push. Rewriting remote history is the user'"'"'s call: report the rejected push, the repository state and the options, and stop.'
-fi
-
 if matches "(^|[^[:alnum:]_-])printenv([^[:alnum:]_-]|$)|${start}(env|set)[[:space:]]*($|[;&|)])|declare[[:space:]]+-[[:alnum:]]*p|/proc/[^[:space:]]*/environ|(Get-ChildItem|gci|dir|ls|Get-Item|gi)[[:space:]]+(-Path[[:space:]]+)?env:(\*|[[:space:];|]|$)" &&
   ! matches '[|][[:space:]]*(select(-object)?[[:space:]]+(-expandproperty[[:space:]]+)?name|%[[:space:]]*[{][[:space:]]*[$]_\.name|cut[[:space:]]+-d[[:space:]]*.?=.?[[:space:]]*-f[[:space:]]*1)[[:space:]]*($|[|;&)])'; then
   # A listing reduced to variable names prints no value, and it is how an
@@ -57,10 +54,12 @@ ask() {
   printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: %s"}}\n' "$1"
 }
 
-# Skipping git hooks and committing are the user's call. Whether a prompt asked
-# for either cannot be read from its words in every language, so the user
-# confirms the call itself. They come after the blocks, which win.
-if matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
+# Force-pushing, skipping git hooks and committing are the user's call. Whether
+# a prompt asked for one cannot be read from its words in every language, so
+# the user confirms the call itself. They come after the blocks, which win.
+if matches "git[[:space:]][^;&|]*push[^;&|]*[[:space:]](--force|-[[:alnum:]]*f[[:alnum:]]*([[:space:]]|$)|\+[^[:space:];&|])"; then
+  ask 'this force-pushes and rewrites remote history. Approve only if you asked for it.'
+elif matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
   ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
 elif matches 'git([[:space:]][^;&|]*)?[[:space:]]commit([[:space:]]|$)'; then
   ask 'a commit is the user'"'"'s call. Approve only if you asked for it.'

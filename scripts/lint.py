@@ -409,11 +409,7 @@ def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
 # through (False). Each allowed one sits next to a blocked pattern: a neighbour
 # that trips the guard would stall ordinary work.
 GUARD_CASES = [
-    ("git push --no-verify --force origin main", True),
-    ("git push --force origin main", True),
-    ("git push --force-with-lease", True),
-    ("git push -f", True),
-    ("git push origin +main", True),
+    ("git commit --no-verify -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("printenv", True),
     ("env | grep KEY", True),
     ("cd app && set", True),
@@ -433,8 +429,6 @@ GUARD_CASES = [
     ("Get-ChildItem env: | Select-Object -ExpandProperty Name", False),
     ("Get-ChildItem env: | Select-Object Name, Value", True),
     ("env | cut -d= -f1,2", True),
-    ("git push origin main", False),
-    ("git push --follow-tags", False),
     ("git commit -m 'verify the parser'", False),
     ("env NODE_ENV=test make check", False),
     ("set -e", False),
@@ -444,9 +438,15 @@ GUARD_CASES = [
 
 
 # Each case is a command and whether the guard must hand it to the user to
-# confirm: every commit and every hook skip asks, whatever language the request
-# was in, and a git call that only reads or names a commit does not.
+# confirm: every force-push, hook skip and commit asks, whatever language the
+# request was in, and a plain push or a git call that only reads does not.
 GUARD_ASK_CASES = [
+    ("git push --force origin main", True),
+    ("git push --force-with-lease", True),
+    ("git push -f", True),
+    ("git push origin +main", True),
+    ("git push origin main", False),
+    ("git push --follow-tags", False),
     ("git commit --no-verify -m 'x'", True),
     ("git -c core.hooksPath=/dev/null commit -m x", True),
     ("git push --no-verify origin main", True),
