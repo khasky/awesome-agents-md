@@ -9,10 +9,10 @@
 ## Rule modules
 
 - [rules/workflow.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/workflow.md): larger work — assumptions, direction choices, plans, the last pass before "done", being stuck, debugging, communication in full.
-- [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): editing Markdown documents and articles.
+- [rules/markdown.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/markdown.md): writing or editing Markdown documents and articles.
 - [rules/planning.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/planning.md): producing a plan or spec as the deliverable — explore before asking, decision-complete plans, plan shape, immutable decision records.
-- [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring or cleanup passes, Chesterton's Fence, the rule of 500.
-- [rules/debugging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/debugging.md): the full debug escalation ladder — hypotheses, disproving checks, when to question the architecture.
+- [rules/refactoring.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/refactoring.md): dedicated refactoring, cleanup, rewrite or migration passes, Chesterton's Fence, the rule of 500.
+- [rules/debugging.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/debugging.md): the full debug escalation ladder — hypotheses, disproving checks, bisecting a regression, when to question the architecture.
 - [rules/code-comments.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-comments.md): full comment policy — what survives a pass, the machine-written prose tells, what a pass must never change, proving it was comment-only, public-repo safety.
 - [rules/commit-messages.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/commit-messages.md): commit messages, PR titles and branch names — house style, proposal shape, type choice, security-neutral wording, body prose.
 - [rules/code-review.md](https://github.com/khasky/awesome-agents-md/blob/main/rules/code-review.md): reviewing a diff/PR, severity triage, comment format, receiving review.

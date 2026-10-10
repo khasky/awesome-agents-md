@@ -1,9 +1,10 @@
 # Markdown editorial rules
 
-Read this when editing Markdown documents: docs, articles, READMEs.
+Read this when writing or editing Markdown documents: docs, articles, READMEs.
 
 - Preserve facts, links, citations, code blocks, commands, and YAML frontmatter — changing any of them changes what the document proves or runs, not just how it reads.
 - Do not invent sources, numbers, quotes, dates, or personal experience: use only what the source already states, since a fabricated detail reads as verified until checked.
+- Documentation you write about a codebase resolves every path, symbol, flag and command it names against the repository (a listing, a grep) and runs every example it shows; one you could not run is marked unverified. A generated document reads as authoritative and is wrong in exactly the names a reader copies.
 - Prefer specific, direct prose over generic summaries — a generic summary could describe any document, so it tells the reader nothing about this one.
 - Remove chatbot artifacts, placeholders, excessive bold, decorative formatting, and empty conclusions — none of them adds information the reader can use.
 - Replace vague headings with concrete headings — a vague heading tells a reader scanning the document nothing about what's under it.

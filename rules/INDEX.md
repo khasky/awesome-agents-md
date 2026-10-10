@@ -3,12 +3,12 @@
 Read a module only when the task matches its line. They live in this folder; if it can't be located, proceed: the core `AGENTS.md` is sufficient.
 
 - `rules/workflow.md`: larger work, a plan, the last pass before "done", being stuck, debugging.
-- `rules/markdown.md`: editing Markdown documents.
+- `rules/markdown.md`: writing or editing Markdown documents.
 - `rules/code-comments.md`: writing, reviewing or cleaning up comments.
 - `rules/commit-messages.md`: any commit message, PR title or branch name.
 - `rules/planning.md`: a plan or spec as the deliverable; a decision record.
-- `rules/refactoring.md`: a dedicated refactor or cleanup.
-- `rules/debugging.md`: a fix failed twice or the same error keeps returning.
+- `rules/refactoring.md`: a dedicated refactor, cleanup, rewrite or migration.
+- `rules/debugging.md`: a fix failed twice, the same error keeps returning, or a regression needs locating.
 - `rules/code-review.md`: reviewing a diff or PR, or preparing one.
 - `rules/testing.md`: writing or restructuring tests.
 - `rules/evidence-gates.md`: turning a verification rule into an enforced gate, or writing an instruction that must hold on every run.
