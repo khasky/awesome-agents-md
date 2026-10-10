@@ -61,6 +61,18 @@ if matches "git[[:space:]][^;&|]*push[^;&|]*[[:space:]](--force|-[[:alnum:]]*f[[
   ask 'this force-pushes and rewrites remote history. Approve only if you asked for it.'
 elif matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
   ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
+# Destructive commands only on the targets nothing can restore: a recursive
+# delete of the root, home, working directory or .git, uncommitted work, whole
+# tables, and a downloaded script run unread. rm -rf build stays ordinary work.
+elif matches "${start}"'(sudo[[:space:]]+)?(rm|Remove-Item)[[:space:]]([^;&|]*[[:space:]])?(-[dfirv]*r[dfirv]*|--recursive|-rec[[:alpha:]]*)[[:space:]]([^;&|]*[[:space:]])?(/|/\*|~/?|\.{1,2}/?|\*|\.git/?|\$HOME/?)([[:space:]]|$|[;&|)])'; then
+  ask 'this recursively deletes the root, the home or working directory, or .git. Approve only if you asked for it.'
+elif matches 'git[[:space:]][^;&|]*(reset[^;&|]*[[:space:]]--hard|clean[^;&|]*[[:space:]](-[[:alnum:]]*f|--force))'; then
+  ask 'this discards uncommitted work for good. Approve only if you asked for it.'
+elif matches '(drop[[:space:]]+(table|database|schema)|truncate[[:space:]]+(table[[:space:]]+)?[[:alpha:]_])' ||
+  { matches 'delete[[:space:]]+from[[:space:]]' && ! matches 'delete[[:space:]]+from[[:space:]][^;]*[[:space:]]where[[:space:]]'; }; then
+  ask 'this drops or empties a table or database. Approve only if you asked for it.'
+elif matches '(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)[[:space:]][^;&|]*[|][[:space:]]*(sudo[[:space:]]+)?((ba|z|da)?sh|iex|Invoke-Expression|pwsh|powershell)([[:space:]]|$|[;&|)])|(iex|Invoke-Expression)[[:space:]]*[(][[:space:]]*(irm|iwr|Invoke-RestMethod|Invoke-WebRequest)|(^|[^[:alnum:]_-])(ba|z)?sh[[:space:]]+(-c[[:space:]]+)?[^[:space:]]{0,3}(<|[$])[(][[:space:]]*(curl|wget)'; then
+  ask 'this runs a script downloaded from the network without reading it. Approve only if you trust the source.'
 elif matches 'git([[:space:]][^;&|]*)?[[:space:]]commit([[:space:]]|$)'; then
   ask 'a commit is the user'"'"'s call. Approve only if you asked for it.'
 fi

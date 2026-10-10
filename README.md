@@ -83,7 +83,7 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 
 What the hooks do:
 
-- `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject.
+- `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell.
 - `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is kept under 60 lines unless the request names more and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.

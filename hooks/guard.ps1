@@ -1,5 +1,5 @@
 # PowerShell twin of guard.sh for agents that run Windows hooks through
-# PowerShell (Codex): the same three blocks and three prompts, the same messages,
+# PowerShell (Codex): the same blocks and prompts, the same messages,
 # exit 2 to block.
 # scripts/lint.py runs both scripts against the same commands.
 $ErrorActionPreference = 'Stop'
@@ -60,6 +60,18 @@ if (Test-Command 'git\s[^;&|]*push[^;&|]*\s(--force|-[A-Za-z0-9]*f[A-Za-z0-9]*(\
   Ask 'this force-pushes and rewrites remote history. Approve only if you asked for it.'
 } elseif (Test-Command 'git\s[^;&|]*(--no-verify|core\.hooksPath)') {
   Ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
+# Destructive commands only on the targets nothing can restore: a recursive
+# delete of the root, home, working directory or .git, uncommitted work, whole
+# tables, and a downloaded script run unread. rm -rf build stays ordinary work.
+} elseif (Test-Command ($start + '(sudo\s+)?(rm|Remove-Item)\s([^;&|]*\s)?(-[dfirv]*r[dfirv]*|--recursive|-rec[A-Za-z]*)\s([^;&|]*\s)?(/|/\*|~/?|\.{1,2}/?|\*|\.git/?|\$HOME/?)(\s|$|[;&|)])')) {
+  Ask 'this recursively deletes the root, the home or working directory, or .git. Approve only if you asked for it.'
+} elseif (Test-Command 'git\s[^;&|]*(reset[^;&|]*\s--hard|clean[^;&|]*\s(-[A-Za-z0-9]*f|--force))') {
+  Ask 'this discards uncommitted work for good. Approve only if you asked for it.'
+} elseif ((Test-Command '(drop\s+(table|database|schema)|truncate\s+(table\s+)?[A-Za-z_])') -or
+    ((Test-Command 'delete\s+from\s') -and -not (Test-Command 'delete\s+from\s[^;]*\swhere\s'))) {
+  Ask 'this drops or empties a table or database. Approve only if you asked for it.'
+} elseif (Test-Command '(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\s[^;&|]*[|]\s*(sudo\s+)?((ba|z|da)?sh|iex|Invoke-Expression|pwsh|powershell)(\s|$|[;&|)])|(iex|Invoke-Expression)\s*[(]\s*(irm|iwr|Invoke-RestMethod|Invoke-WebRequest)|(^|[^A-Za-z0-9_-])(ba|z)?sh\s+(-c\s+)?\S{0,3}(<|[$])[(]\s*(curl|wget)') {
+  Ask 'this runs a script downloaded from the network without reading it. Approve only if you trust the source.'
 } elseif (Test-Command 'git(\s[^;&|]*)?\scommit(\s|$)') {
   Ask "a commit is the user's call. Approve only if you asked for it."
 }
