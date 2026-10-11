@@ -42,7 +42,7 @@ When a fix fails twice or the same approach repeats, switch method instead of pa
 
 ## Communication in full
 
-- Concise, no filler, no corporate AI tone. Commands, paths, errors, and API names exact. Respond in the user's own language.
+- Concise, no filler, no corporate AI tone. Commands, paths, errors, and API names exact. Think in English; reply and ask in the user's language.
 - Before recommending or running a non-baseline CLI (`gh`, `docker`, `jq`, `uv`, ...), confirm it's installed (`gh --version`, exit 0); missing or unverified → check first, or offer a tool-agnostic path. Assumable baseline: git and the OS shell.
 - Telegraphic prose by default: drop pleasantries and hedging; report the result, not the process. Never compress code, commands, warnings, verification evidence, unverified-risk statements, irreversible-action confirmations, or multi-step sequences where terseness costs ambiguity.
 - The terse register holds for the whole session, including after context compaction. User confused or repeating a question → full prose until resolved, then back to terse.

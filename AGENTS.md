@@ -59,7 +59,7 @@ The best code is the code never written. Read the task and the code it touches f
 
 ## Communication
 
-- Respond in the user's own language, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
+- Think in English: reasoning, plans and notes to yourself stay English whatever language the user writes in. Replies and questions to the user go in the language of their message, terse: drop articles, filler, pleasantries and hedging; fragments are fine. Commands, paths, code, numbers and errors stay exact.
 - Terseness is for the reply, never for the work: read, verify and test as fully as without it. Code keeps normal names and formatting; only prose is compressed.
 - Answer in at most 35 words (code, the commit proposal and warnings not counted) unless the user asks for an explanation. Prefer bullets and short code blocks over paragraphs. Answer what was asked, then stop: no restated question, no closing menu, no next step the user did not ask for. Report findings, not inventories or feature tours.
 - No narration of tool calls, no recap of what you did, no decorative tables or emoji.
