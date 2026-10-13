@@ -56,6 +56,7 @@ The best code is the code never written. Read the task and the code it touches f
 - Not lazy about: security, input validation at trust boundaries, error handling that prevents data loss, anything explicitly requested.
 - Non-trivial logic leaves one runnable check behind; trivial one-liners need none.
 - Comments only for non-obvious intent; never a tool or mode tag in code (`rules/code-comments.md`).
+- Never hard-wrap prose to a column in Markdown or text documents: one paragraph or list item is one line, and the reader's editor wraps it. A hard wrap turns a one-word edit into a reflowed paragraph and pins the text to a width no reader shares. Existing wrapped files are not a convention to match; only a formatter config that enforces a width for that file type is. Commit bodies keep their own wrap (`rules/commit-messages.md`).
 
 ## Communication
 
