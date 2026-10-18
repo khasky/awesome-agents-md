@@ -168,6 +168,21 @@ def modules_listed_in_index() -> list[str]:
                     if path not in index]
 
 
+# A module is paid for in full each time a task opens it, so its budget counts
+# words: a line budget lets a module grow by lengthening its lines.
+MODULE_WORD_LIMIT = 3500
+
+
+def modules_under_word_limit() -> list[str]:
+    found = []
+    for path in modules():
+        words = len(read(path).split())
+        if words > MODULE_WORD_LIMIT:
+            found.append(f"{path}: {words} words, over the {MODULE_WORD_LIMIT}-word module cap - "
+                         f"split it along a trigger a task can see")
+    return found
+
+
 def modules_open_with_trigger() -> list[str]:
     return [f"{path}: missing 'Read this when' trigger line in the first 5 lines"
             for path in modules()
@@ -398,11 +413,12 @@ FIXTURE_ENV = {key: value for key, value in os.environ.items()
 
 
 def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
-             args: list[str], payload: str = "") -> subprocess.CompletedProcess:
+             args: list[str], payload: str = "", env: dict[str, str] | None = None,
+             cwd: pathlib.Path | None = None) -> subprocess.CompletedProcess:
     _, launcher, suffix = runtime
     return subprocess.run([*launcher, str(root / "hooks" / f"{name}{suffix}"), *args],
                           input=payload, capture_output=True, text=True, encoding="utf-8",
-                          env=FIXTURE_ENV)
+                          env={**FIXTURE_ENV, **(env or {})}, cwd=cwd)
 
 
 # Each case is a command the plugin's PreToolUse guard must block (True) or let
@@ -484,6 +500,15 @@ GUARD_ASK_CASES = [
 ]
 
 
+# Payloads the guard cannot read: one that names a command goes to the user, so
+# a cut-off call is never waved through; one without a command field is not a
+# shell call and passes.
+GUARD_RAW_CASES = [
+    ('{"tool_name":"Bash","tool_input":{"command":"rm -rf /', True),
+    ('{"tool_name":"Bash","tool_input":{}}', False),
+]
+
+
 def plugin_guard_blocks_what_it_names() -> list[str]:
     # Runs the real hook scripts the way the agents do: the tool call as JSON
     # on stdin, exit 2 meaning blocked, a permissionDecision "ask" on stdout
@@ -491,13 +516,14 @@ def plugin_guard_blocks_what_it_names() -> list[str]:
     runtimes, found = hook_runtimes()
     with tempfile.TemporaryDirectory() as scratch:
         root = plugin_copy(scratch)
-        cases = [(command, expect_block, None) for command, expect_block in GUARD_CASES]
-        cases += [(command, False, expect_ask) for command, expect_ask in GUARD_ASK_CASES]
+        cases = [(json.dumps({"tool_name": "Bash", "tool_input": {"command": command}}),
+                  repr(command), expect_block, None) for command, expect_block in GUARD_CASES]
+        cases += [(json.dumps({"tool_name": "Bash", "tool_input": {"command": command}}),
+                   repr(command), False, expect_ask) for command, expect_ask in GUARD_ASK_CASES]
+        cases += [(raw, f"raw payload {raw[:40]!r}", False, expect_ask) for raw, expect_ask in GUARD_RAW_CASES]
         for runtime in runtimes:
-            for command, expect_block, expect_ask in cases:
-                request = {"tool_name": "Bash", "tool_input": {"command": command}}
-                label = repr(command)
-                run = run_hook(runtime, root, "guard", [], json.dumps(request))
+            for payload, label, expect_block, expect_ask in cases:
+                run = run_hook(runtime, root, "guard", [], payload)
                 if run.returncode not in (0, 2):
                     found.append(f"{runtime[0]} guard crashed on {label}: exit "
                                  f"{run.returncode} {run.stderr.strip()}")
@@ -735,6 +761,88 @@ def plugin_facts_hook_names_the_runner() -> list[str]:
     return found
 
 
+# Each case: the file an edit touches, whether it exists before the edit, and
+# whether the protect hook must hand the edit to the user.
+PROTECT_CASES = [
+    (".eslintrc.json", True, True),
+    ("eslint.config.js", True, True),
+    ("ruff.toml", True, True),
+    (".pre-commit-config.yaml", True, True),
+    (".github/workflows/ci.yml", True, True),
+    ("AGENTS.md", True, True),
+    (".claude/settings.json", True, True),
+    (".gitignore", True, True),
+    ("ruff.toml", False, False),
+    ("pager.py", True, False),
+    ("README.md", True, False),
+    ("docs/eslint-notes.md", True, False),
+]
+
+
+def plugin_protect_hook_asks_before_check_edits() -> list[str]:
+    # An edit to an existing check configuration or instruction file asks; a
+    # new one, and every other file, goes through. Claude Code's file_path and
+    # Codex's apply_patch both name the file.
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        repo = pathlib.Path(scratch) / "repo with space"
+        repo.mkdir()
+        for path, exists, expect_ask in PROTECT_CASES:
+            target = repo / path
+            if exists:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("x\n", encoding="utf-8")
+            payloads = [json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(target)}}),
+                        json.dumps({"tool_name": "apply_patch", "tool_input": {
+                            "command": f"*** Begin Patch\n*** Update File: {path}\n@@\n-x\n+y\n*** End Patch"}})]
+            for payload in payloads:
+                for runtime in runtimes:
+                    run = run_hook(runtime, root, "protect", [], payload, cwd=repo)
+                    asked = run.returncode == 0 and '"permissionDecision":"ask"' in run.stdout.replace(" ", "")
+                    if run.returncode or asked != expect_ask:
+                        verdict = "did not ask about" if expect_ask else "asked about"
+                        found.append(f"{runtime[0]} protect hook {verdict} {path} "
+                                     f"({json.loads(payload)['tool_name']}, exit {run.returncode})")
+            if exists:
+                target.unlink()
+    return found
+
+
+SUBAGENT_SECTIONS = ("## Boundaries", "## Security", "## Verification")
+
+
+def plugin_subagent_hook_carries_the_hard_rules() -> list[str]:
+    # A subagent gets the sections it cannot learn from the parent's prompt,
+    # exactly as the core states them, and nothing else, the same from every
+    # shell and under the inline output limit.
+    runtimes, found = hook_runtimes()
+    core = read(CORE).replace("\r\n", "\n")
+    expected = "".join(section for section in re.split(r"(?m)^(?=## )", core)
+                       if section.startswith(SUBAGENT_SECTIONS))
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        notes = set()
+        for runtime in runtimes:
+            run = run_hook(runtime, root, "subagent", [], json.dumps({"agent_type": "Explore"}))
+            try:
+                output = json.loads(run.stdout)["hookSpecificOutput"]
+                note = output["additionalContext"]
+            except (ValueError, KeyError):
+                found.append(f"{runtime[0]} subagent hook printed no valid JSON: {run.stdout.strip()[:80]!r}")
+                continue
+            if run.returncode or output.get("hookEventName") != "SubagentStart":
+                found.append(f"{runtime[0]} subagent hook exited {run.returncode} for {output.get('hookEventName')!r}")
+            if not note.endswith(expected):
+                found.append(f"{runtime[0]} subagent hook does not carry {', '.join(SUBAGENT_SECTIONS)} as the core has them")
+            if len(note) > HOOK_OUTPUT_LIMIT:
+                found.append(f"subagent context is {len(note)} characters, over {HOOK_OUTPUT_LIMIT}")
+            notes.add(note)
+        if len(notes) > 1:
+            found.append("the subagent hooks say different things")
+    return found
+
+
 GATES = [
     (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
     (f"core {CORE} stays under {CORE_BYTE_LIMIT} bytes", core_under_byte_limit),
@@ -744,6 +852,7 @@ GATES = [
      modules_name_no_stack),
     (f"every rules module is listed in {INDEX_FILE}, and {CORE} points at it", modules_listed_in_index),
     ("every rules module opens with its trigger line", modules_open_with_trigger),
+    (f"every rules module stays under {MODULE_WORD_LIMIT} words", modules_under_word_limit),
     ("llms.txt stays in sync with rules/", llms_in_sync),
     ("llms.txt links point at files that exist", llms_links_exist),
     ("every referenced rules module exists", referenced_modules_exist),
@@ -757,6 +866,10 @@ GATES = [
     ("the plugin shape hook guides a created or edited file, the same in every shell",
      plugin_shape_hook_guides_in_flow),
     ("the plugin facts hook names how the repository's tests run", plugin_facts_hook_names_the_runner),
+    ("the plugin protect hook asks before an edit to a check or instruction file",
+     plugin_protect_hook_asks_before_check_edits),
+    ("the plugin SubagentStart hook carries Boundaries, Security and Verification",
+     plugin_subagent_hook_carries_the_hard_rules),
     ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
      plugin_verify_hook_holds_unchecked_edits),
     ("the UserPromptSubmit hook states the answer limit", plugin_remind_hook_states_the_limit),

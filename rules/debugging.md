@@ -1,6 +1,6 @@
 # Debug escalation ladder
 
-Read this when a fix has failed twice, the same error keeps returning, a debugging session is going in circles, or a regression needs locating. The core carries the short form; this is the full ladder.
+Read this when a fix has failed twice, the same error keeps returning, a debugging session is going in circles, or a regression needs locating. `rules/workflow.md` carries the short form; this is the full ladder.
 
 - Read the exact error message and the logs before guessing — the answer is usually printed. Quote the decisive line, not the whole dump.
 - Form 3 different hypotheses before testing any. Test the most likely first — and design the check that would disprove it, not confirm it. Reverse the assumption too: "problem is in A" → test "problem is NOT in A".

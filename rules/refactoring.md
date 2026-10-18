@@ -13,7 +13,7 @@ Read this when the task is a dedicated refactor, cleanup, rewrite or migration, 
 - Chesterton's Fence — before simplifying or deleting, answer: what is this code's responsibility? who calls it and what does it call? which edge cases does it handle? which tests define its behavior? why was it written this way (`git blame`/`git log`)? Can't answer most → not ready to change it.
 - "Unused" is shown, never grepped: a symbol with no static reference may still be reached by name (reflection, dependency injection or routing by string, templates, config, serialization) or by a published package's consumers. Search the name as a string and in non-code files before calling it dead; an export of a published package is never provably dead from inside the repository.
 - Before a rewrite or migration, inventory the behavior the repository does not hold: database triggers and stored procedures, scheduled jobs defined in infrastructure, feature-flag states, config kept on a deploy platform. Absent from the repository is not absent from the system, and a rewrite drops it without a failing test.
-- A comment-only pass is a cleanup with its own proof obligation: "comment-only" is shown by comparing the comment-stripped source at HEAD against the working tree, never asserted (`rules/code-comments.md`).
+- A comment-only pass is a cleanup with its own proof obligation: "comment-only" is shown by comparing the comment-stripped source at HEAD against the working tree, never asserted (`rules/comment-pass.md`).
 - Simplification red flags: needing to modify tests (behavior changed, not simplified); removing error handling to make code "cleaner". Simplicity is comprehension speed, not line count.
 
 Not a violation — leave these alone:

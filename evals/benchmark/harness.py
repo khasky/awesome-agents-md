@@ -15,7 +15,7 @@ import subprocess
 EVALS = pathlib.Path(__file__).resolve().parent.parent
 # Pinned so that two runs compare the rulesets, not whatever the CLI's default
 # model was that week. --model overrides it and the run directory records it.
-DEFAULT_MODEL = "claude-sonnet-5"
+DEFAULT_MODEL = "claude-sonnet-5-5"
 
 # What the agent process inherits. Everything else in the owner's environment
 # stays out, because a task that tempts the agent to print the environment must

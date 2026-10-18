@@ -41,7 +41,7 @@ Read this when writing any commit message, PR title or branch name, planning or 
 
 ## Characters
 
-- Plain ASCII throughout: no em dash, no arrow glyph, no curly quote, no ellipsis character, no emoji, no non-breaking space — they break `git log`, changelog parsers, and terminals, and they read as machine output.
+- Plain ASCII throughout: no em dash, no arrow glyph, no curly quote, no ellipsis character, no emoji, no non-breaking space — they break `git log`, changelog parsers, and terminals, and they read as machine output. The one exception is the house style itself: a log whose subjects open with an emoji (gitmoji) keeps that leading emoji.
 - No backticks anywhere, since `git log` renders no markdown and a backtick shows up as a stray character; identifiers are written bare (profiles.json, ssh-keygen, user.useConfigOnly). Quoting is for the rare string that has to be marked off, and then single quotes.
 - No implementation trivia in prose, since a literal copied from the diff goes stale the moment that code changes: not an address template, not an include condition, not a full command line, not a call with its argument object — name the thing in words.
 

@@ -5,6 +5,7 @@ Read a module only when the task matches its line. They live in this folder; if 
 - `rules/workflow.md`: larger work, a plan, the last pass before "done", being stuck, debugging.
 - `rules/markdown.md`: writing or editing Markdown documents.
 - `rules/code-comments.md`: writing, reviewing or cleaning up comments.
+- `rules/comment-pass.md`: a comment-only cleanup pass over existing files.
 - `rules/commit-messages.md`: any commit message, PR title or branch name.
 - `rules/planning.md`: a plan or spec as the deliverable; a decision record.
 - `rules/refactoring.md`: a dedicated refactor, cleanup, rewrite or migration.

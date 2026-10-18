@@ -59,6 +59,10 @@ CALL_BUDGET_USD = 1.0
 # always-on only behind a flag file, which the run creates (see claude_flags).
 ARMS = {
     "baseline": None,
+    # The control a terse ruleset has to beat: no plugin, one sentence asking
+    # for brevity. A gain over baseline that this arm also gets is the request
+    # for brevity, not the ruleset.
+    "concise": {"system": "Answer concisely."},
     "awesome-agents-md": {"path": REPO},
     "caveman": {"url": "https://github.com/JuliusBrussee/caveman.git",
                 "commit": "2fd153c67988e980fb0b2455c90832159a6a5a25"},
@@ -214,7 +218,7 @@ def code_stats(workdir: pathlib.Path) -> dict:
 
 def plugin_dir(arm: str, cache: pathlib.Path) -> pathlib.Path | None:
     source = ARMS[arm]
-    if source is None:
+    if source is None or "system" in source:
         return None
     if "path" in source:
         return source["path"]
@@ -233,7 +237,7 @@ def plugin_dir(arm: str, cache: pathlib.Path) -> pathlib.Path | None:
 
 def agent_command(claude: str, prompt: str, model: str, call_budget: float,
                   plugin: pathlib.Path | None, session: tuple[str, str],
-                  effort: str | None = None) -> list[str]:
+                  effort: str | None = None, system: str | None = None) -> list[str]:
     # No user-level settings, plugins or hooks, no global CLAUDE.md, and
     # exactly one plugin per arm. Every arm keeps its session on disk, because
     # a Stop hook reads the transcript and a scenario resumes it; the runner
@@ -248,6 +252,8 @@ def agent_command(claude: str, prompt: str, model: str, call_budget: float,
         command += ["--effort", effort]
     if plugin is not None:
         command += ["--plugin-dir", str(plugin)]
+    if system:
+        command += ["--append-system-prompt", system]
     return command
 
 
@@ -269,7 +275,8 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
             if len(job.turns) > 1:
                 stdout += json.dumps({"type": "eval_turn", "turn": index, "prompt": prompt}) + "\n"
             text, exit_code = run_agent(agent_command(claude, prompt, model, call_budget, plugin,
-                                                      session, effort), workdir, agent_env(job))
+                                                      session, effort, (ARMS[arm] or {}).get("system")),
+                                        workdir, agent_env(job))
             stdout += text if text.endswith("\n") or not text else text + "\n"
             if exit_code:
                 break
@@ -473,7 +480,8 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
               + (" ..." if len(broken) > 8 else ""))
 
     print(f"\n{'arm':<18} {'traps':>7} {'coding':>7} {'safe':>6} {'open loc':>9} "
-          f"{'coding loc':>11} {'words':>6} {'prose':>6} {'trace':>6} {'commit':>7} {'$/cell':>7} {'s/cell':>7}")
+          f"{'coding loc':>11} {'words':>6} {'prose':>6} {'trace':>6} {'commit':>7} {'$/cell':>7} {'s/cell':>7} "
+          f"{'in tok':>8} {'out tok':>8} {'turns':>6}")
     for arm in arms:
         mine = [r for r in rows if r["arm"] == arm]
         if not mine:
@@ -491,7 +499,10 @@ def summarize(rows: list[dict], arms: list[str]) -> None:
               f"{sum(bool(r.get('reply_trace')) for r in mine):>6} "
               f"{sum(bool(r.get('unasked_commit')) for r in mine):>3}/{len(mine):<3} "
               f"{fmt(mean([r['cost_usd'] for r in mine]), '${:.3f}'):>7} "
-              f"{fmt(mean([r['seconds'] for r in mine]), '{:.0f}'):>7}")
+              f"{fmt(mean([r['seconds'] for r in mine]), '{:.0f}'):>7} "
+              f"{fmt(mean([r.get('input_tokens') for r in mine]), '{:.0f}'):>8} "
+              f"{fmt(mean([r.get('output_tokens') for r in mine]), '{:.0f}'):>8} "
+              f"{fmt(mean([r.get('agent_turns') for r in mine]), '{:.1f}'):>6}")
 
     print(f"\n{'task':<18}{'split':>6}" + "".join(f"{arm[:14]:>15}" for arm in arms))
     for task in sorted({r["task"] for r in rows}):
@@ -538,11 +549,14 @@ def compare(before: pathlib.Path, after: pathlib.Path, arms: list[str], split: s
         # between two versions on one task, so each task is compared with
         # itself and the interval is taken over the per-task differences.
         for key, label, lower_is_better in (("cost_usd", "cost per task", True),
-                                            ("prose_words", "words in answer", True)):
+                                            ("prose_words", "words in answer", True),
+                                            ("input_tokens", "input tokens", True),
+                                            ("output_tokens", "output tokens", True),
+                                            ("agent_turns", "agent turns", True)):
             diffs, before_means, after_means = [], [], []
             for task in sorted(tasks):
-                va = [r[key] for r in a if r["task"] == task and r[key] is not None]
-                vb = [r[key] for r in b if r["task"] == task and r[key] is not None]
+                va = [r[key] for r in a if r["task"] == task and r.get(key) is not None]
+                vb = [r[key] for r in b if r["task"] == task and r.get(key) is not None]
                 if va and vb:
                     before_means.append(sum(va) / len(va))
                     after_means.append(sum(vb) / len(vb))

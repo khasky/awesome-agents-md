@@ -38,8 +38,9 @@ llms.txt         # index of the core and every module for LLM consumption —
                  # CI keeps it two-way synced with rules/
 hooks/           # plugin-hooks.json and load-core — the SessionStart hooks that print AGENTS.md
                  # into a Claude Code or Codex session when the repo is installed as a plugin,
-                 # and guard and verify, the PreToolUse and Stop hooks that enforce what the
-                 # core forbids outright; each ships as .sh (Claude Code) and .ps1 (Codex on Windows)
+                 # subagent for subagents, and guard, protect and verify, the PreToolUse and Stop
+                 # hooks that enforce what the core forbids outright; each ships as .sh (Claude
+                 # Code) and .ps1 (Codex on Windows)
 .claude-plugin/  # plugin.json and marketplace.json for the Claude Code plugin; Codex reads the
                  # marketplace too
 .codex-plugin/   # plugin.json for the Codex plugin
@@ -83,7 +84,9 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 
 What the hooks do:
 
-- `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell.
+- `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. A command it cannot read goes to you as well.
+- `protect` (before a file edit) hands you an edit to an existing check configuration (lint, format, type check, test runner, git hooks, CI workflows) or to a file that constrains the agent (`AGENTS.md`, `CLAUDE.md`, `.claude/settings*.json`, `.gitignore`). Creating one of these files goes through.
+- `subagent` (when a subagent starts) gives it the core's Boundaries, Security and Verification sections, which it would otherwise run without.
 - `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is kept under 60 lines unless the request names more and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.
@@ -138,7 +141,7 @@ In Claude Code, `/context` shows the core in the session and how many tokens it 
 
 ## Benchmark
 
-Claude Code 2.1.289 runs the same seeded tasks with no plugin (baseline), with this ruleset, and with [caveman](https://github.com/JuliusBrussee/caveman), [ponytail](https://github.com/DietrichGebert/ponytail), [i-have-adhd](https://github.com/ayghri/i-have-adhd), [superpowers](https://github.com/obra/superpowers) and [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills), one plugin per session, the latest model of each tier at `--effort low`, 5 attempts per task. A script scores what each session leaves behind: trap tasks where the tempting move is the wrong one, source lines written for open requests, words in the final answer, and cost.
+Claude Code 2.1.289 runs the same seeded tasks with no plugin (baseline), with this ruleset, and with [caveman](https://github.com/JuliusBrussee/caveman), [ponytail](https://github.com/DietrichGebert/ponytail), [i-have-adhd](https://github.com/ayghri/i-have-adhd), [superpowers](https://github.com/obra/superpowers) and [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills), one plugin per session, the latest model of each tier at `--effort low`, 5 attempts per task. A script scores what each session leaves behind: trap tasks where the tempting move is the wrong one, source lines written for open requests, words in the final answer, and cost. The runner also has a `concise` arm (no plugin, the system prompt line "Answer concisely.") that separates what a ruleset adds from a plain request for brevity, and reports input and output tokens and agent turns per cell; neither is in the tables below yet.
 
 **Train split**, the tasks the ruleset was tuned against:
 

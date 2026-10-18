@@ -16,7 +16,14 @@ command=$(printf '%s' "$payload" |
   grep -oE '"command"[[:space:]]*:[[:space:]]*"([^"\\]|\\.)*"' |
   head -n 1 |
   sed -E 's/^"command"[[:space:]]*:[[:space:]]*"//; s/"$//; s/\\n/; /g') || true
-[ -n "$command" ] || exit 0
+if [ -z "$command" ]; then
+  # A payload that names a command the guard cannot read (cut off, or in a
+  # shape it does not parse) goes to the user rather than through unchecked.
+  if printf '%s' "$payload" | grep -qE '"command"[[:space:]]*:'; then
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: the guard could not read this command. Approve only if you have read it."}}'
+  fi
+  exit 0
+fi
 
 block() {
   printf 'Blocked by the awesome-agents-md guard: %s\n' "$1" >&2

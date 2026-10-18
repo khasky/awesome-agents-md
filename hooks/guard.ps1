@@ -4,9 +4,15 @@
 # scripts/lint.py runs both scripts against the same commands.
 $ErrorActionPreference = 'Stop'
 
+$raw = [Console]::In.ReadToEnd()
 try {
-  $payload = [Console]::In.ReadToEnd() | ConvertFrom-Json
+  $payload = $raw | ConvertFrom-Json
 } catch {
+  # A payload that names a command the guard cannot read (cut off, or in a
+  # shape it does not parse) goes to the user rather than through unchecked.
+  if ($raw -match '"command"\s*:') {
+    [Console]::Out.WriteLine('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: the guard could not read this command. Approve only if you have read it."}}')
+  }
   exit 0
 }
 $toolInput = $payload.tool_input

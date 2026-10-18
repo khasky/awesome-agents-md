@@ -67,10 +67,10 @@ Read this when reviewing a diff/PR or preparing your own changes for review.
 
 ## Review comment format
 
-- One line per finding: `file:line: <severity>: problem. fix.` — location, problem, concrete fix. No throat-clearing ("I noticed that...", "You might want to consider...").
+- A review skill or the repository's own template that sets a finding format wins; otherwise one line per finding: `file:line: <severity>: problem. fix.` — location, problem, concrete fix. No throat-clearing ("I noticed that...", "You might want to consider...").
 - Concrete fix over "consider refactoring"; exact symbols in backticks; add the why only when the fix isn't obvious from the problem.
 - Unsure whether it's a real problem → ask it as a question, never hedge with "perhaps"/"maybe"/"I think".
-- Praise once at the top of the review: praise scattered between findings reads as padding and dilutes them.
+- No praise for what was already right: the review is its findings, and praise beside them reads as padding and dilutes them.
 - Full-prose exceptions: security findings (complete explanation plus reference) and architectural disagreements (rationale, not a one-liner). Resume one-liners after.
 
 ## Receiving review
