@@ -8,7 +8,7 @@ A ruleset written in the [AGENTS.md](https://agents.md) format, with shared rule
 
 The always-loaded core covers: concise token-efficient communication, a coding discipline that stops at the first rung that holds (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, and a commit-proposal habit with no assistant traces. The procedure for larger work (assumptions, plans, the last pass before "done", debugging) loads from `rules/workflow.md` when the task calls for it, so the always-loaded part stays under 10 KB. On-demand modules in `rules/` extend it — commit messages that inherit the target repo's own convention, backend security, databases, caching, resilience, deployment and infrastructure definitions, payments, and more.
 
-No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the four agents, with nothing extra to install.
+No hard dependencies and nothing tool-specific. The ruleset is framework- and project-agnostic — it holds for any stack and any of the agents listed under Prerequisites, with nothing extra to install.
 
 ## Contents
 
@@ -36,11 +36,10 @@ rules/           # on-demand modules, read only when the task matches; rules/IND
 README.md        # setup and optional tooling (this file)
 llms.txt         # index of the core and every module for LLM consumption —
                  # CI keeps it two-way synced with rules/
-hooks/           # plugin-hooks.json and load-core — the SessionStart hooks that print AGENTS.md
-                 # into a Claude Code or Codex session when the repo is installed as a plugin,
-                 # subagent for subagents, and guard, protect and verify, the PreToolUse and Stop
-                 # hooks that enforce what the core forbids outright; each ships as .sh (Claude
-                 # Code) and .ps1 (Codex on Windows)
+hooks/           # plugin-hooks.json and the hook scripts: load-core and facts (SessionStart),
+                 # subagent (SubagentStart), guard and protect (PreToolUse), shape and survivors
+                 # (PostToolUse, UserPromptSubmit), verify and survivors (Stop); each ships as
+                 # .sh (Claude Code) and .ps1 (Codex on Windows)
 .claude-plugin/  # plugin.json and marketplace.json for the Claude Code plugin; Codex reads the
                  # marketplace too
 .codex-plugin/   # plugin.json for the Codex plugin
@@ -87,7 +86,7 @@ What the hooks do:
 - `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. A command it cannot read goes to you as well.
 - `protect` (before a file edit) hands you an edit to an existing check configuration (lint, format, type check, test runner, git hooks, CI workflows) or to a file that constrains the agent (`AGENTS.md`, `CLAUDE.md`, `.claude/settings*.json`, `.gitignore`). Creating one of these files goes through.
 - `subagent` (when a subagent starts) gives it the core's Boundaries, Security and Verification sections, which it would otherwise run without.
-- `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is kept under 60 lines unless the request names more and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
+- `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is held to what the request names and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.
 - `survivors` (with every prompt, after every shell command, and when the agent finishes) tracks the processes started under the agent during the turn: after a shell command it names those still running, and when the agent finishes it sends it back once while any are, to stop them or say why they stay. MCP and language servers started before the turn never count. A process whose parent already exited is no longer under the agent and is not seen.

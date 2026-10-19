@@ -700,7 +700,7 @@ def plugin_shape_hook_guides_in_flow() -> list[str]:
         root = plugin_copy(scratch)
         repo = hook_repo(scratch)
         cases = [("Edit", "update", repo / "pager.py", "has tests (test_pager.py)"),
-                 ("Write", "create", repo / "big.py", "under 60 lines"),
+                 ("Write", "create", repo / "big.py", "builds only what it names"),
                  ("Write", "update", repo / "big.py", "has tests (test_pager.py)"),
                  ("Write", "create", repo / "test_extra.py", None),
                  ("Edit", "update", repo / "notes.md", None)]

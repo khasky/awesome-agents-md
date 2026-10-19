@@ -21,7 +21,7 @@ tests=$(git -C "$dir" ls-files 2>/dev/null |
 if printf '%s' "$payload" | grep -qE '"type"[[:space:]]*:[[:space:]]*"create"'; then
   lines=0
   [ -f "$file" ] && lines=$(grep -c '[^[:space:]]' "$file" || true)
-  note="You created $name ($lines lines). An open request stays under 60 lines unless it names more: delete what it did not name (options, modes, tiers, checks, CLI parsing, persistence, docstrings), keep input validation at trust boundaries. Prove it with one shell call on input given in the command itself, no temporary files; fix only what that run shows broken, then answer."
+  note="You created $name ($lines lines). An open request builds only what it names: delete what it did not name (options, modes, tiers, checks, CLI parsing, persistence, docstrings), keep input validation at trust boundaries. Prove it with one run before you answer."
 elif [ -n "$tests" ]; then
   top=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$dir")
   runner=''

@@ -1,10 +1,10 @@
 # Awesome AGENTS.md
 
-> One tool-agnostic `AGENTS.md` that Claude Code, OpenAI Codex CLI, Gemini CLI and Cursor Agent all import, plus on-demand rule modules in `rules/` that an agent reads only when the task matches. The core file is always loaded and capped at 200 instruction lines, the module index excluded, and at 32 KiB as a whole (CI-enforced); everything else is opt-in.
+> One tool-agnostic `AGENTS.md` that Claude Code, OpenAI Codex, Gemini CLI, Qwen Code, Cursor and other agents import, plus on-demand rule modules in `rules/` that an agent reads only when the task matches. The core file is always loaded and capped at 200 instruction lines, the module index excluded, and at 32 KiB as a whole (CI-enforced); everything else is opt-in.
 
 ## Core
 
-- [AGENTS.md](https://github.com/khasky/awesome-agents-md/blob/main/AGENTS.md): the always-loaded ruleset — boundaries, security, the verification gate, workflow, debugging, the lazy-senior-dev coding ladder, communication style, the commit-proposal habit.
+- [AGENTS.md](https://github.com/khasky/awesome-agents-md/blob/main/AGENTS.md): the always-loaded ruleset — scope and precedence, boundaries, security, the verification gate, the coding ladder, communication style, the commit-proposal habit; the workflow and debugging procedure loads from rules/workflow.md.
 
 ## Rule modules
 
@@ -53,6 +53,6 @@
 
 ## Docs
 
-- [README](https://github.com/khasky/awesome-agents-md/blob/main/README.md): per-agent install paths for Claude Code, Codex CLI, Gemini CLI and Cursor.
+- [README](https://github.com/khasky/awesome-agents-md/blob/main/README.md): plugin install and per-agent import paths for Claude Code, Codex, Gemini CLI, Qwen Code, Cursor and the other supported agents.
 - [CONTRIBUTING](https://github.com/khasky/awesome-agents-md/blob/main/CONTRIBUTING.md): the line test, the core budget (200 instruction lines, 32 KiB), module format and writing rules.
 - [LICENSE](https://github.com/khasky/awesome-agents-md/blob/main/LICENSE): MIT.
