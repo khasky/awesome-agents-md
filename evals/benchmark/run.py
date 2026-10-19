@@ -303,6 +303,12 @@ def run_cell(claude: str, job: Job, arm: str, plugin: pathlib.Path | None, model
                               r["usage"].get("input_tokens", 0)
                               + r["usage"].get("cache_creation_input_tokens", 0)
                               + r["usage"].get("cache_read_input_tokens", 0)),
+        # Split by billing type: a cache write costs about 12 times a cache read,
+        # so two cells with the same input total can differ several-fold in cost.
+        **{name: total(results, lambda r, key=key: r.get("usage", {}).get(key))
+           for name, key in (("uncached_tokens", "input_tokens"),
+                             ("cache_write_tokens", "cache_creation_input_tokens"),
+                             ("cache_read_tokens", "cache_read_input_tokens"))},
         "output_tokens": total(results, lambda r: r.get("usage", {}).get("output_tokens")),
         "agent_turns": total(results, lambda r: r.get("num_turns")),
         "split": job.split,
@@ -551,6 +557,8 @@ def compare(before: pathlib.Path, after: pathlib.Path, arms: list[str], split: s
         for key, label, lower_is_better in (("cost_usd", "cost per task", True),
                                             ("prose_words", "words in answer", True),
                                             ("input_tokens", "input tokens", True),
+                                            ("cache_write_tokens", "cache writes", True),
+                                            ("cache_read_tokens", "cache reads", True),
                                             ("output_tokens", "output tokens", True),
                                             ("agent_turns", "agent turns", True)):
             diffs, before_means, after_means = [], [], []
