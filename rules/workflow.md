@@ -14,7 +14,7 @@ Read this when the work is larger than a couple of files, a feature, a migration
 
 The assumptions block, the direction question, the plan, the last pass, and the final verification report survive any brevity or minimalism mode: compress their wording, never drop them.
 
-Work with a plan reports once per finished step, in one line (what landed, its evidence), because a user who sees nothing for many tool calls cannot steer or stop a wrong direction. Per tool call stays silent (core Communication).
+Work with a plan reports once per finished step, in one line (what landed, its evidence), because a user who sees nothing for many tool calls cannot steer or stop a wrong direction. A tool call on its own gets no announcement (core Communication).
 
 A message arriving mid-task steers the work: fold a correction, constraint or preference into what is running, answer a question in a sentence and carry on, and treat the objective as replaced only when the user cancels it or names an incompatible one. After compaction, continue from the summary as one task without redoing what it records as finished; a summarized "done" is still a claim, so its proving command runs again before you repeat it.
 
@@ -33,8 +33,6 @@ A green proving command says the code runs; whether the diff is right is a separ
 5. The change against the conventions of the files it lands in: naming, comment placement, duplication the edit introduced.
 
 A defect the user finds reopens all five lenses over the whole change, because a fix scoped to the line they named is how the second and third defect survive.
-
-Final response for code changes: at most three short lines, what changed, the evidence (command and result), what remains unverified or risky, then the commit message.
 
 ## Debugging
 

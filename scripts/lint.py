@@ -583,7 +583,7 @@ VERIFY_CASES = [
     ([("prompt",), ("text", "Proposed commit:\n\nFix x")], False, False),
     ([("prompt",), ("text", "Fix x\n\nco-authored-by: Bot <b@x.io>")], True, False),
     ([("prompt",), ("text", "Co-Authored-By: Bot"), ("prompt",), ("text", "Done.")], False, False),
-    # Answer length is the remind hook's: a long answer ends the turn.
+    # Answer length is not checked: a long answer ends the turn.
     ([("prompt",), ("text", LONG_ANSWER)], False, False),
     ([("prompt",), ("text", " ".join(["word"] * 34))], False, False),
     ([("prompt",), ("text", MID_ANSWER)], False, False),
@@ -600,26 +600,6 @@ VERIFY_CASES = [
 ]
 
 
-def plugin_remind_hook_states_the_limit() -> list[str]:
-    # Every prompt gets the answer-length line as context, the same from every
-    # shell, so the limit holds without a Stop hook sending an answer back.
-    runtimes, found = hook_runtimes()
-    with tempfile.TemporaryDirectory() as scratch:
-        root = plugin_copy(scratch)
-        notes = set()
-        for runtime in runtimes:
-            run = run_hook(runtime, root, "remind", [], json.dumps({"prompt": "fix the bug"}))
-            try:
-                note = json.loads(run.stdout)["hookSpecificOutput"]["additionalContext"]
-            except (ValueError, KeyError):
-                found.append(f"{runtime[0]} remind hook printed no valid JSON: {run.stdout.strip()[:80]!r}")
-                continue
-            if run.returncode or "35 words" not in note:
-                found.append(f"{runtime[0]} remind hook exited {run.returncode} with {note[:60]!r}")
-            notes.add(note)
-        if len(notes) > 1:
-            found.append("the remind hooks say different things")
-    return found
 
 
 def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
@@ -934,7 +914,6 @@ GATES = [
      plugin_verify_hook_holds_unchecked_edits),
     ("the plugin survivors hook names and holds only what the turn left running",
      plugin_survivors_hook_names_what_the_turn_left_running),
-    ("the UserPromptSubmit hook states the answer limit", plugin_remind_hook_states_the_limit),
 ]
 
 

@@ -4,7 +4,7 @@
 # Co-Authored-By or session trailer in a proposed commit message, which the
 # shell guard never sees), or it edited files and ran no command after its last
 # edit. Exit 2 keeps the turn going and hands stderr to the agent. Answer length
-# is left to the remind hook: sending a long answer back pays for it twice.
+# is not checked: sending a long answer back pays for it twice.
 set -euo pipefail
 
 

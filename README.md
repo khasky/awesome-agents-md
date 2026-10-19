@@ -91,7 +91,6 @@ What the hooks do:
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.
 - `survivors` (with every prompt, after every shell command, and when the agent finishes) tracks the processes started under the agent during the turn: after a shell command it names those still running, and when the agent finishes it sends it back once while any are, to stop them or say why they stay. MCP and language servers started before the turn never count. A process whose parent already exited is no longer under the agent and is not seen.
-- `remind` (with every prompt) adds one line: answer in at most 35 words unless an explanation is asked for. Length is held by this line, not by sending an answer back, so no answer is paid for twice.
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI and Qwen Code get the core only, without hooks.
 
