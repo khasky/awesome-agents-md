@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -843,6 +844,65 @@ def plugin_subagent_hook_carries_the_hard_rules() -> list[str]:
     return found
 
 
+def plugin_survivors_hook_names_what_the_turn_left_running() -> list[str]:
+    # This process stands in for the agent: a child it started before the
+    # turn's start hook is never named, one started after is named by the
+    # PostToolUse report and holds the first Stop, and once it exits both go
+    # quiet. Each shell reads the baseline the others wrote, as the twins share
+    # one implementation per platform.
+    runtimes, found = hook_runtimes()
+    sleeper = [sys.executable, "-c", "import time; time.sleep(60)"]
+
+    def names(text: str, process: subprocess.Popen) -> bool:
+        return re.search(rf"(^|[(:;] ){process.pid} ", text) is not None
+
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        before = subprocess.Popen(sleeper)
+        try:
+            for runtime in runtimes:
+                run = run_hook(runtime, root, "survivors", ["start"], "{}")
+                if run.returncode or run.stdout.strip():
+                    found.append(f"{runtime[0]} survivors start exited {run.returncode}: "
+                                 f"{(run.stdout + run.stderr).strip()[:80]!r}")
+            during = subprocess.Popen(sleeper)
+            try:
+                # A process tree younger than a second counts as a hook running
+                # beside this one.
+                time.sleep(2.5)
+                for runtime in runtimes:
+                    run = run_hook(runtime, root, "survivors", ["after"], "{}")
+                    try:
+                        note = json.loads(run.stdout)["hookSpecificOutput"]["additionalContext"]
+                    except (ValueError, KeyError):
+                        note = ""
+                    if run.returncode or not names(note, during) or names(note, before):
+                        found.append(f"{runtime[0]} survivors after did not name only the process "
+                                     f"the turn started: exit {run.returncode} {run.stdout.strip()[:120]!r}")
+                    run = run_hook(runtime, root, "survivors", ["stop"],
+                                   json.dumps({"stop_hook_active": False}))
+                    if run.returncode != 2 or not names(run.stderr, during) or names(run.stderr, before):
+                        found.append(f"{runtime[0]} survivors stop did not hold the turn on the process "
+                                     f"it started: exit {run.returncode} {run.stderr.strip()[:120]!r}")
+                    run = run_hook(runtime, root, "survivors", ["stop"],
+                                   json.dumps({"stop_hook_active": True}))
+                    if run.returncode:
+                        found.append(f"{runtime[0]} survivors held the second stop: exit {run.returncode}")
+            finally:
+                during.kill()
+                during.wait()
+            for runtime in runtimes:
+                after = run_hook(runtime, root, "survivors", ["after"], "{}")
+                stop = run_hook(runtime, root, "survivors", ["stop"], json.dumps({"stop_hook_active": False}))
+                if after.returncode or after.stdout.strip() or stop.returncode:
+                    found.append(f"{runtime[0]} survivors spoke after the process exited: exit "
+                                 f"{after.returncode}/{stop.returncode} {(after.stdout + stop.stderr).strip()[:120]!r}")
+        finally:
+            before.kill()
+            before.wait()
+    return found
+
+
 GATES = [
     (f"core {CORE} stays under {CORE_LINE_LIMIT} instruction lines", core_under_line_limit),
     (f"core {CORE} stays under {CORE_BYTE_LIMIT} bytes", core_under_byte_limit),
@@ -872,6 +932,8 @@ GATES = [
      plugin_subagent_hook_carries_the_hard_rules),
     ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
      plugin_verify_hook_holds_unchecked_edits),
+    ("the plugin survivors hook names and holds only what the turn left running",
+     plugin_survivors_hook_names_what_the_turn_left_running),
     ("the UserPromptSubmit hook states the answer limit", plugin_remind_hook_states_the_limit),
 ]
 
