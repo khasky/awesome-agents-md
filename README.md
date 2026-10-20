@@ -82,7 +82,7 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 
 What the hooks do:
 
-- `guard` (before every shell command) blocks printing the environment or a secret variable. When you do want one of these, run it yourself in a terminal. A `git push`, a `git commit`, a commit carrying a `Co-Authored-By` trailer and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. A command it cannot read goes to you as well.
+- `guard` (before every shell command) blocks, the way Anthropic's `bash_command_validator` example does, every command on its rule table: printing the environment or a secret variable, a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, a skip of git hooks (`--no-verify`, a `core.hooksPath` override), `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. When you do want one of these, run it yourself in a terminal. A `git push` and a commit whose `Co-Authored-By` trailer names an AI agent (by its bot account, signing address or name; a human co-author passes) it hands to you to approve or reject, and so is a command it cannot read.
 - `subagent` (when a subagent starts) gives it the core's Boundaries, Security and Verification sections, which it would otherwise run without.
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Gemini CLI and Qwen Code get the core only, without hooks.

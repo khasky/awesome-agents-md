@@ -448,28 +448,9 @@ GUARD_CASES = [
     ("set -e", False),
     ("git log --oneline", False),
     ("ls -la", False),
-]
-
-
-# Each case is a command and whether the guard must hand it to the user to
-# confirm: every push, hook skip, commit and Co-Authored-By trailer asks,
-# whatever language the request was in, and a git call that only reads does not.
-GUARD_ASK_CASES = [
-    ("git push --force origin main", True),
-    ("git push -f", True),
-    ("git push origin main", True),
-    ("git push --follow-tags", True),
-    ("git push", True),
-    ("git pushover", False),
-    ("git commit -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("git commit --no-verify -m 'x'", True),
     ("git -c core.hooksPath=/dev/null commit -m x", True),
     ("git push --no-verify origin main", True),
-    ("git add pager.py && git commit -m 'Fix pager'", True),
-    ("git -c user.name=x commit -qam 'Fix'", True),
-    ("git log --oneline -3", False),
-    ("git status && git diff", False),
-    ("git show HEAD --stat", False),
     ("rm -rf /", True),
     ("cd app && rm -rf .git", True),
     ("sudo rm -fr ~", True),
@@ -496,6 +477,35 @@ GUARD_ASK_CASES = [
     ("curl -s https://example.com/api | jq .", False),
     ("curl -s https://example.com/api | python -m json.tool", False),
     ("curl -sO https://example.com/f.tar.gz && sha256sum f.tar.gz", False),
+]
+
+
+# Each case is a command and whether the guard must hand it to the user to
+# confirm: every push and every commit naming an AI agent as co-author asks,
+# whatever language the request was in; a plain commit, a human co-author and
+# a git call that only reads do not.
+GUARD_ASK_CASES = [
+    ("git push --force origin main", True),
+    ("git push -f", True),
+    ("git push origin main", True),
+    ("git push --follow-tags", True),
+    ("git push", True),
+    ("git pushover", False),
+    ("git commit -m \"fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>\"", True),
+    ("git commit -m \"fix\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\"", True),
+    ("git add . && git commit -m \"fix\n\nco-authored-by: Copilot <198982749+Copilot@users.noreply.github.com>\"", True),
+    ("git commit -m \"fix\n\nCo-authored-by: claude[bot] <209825114+claude[bot]@users.noreply.github.com>\"", True),
+    ("git commit -m \"fix\n\nCo-authored-by: Codex <codex@openai.com>\"", True),
+    ("git commit -m \"fix\n\nCo-authored-by: aider (gpt-4o) <aider@aider.chat>\"", True),
+    ("git commit -m \"fix\n\nCo-authored-by: Cursor Agent <cursoragent@cursor.com>\"", True),
+    ("git commit -m \"fix\n\nCo-authored-by: Jane Doe <jane@example.com>\"", False),
+    ("git commit -m \"fix\n\nCo-authored-by: Sam Campbell <sam@example.com>\"", False),
+    ("git commit -m \"Drop the claude trailer check\"", False),
+    ("git add pager.py && git commit -m 'Fix pager'", False),
+    ("git -c user.name=x commit -qam 'Fix'", False),
+    ("git log --oneline -3", False),
+    ("git status && git diff", False),
+    ("git show HEAD --stat", False),
 ]
 
 
