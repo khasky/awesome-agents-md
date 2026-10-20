@@ -37,9 +37,8 @@ README.md        # setup and optional tooling (this file)
 llms.txt         # index of the core and every module for LLM consumption —
                  # CI keeps it two-way synced with rules/
 hooks/           # plugin-hooks.json and the hook scripts: load-core and facts (SessionStart),
-                 # subagent (SubagentStart), guard and protect (PreToolUse), shape and survivors
-                 # (PostToolUse, UserPromptSubmit), verify and survivors (Stop); each ships as
-                 # .sh (Claude Code) and .ps1 (Codex on Windows)
+                 # subagent (SubagentStart), guard and protect (PreToolUse), shape (PostToolUse),
+                 # verify (Stop); each ships as .sh (Claude Code) and .ps1 (Codex on Windows)
 .claude-plugin/  # plugin.json and marketplace.json for the Claude Code plugin; Codex reads the
                  # marketplace too
 .codex-plugin/   # plugin.json for the Codex plugin
@@ -89,7 +88,6 @@ What the hooks do:
 - `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is held to what the request names and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
 - `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
 - `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.
-- `survivors` (with every prompt, after every shell command, and when the agent finishes) tracks the processes started under the agent during the turn: after a shell command it names those still running, and when the agent finishes it sends it back once while any are, to stop them or say why they stay. MCP and language servers started before the turn never count. A process whose parent already exited is no longer under the agent and is not seen.
 
 Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI and Qwen Code get the core only, without hooks.
 
