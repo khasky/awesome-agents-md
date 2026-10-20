@@ -51,19 +51,18 @@ if (Test-Command "$start\`$env:$secret\s*($|[;|)])|(echo|printf|print|Write-Host
   Block 'printing a secret variable. Its value enters the transcript: test that it is set ([ -n "$X" ], Test-Path env:X) instead of printing it.'
 }
 
-if ((Test-Command 'git\s[^;&|]*commit') -and (Test-Command 'Co-Authored-By|Claude-Session|claude\.ai/code/session')) {
-  Block 'an assistant trailer or session link in a commit. Commits carry no assistant trace: drop the trailer and the link.'
-}
-
 function Ask([string]$reason) {
   [Console]::Out.WriteLine('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: ' + $reason + '"}}')
 }
 
-# Force-pushing, skipping git hooks and committing are the user's call. Whether
-# a prompt asked for one cannot be read from its words in every language, so
-# the user confirms the call itself. They come after the blocks, which win.
-if (Test-Command 'git\s[^;&|]*push[^;&|]*\s(--force|-[A-Za-z0-9]*f[A-Za-z0-9]*(\s|$)|\+[^\s;&|])') {
-  Ask 'this force-pushes and rewrites remote history. Approve only if you asked for it.'
+# Pushing, a commit carrying a Co-Authored-By trailer, skipping git hooks and
+# committing are the user's call. Whether a prompt asked for one cannot be read
+# from its words in every language, so the user confirms the call itself. They
+# come after the blocks, which win.
+if ((Test-Command 'git\s[^;&|]*commit') -and (Test-Command 'Co-Authored-By')) {
+  Ask 'this commit carries a Co-Authored-By trailer. Commits carry no assistant trace: approve only if you asked for it.'
+} elseif (Test-Command 'git\s[^;&|]*push(\s|$)') {
+  Ask 'this pushes to a remote. Approve only if you asked for it.'
 } elseif (Test-Command 'git\s[^;&|]*(--no-verify|core\.hooksPath)') {
   Ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
 # Destructive commands only on the targets nothing can restore: a recursive

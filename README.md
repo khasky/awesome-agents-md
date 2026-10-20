@@ -36,9 +36,9 @@ rules/           # on-demand modules, read only when the task matches; rules/IND
 README.md        # setup and optional tooling (this file)
 llms.txt         # index of the core and every module for LLM consumption —
                  # CI keeps it two-way synced with rules/
-hooks/           # plugin-hooks.json and the hook scripts: load-core and facts (SessionStart),
-                 # subagent (SubagentStart), guard and protect (PreToolUse), shape (PostToolUse),
-                 # verify (Stop); each ships as .sh (Claude Code) and .ps1 (Codex on Windows)
+hooks/           # plugin-hooks.json and the hook scripts: load-core (SessionStart),
+                 # subagent (SubagentStart), guard (PreToolUse); each ships as .sh (Claude Code)
+                 # and .ps1 (Codex on Windows)
 .claude-plugin/  # plugin.json and marketplace.json for the Claude Code plugin; Codex reads the
                  # marketplace too
 .codex-plugin/   # plugin.json for the Codex plugin
@@ -82,14 +82,10 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 
 What the hooks do:
 
-- `guard` (before every shell command) blocks printing the environment or a secret variable, and a commit carrying a `Co-Authored-By` or session trailer. When you do want one of these, run it yourself in a terminal. A `git commit`, a force-push and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. A command it cannot read goes to you as well.
-- `protect` (before a file edit) hands you an edit to an existing check configuration (lint, format, type check, test runner, git hooks, CI workflows) or to a file that constrains the agent (`AGENTS.md`, `CLAUDE.md`, `.claude/settings*.json`, `.gitignore`). Creating one of these files goes through.
+- `guard` (before every shell command) blocks printing the environment or a secret variable. When you do want one of these, run it yourself in a terminal. A `git push`, a `git commit`, a commit carrying a `Co-Authored-By` trailer and a skip of git hooks (`--no-verify`, a `core.hooksPath` override) it hands to you to approve or reject, and so are the destructive commands nothing restores: a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. A command it cannot read goes to you as well.
 - `subagent` (when a subagent starts) gives it the core's Boundaries, Security and Verification sections, which it would otherwise run without.
-- `shape` (after a file is written or edited) adds one line in the flow of the work: a source file just created is held to what the request names and proved with one run; a code edit in a repository with tests is proved with them, named with a command that runs there.
-- `facts` (at session start) states how the repository's tests run here and, on Windows, which syntax each shell tool takes, so no command fails once to find out.
-- `verify` (when the agent finishes) sends it back once, for the first of: an assistant trailer in its reply; an edit to code no command followed.
 
-Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Codex passes no session transcript to the `Stop` hook, so `verify` does nothing there. Gemini CLI and Qwen Code get the core only, without hooks.
+Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Gemini CLI and Qwen Code get the core only, without hooks.
 
 Every other agent takes the manual import below. GitHub Copilot CLI installs the plugin, but it reads only a JSON `additionalContext` from a session-start hook and `load-core` prints plain text, so the core would not reach the session. Antigravity CLI installs the repository from a clone (`agy plugin install <clone>` reads `gemini-extension.json`), but loads nothing from it: no context file, no hooks. Its own plugin format would read `rules/` as always-on rules, so it is not offered. Cursor's Agent Plugins format carries only skills and MCP servers. Kilo Code's plugins are npm code modules.
 

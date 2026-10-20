@@ -425,14 +425,12 @@ def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
 # through (False). Each allowed one sits next to a blocked pattern: a neighbour
 # that trips the guard would stall ordinary work.
 GUARD_CASES = [
-    ("git commit --no-verify -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("printenv", True),
     ("env | grep KEY", True),
     ("cd app && set", True),
     ("declare -p", True),
     ("cat /proc/1/environ", True),
     ("Get-ChildItem env:", True),
-    ("git commit -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("$env:PAYMENTS_API_KEY; $env:DATABASE_URL", True),
     ("echo $API_KEY", True),
     ("Write-Host $env:GITHUB_TOKEN", True),
@@ -454,15 +452,16 @@ GUARD_CASES = [
 
 
 # Each case is a command and whether the guard must hand it to the user to
-# confirm: every force-push, hook skip and commit asks, whatever language the
-# request was in, and a plain push or a git call that only reads does not.
+# confirm: every push, hook skip, commit and Co-Authored-By trailer asks,
+# whatever language the request was in, and a git call that only reads does not.
 GUARD_ASK_CASES = [
     ("git push --force origin main", True),
-    ("git push --force-with-lease", True),
     ("git push -f", True),
-    ("git push origin +main", True),
-    ("git push origin main", False),
-    ("git push --follow-tags", False),
+    ("git push origin main", True),
+    ("git push --follow-tags", True),
+    ("git push", True),
+    ("git pushover", False),
+    ("git commit -m \"fix\n\nCo-Authored-By: Bot <bot@example.com>\"", True),
     ("git commit --no-verify -m 'x'", True),
     ("git -c core.hooksPath=/dev/null commit -m x", True),
     ("git push --no-verify origin main", True),
@@ -539,93 +538,6 @@ def plugin_guard_blocks_what_it_names() -> list[str]:
     return found
 
 
-def transcript_line(kind: str, name: str = "") -> str:
-    # Key order as Claude Code writes a session record: the message first, the
-    # record's own "type" after it. A hook pattern that assumes the other order
-    # passes a hand-built transcript and misses every real one.
-    if kind == "prompt":
-        record = {"message": {"role": "user", "content": name or "fix it"}, "type": "user"}
-    elif kind == "result":
-        record = {"message": {"role": "user", "content": [
-            {"type": "tool_result", "tool_use_id": "t", "content": name or "ok"}]}, "type": "user"}
-    elif kind == "text":
-        record = {"message": {"role": "assistant", "content": [
-            {"type": "text", "text": name}]}, "type": "assistant"}
-    else:
-        tool, _, target = name.partition(":")
-        tool_input = {"file_path": "C:\\repo\\" + (target or "pager.py")} if tool in (
-            "Edit", "Write", "MultiEdit", "NotebookEdit") else {}
-        record = {"message": {"role": "assistant", "content": [
-            {"type": "tool_use", "id": "t", "name": tool, "input": tool_input}]}, "type": "assistant"}
-    return json.dumps(record, separators=(",", ":"))
-
-
-MID_ANSWER = ("The bug was in the range bound of paginate, which stopped one item early, "
-              "so I changed it to run to the end of the list and then checked every page "
-              "size I could think of, and all of them now include the final item as expected.")
-LONG_ANSWER = MID_ANSWER + " " + MID_ANSWER
-
-# Each case is a turn as the session transcript records it, whether the Stop
-# hook must send the agent back (True), and whether this is the second stop.
-VERIFY_CASES = [
-    ([("prompt",), ("tool", "Edit"), ("result",)], False, True),
-    ([("prompt",), ("tool", "Edit"), ("result",), ("tool", "Bash"), ("result",)], False, False),
-    ([("prompt",), ("tool", "Bash"), ("result",), ("tool", "Write"), ("result",)], False, True),
-    ([("prompt",), ("tool", "Edit"), ("result",)], True, False),
-    ([("prompt",), ("tool", "Edit"), ("result",), ("prompt",), ("tool", "Read"), ("result",)],
-     False, False),
-    ([("prompt",), ("tool", "Read"), ("result",)], False, False),
-    # A proposed commit message with an assistant trailer, which no shell guard
-    # sees; the same reply clean; the second stop; a trailer from an older turn.
-    ([("prompt",), ("text", "Proposed commit:\n\nFix x\n\nCo-Authored-By: Bot <b@x.io>")],
-     False, True),
-    ([("prompt",), ("text", "Proposed commit:\n\nFix x")], False, False),
-    ([("prompt",), ("text", "Fix x\n\nco-authored-by: Bot <b@x.io>")], True, False),
-    ([("prompt",), ("text", "Co-Authored-By: Bot"), ("prompt",), ("text", "Done.")], False, False),
-    # Answer length is not checked: a long answer ends the turn.
-    ([("prompt",), ("text", LONG_ANSWER)], False, False),
-    ([("prompt",), ("text", " ".join(["word"] * 34))], False, False),
-    ([("prompt",), ("text", MID_ANSWER)], False, False),
-    ([("prompt", "explain why the test failed"), ("text", LONG_ANSWER)], False, False),
-    ([("prompt",), ("text", "Fixed, 2/2 pass.\n\n**Commit message:**\n```\nFix x\n\n" + LONG_ANSWER
-                  + "\n```\n- pager.py")], False, False),
-    ([("prompt",), ("text", "Fixed.\n```python\n" + LONG_ANSWER + "\n```")],
-     False, False),
-    ([("prompt",), ("text", " ".join(["слово"] * 70))], False, False),
-    ([("prompt", "объясни, почему упал тест"), ("text", " ".join(["слово"] * 70))], False, False),
-    ([("prompt",), ("text", LONG_ANSWER)], True, False),
-    # An edit to a changelog or a note needs no check after it.
-    ([("prompt",), ("tool", "Edit:CHANGELOG.md"), ("result",), ("text", "Done.")], False, False),
-]
-
-
-
-
-def plugin_verify_hook_holds_unchecked_edits() -> list[str]:
-    # Runs the real Stop hooks against a transcript file they read the way
-    # Claude Code hands it over: the path in the JSON payload on stdin.
-    runtimes, found = hook_runtimes()
-    with tempfile.TemporaryDirectory() as scratch:
-        root = plugin_copy(scratch)
-        transcript = root / "session log.jsonl"
-        for runtime in runtimes:
-            for turn, second_stop, expect_block in VERIFY_CASES:
-                transcript.write_text("\n".join(transcript_line(*step) for step in turn)
-                                      + "\n", encoding="utf-8")
-                payload = json.dumps({"transcript_path": str(transcript),
-                                      "stop_hook_active": second_stop})
-                run = run_hook(runtime, root, "verify", [], payload)
-                steps = " > ".join(step[-1][:20] for step in turn)
-                if run.returncode not in (0, 2):
-                    found.append(f"{runtime[0]} Stop hook crashed on {steps}: exit "
-                                 f"{run.returncode} {run.stderr.strip()}")
-                elif (run.returncode == 2) != expect_block:
-                    verdict = "let the agent stop after" if expect_block else "held the agent after"
-                    found.append(f"{runtime[0]} Stop hook {verdict} {steps}"
-                                 + (" (second stop)" if second_stop else ""))
-    return found
-
-
 # Claude Code keeps a hook's output inline only below a size limit and shows a
 # longer one as a short preview plus a file path, so the core goes out in parts.
 HOOK_OUTPUT_LIMIT = 9500
@@ -676,116 +588,6 @@ def plugin_loads_whole_core() -> list[str]:
                          out.split("\n\n", 1)[1]).strip("\n") for out in reference]
         if reference and "\n\n".join(bodies) != read(CORE).replace("\r\n", "\n").strip("\n"):
             found.append(f"the SessionStart parts do not rebuild {CORE}")
-    return found
-
-
-def hook_repo(scratch: str) -> pathlib.Path:
-    # A git repository with a Python test file, under a path with a space.
-    repo = pathlib.Path(scratch) / "repo with space"
-    repo.mkdir()
-    (repo / "pager.py").write_text("x = 1\n", encoding="utf-8")
-    (repo / "test_pager.py").write_text("import pager\n", encoding="utf-8")
-    (repo / "big.py").write_text("".join(f"x{i} = {i}\n" for i in range(70)), encoding="utf-8")
-    subprocess.run(["git", "init", "-q"], cwd=repo, check=True, env=FIXTURE_ENV)
-    subprocess.run(["git", "add", "pager.py", "test_pager.py"], cwd=repo, check=True, env=FIXTURE_ENV)
-    return repo
-
-
-def plugin_shape_hook_guides_in_flow() -> list[str]:
-    # Each case: the tool call, the file, and the phrase the guidance must
-    # carry, or None for silence. Every shell must say the same.
-    runtimes, found = hook_runtimes()
-    with tempfile.TemporaryDirectory() as scratch:
-        root = plugin_copy(scratch)
-        repo = hook_repo(scratch)
-        cases = [("Edit", "update", repo / "pager.py", "has tests (test_pager.py)"),
-                 ("Write", "create", repo / "big.py", "builds only what it names"),
-                 ("Write", "update", repo / "big.py", "has tests (test_pager.py)"),
-                 ("Write", "create", repo / "test_extra.py", None),
-                 ("Edit", "update", repo / "notes.md", None)]
-        for tool, kind, file, phrase in cases:
-            payload = json.dumps({"tool_name": tool, "tool_input": {"file_path": str(file)},
-                                  "tool_response": {"type": kind, "filePath": str(file)}})
-            outputs = set()
-            for runtime in runtimes:
-                run = run_hook(runtime, root, "shape", [], payload)
-                note = ""
-                if run.returncode:
-                    found.append(f"{runtime[0]} shape hook exited {run.returncode} on {tool} {file.name}")
-                elif run.stdout.strip():
-                    try:
-                        note = json.loads(run.stdout)["hookSpecificOutput"]["additionalContext"]
-                    except (ValueError, KeyError):
-                        found.append(f"{runtime[0]} shape hook printed no valid JSON on {file.name}")
-                if (phrase is None) != (note == "") or (phrase and phrase not in note):
-                    found.append(f"{runtime[0]} shape hook on {tool} {kind} {file.name}: {note[:60]!r}")
-                outputs.add(note)
-            if len(outputs) > 1:
-                found.append(f"the shape hooks say different things on {tool} {file.name}")
-    return found
-
-
-def plugin_facts_hook_names_the_runner() -> list[str]:
-    runtimes, found = hook_runtimes()
-    with tempfile.TemporaryDirectory() as scratch:
-        root = plugin_copy(scratch)
-        repo = hook_repo(scratch)
-        for runtime in runtimes:
-            _, launcher, suffix = runtime
-            run = subprocess.run([*launcher, str(root / "hooks" / f"facts{suffix}")], input="{}",
-                                 capture_output=True, text=True, encoding="utf-8", cwd=repo,
-                                 env=FIXTURE_ENV)
-            if run.returncode or "test_pager.py) run with `python -m" not in run.stdout:
-                found.append(f"{runtime[0]} facts hook does not name the test runner: "
-                             f"exit {run.returncode} {run.stdout.strip()[:80]!r}")
-    return found
-
-
-# Each case: the file an edit touches, whether it exists before the edit, and
-# whether the protect hook must hand the edit to the user.
-PROTECT_CASES = [
-    (".eslintrc.json", True, True),
-    ("eslint.config.js", True, True),
-    ("ruff.toml", True, True),
-    (".pre-commit-config.yaml", True, True),
-    (".github/workflows/ci.yml", True, True),
-    ("AGENTS.md", True, True),
-    (".claude/settings.json", True, True),
-    (".gitignore", True, True),
-    ("ruff.toml", False, False),
-    ("pager.py", True, False),
-    ("README.md", True, False),
-    ("docs/eslint-notes.md", True, False),
-]
-
-
-def plugin_protect_hook_asks_before_check_edits() -> list[str]:
-    # An edit to an existing check configuration or instruction file asks; a
-    # new one, and every other file, goes through. Claude Code's file_path and
-    # Codex's apply_patch both name the file.
-    runtimes, found = hook_runtimes()
-    with tempfile.TemporaryDirectory() as scratch:
-        root = plugin_copy(scratch)
-        repo = pathlib.Path(scratch) / "repo with space"
-        repo.mkdir()
-        for path, exists, expect_ask in PROTECT_CASES:
-            target = repo / path
-            if exists:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text("x\n", encoding="utf-8")
-            payloads = [json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(target)}}),
-                        json.dumps({"tool_name": "apply_patch", "tool_input": {
-                            "command": f"*** Begin Patch\n*** Update File: {path}\n@@\n-x\n+y\n*** End Patch"}})]
-            for payload in payloads:
-                for runtime in runtimes:
-                    run = run_hook(runtime, root, "protect", [], payload, cwd=repo)
-                    asked = run.returncode == 0 and '"permissionDecision":"ask"' in run.stdout.replace(" ", "")
-                    if run.returncode or asked != expect_ask:
-                        verdict = "did not ask about" if expect_ask else "asked about"
-                        found.append(f"{runtime[0]} protect hook {verdict} {path} "
-                                     f"({json.loads(payload)['tool_name']}, exit {run.returncode})")
-            if exists:
-                target.unlink()
     return found
 
 
@@ -843,15 +645,8 @@ GATES = [
     ("the plugin SessionStart hooks deliver the whole core under the output limit",
      plugin_loads_whole_core),
     ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),
-    ("the plugin shape hook guides a created or edited file, the same in every shell",
-     plugin_shape_hook_guides_in_flow),
-    ("the plugin facts hook names how the repository's tests run", plugin_facts_hook_names_the_runner),
-    ("the plugin protect hook asks before an edit to a check or instruction file",
-     plugin_protect_hook_asks_before_check_edits),
     ("the plugin SubagentStart hook carries Boundaries, Security and Verification",
      plugin_subagent_hook_carries_the_hard_rules),
-    ("the plugin Stop hook holds unchecked edits and traced replies, once per turn",
-     plugin_verify_hook_holds_unchecked_edits),
 ]
 
 

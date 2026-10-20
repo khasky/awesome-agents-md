@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# PreToolUse guard for shell tools: blocks the commands the core Boundaries,
-# Security and Commits rules forbid outright, and asks the user to confirm the
-# ones that are only theirs to allow, so neither depends on the model
-# remembering them. Exit 2 blocks the call and hands stderr to the agent as the
-# reason.
+# PreToolUse guard for shell tools: blocks the commands the core Security rules
+# forbid outright, and asks the user to confirm the ones that are only theirs
+# to allow (a push, a commit, a Co-Authored-By trailer, a destructive command),
+# so neither depends on the model remembering them. Exit 2 blocks the call and
+# hands stderr to the agent as the reason.
 set -euo pipefail
 
 payload=$(cat)
@@ -53,19 +53,18 @@ if matches "${start}\\\$env:${secret}[[:space:]]*(\$|[;|)])|(echo|printf|print|W
   block 'printing a secret variable. Its value enters the transcript: test that it is set ([ -n "$X" ], Test-Path env:X) instead of printing it.'
 fi
 
-if matches 'git[[:space:]][^;&|]*commit' && matches 'Co-Authored-By|Claude-Session|claude\.ai/code/session'; then
-  block 'an assistant trailer or session link in a commit. Commits carry no assistant trace: drop the trailer and the link.'
-fi
-
 ask() {
   printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: %s"}}\n' "$1"
 }
 
-# Force-pushing, skipping git hooks and committing are the user's call. Whether
-# a prompt asked for one cannot be read from its words in every language, so
-# the user confirms the call itself. They come after the blocks, which win.
-if matches "git[[:space:]][^;&|]*push[^;&|]*[[:space:]](--force|-[[:alnum:]]*f[[:alnum:]]*([[:space:]]|$)|\+[^[:space:];&|])"; then
-  ask 'this force-pushes and rewrites remote history. Approve only if you asked for it.'
+# Pushing, a commit carrying a Co-Authored-By trailer, skipping git hooks and
+# committing are the user's call. Whether a prompt asked for one cannot be read
+# from its words in every language, so the user confirms the call itself. They
+# come after the blocks, which win.
+if matches 'git[[:space:]][^;&|]*commit' && matches 'Co-Authored-By'; then
+  ask 'this commit carries a Co-Authored-By trailer. Commits carry no assistant trace: approve only if you asked for it.'
+elif matches 'git[[:space:]][^;&|]*push([[:space:]]|$)'; then
+  ask 'this pushes to a remote. Approve only if you asked for it.'
 elif matches 'git[[:space:]][^;&|]*(--no-verify|core\.hooksPath)'; then
   ask 'this skips git hooks. A failing hook is a check: approve only if you asked to bypass it.'
 # Destructive commands only on the targets nothing can restore: a recursive
