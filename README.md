@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Emojery](https://api.emojery.app/badge/github/khasky/awesome-agents-md.svg)](https://emojery.app/react?t=github/khasky/awesome-agents-md)
 
-A ruleset written in the [AGENTS.md](https://agents.md) format, with shared rules for AI coding agents: Claude Code, OpenAI Codex, Gemini, Cursor, plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
+A ruleset written in the [AGENTS.md](https://agents.md) format, with shared rules for AI coding agents: Claude Code, OpenAI Codex, Gemini, Kimi Code, Cursor, plus optional rule modules in `rules/` that load on demand. Clone once, import it globally into every agent you use.
 
 The always-loaded core covers: concise token-efficient communication, a coding discipline that stops at the first rung that holds (smallest correct diff, no speculative abstractions), a hard verification gate before any "done" claim, and a commit-proposal habit with no assistant traces. The procedure for larger work (assumptions, plans, the last pass before "done", debugging) loads from `rules/workflow.md` when the task calls for it, so the always-loaded part stays under 10 KB. On-demand modules in `rules/` extend it — commit messages that inherit the target repo's own convention, backend security, databases, caching, resilience, deployment and infrastructure definitions, payments, and more.
 
@@ -44,6 +44,7 @@ hooks/           # plugin-hooks.json and the hook scripts: load-core (SessionSta
 .codex-plugin/   # plugin.json for the Codex plugin
 gemini-extension.json  # the Gemini CLI extension: loads AGENTS.md as a context file, no hooks
 qwen-extension.json    # the same for Qwen Code
+kimi.plugin.json        # the Kimi Code plugin: loads AGENTS.md into the system prompt
 scripts/         # lint.py — every gate above, run by CI and by the optional
                  # pre-commit hook that install-hooks.py sets up
 evals/           # benchmark/ runs this ruleset and five other plugins on the same
@@ -62,6 +63,7 @@ One of the agents, installed by its own instructions:
 - [Codex](https://developers.openai.com/codex/cli)
 - [Gemini CLI](https://geminicli.com/docs/get-started/installation/)
 - [Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/quickstart/)
+- [Kimi Code](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started)
 - [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli)
 - [Kilo Code CLI](https://kilo.ai/docs/cli)
 - [Antigravity CLI](https://antigravity.google/docs/cli/install)
@@ -71,7 +73,7 @@ One of the agents, installed by its own instructions:
 
 ## Install as a plugin
 
-The plugin loads `AGENTS.md` at session start and adds the hooks that turn the rules an agent most often breaks into hard checks. Pick the plugin or the manual import, not both: both put the core in context twice.
+The plugin loads `AGENTS.md` into the agent's instructions. Claude Code and Codex also get hooks that turn the rules an agent most often breaks into hard checks. Pick the plugin or the manual import, not both: both put the core in context twice.
 
 | Agent | Install | Update | Uninstall |
 |---|---|---|---|
@@ -79,13 +81,14 @@ The plugin loads `AGENTS.md` at session start and adds the hooks that turn the r
 | Codex | `codex plugin marketplace add khasky/awesome-agents-md`, then `codex plugin add awesome-agents-md@awesome-agents-md` | `codex plugin marketplace upgrade awesome-agents-md`, then the `add` again | `codex plugin remove awesome-agents-md@awesome-agents-md` |
 | Gemini CLI | `gemini extensions install https://github.com/khasky/awesome-agents-md` (add `--auto-update` to follow the repository) | `gemini extensions update awesome-agents-md` | `gemini extensions uninstall awesome-agents-md` |
 | Qwen Code | `qwen extensions install https://github.com/khasky/awesome-agents-md` | `qwen extensions update awesome-agents-md` | `qwen extensions uninstall awesome-agents-md` |
+| Kimi Code | `/plugins install https://github.com/khasky/awesome-agents-md/tree/main`, then `/reload` | Reinstall from the same URL, then `/reload` | `/plugins remove awesome-agents-md` |
 
 What the hooks do:
 
 - `guard` (before every shell command) blocks, the way Anthropic's `bash_command_validator` example does, every command on its rule table: printing the environment or a secret variable, a recursive delete of `/`, `~`, `.` or `.git`, `git reset --hard`, `git clean -f`, a skip of git hooks (`--no-verify`, a `core.hooksPath` override), `DROP`/`TRUNCATE` or `DELETE` without `WHERE`, and a downloaded script piped into a shell. When you do want one of these, run it yourself in a terminal. A `git push` and a commit whose `Co-Authored-By` trailer names an AI agent (by its bot account, signing address or name; a human co-author passes) it hands to you to approve or reject, and so is a command it cannot read.
 - `subagent` (when a subagent starts) gives it the core's Boundaries, Security and Verification sections, which it would otherwise run without.
 
-Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Gemini CLI and Qwen Code get the core only, without hooks.
+Codex runs the hooks only after you trust them: the next interactive `codex` start lists them under "Hooks need review". Gemini CLI, Qwen Code and Kimi Code get the core only, without hooks. Kimi Code loads it through `systemPromptPath` in `kimi.plugin.json`; `/reload` applies the plugin to the session. The `tree/main` URL selects the branch because a plain repository URL selects the latest release first, which may predate this manifest.
 
 Every other agent takes the manual import below. GitHub Copilot CLI installs the plugin, but it reads only a JSON `additionalContext` from a session-start hook and `load-core` prints plain text, so the core would not reach the session. Antigravity CLI installs the repository from a clone (`agy plugin install <clone>` reads `gemini-extension.json`), but loads nothing from it: no context file, no hooks. Its own plugin format would read `rules/` as always-on rules, so it is not offered. Cursor's Agent Plugins format carries only skills and MCP servers. Kilo Code's plugins are npm code modules.
 

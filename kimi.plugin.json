@@ -1,0 +1,10 @@
+{
+  "name": "awesome-agents-md",
+  "description": "Shared AGENTS.md ruleset for Kimi Code CLI",
+  "license": "MIT",
+  "systemPromptPath": "./AGENTS.md",
+  "interface": {
+    "displayName": "Awesome AGENTS.md",
+    "shortDescription": "Shared rules for coding agents"
+  }
+}
