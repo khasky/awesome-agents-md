@@ -481,9 +481,10 @@ GUARD_CASES = [
 
 
 # Each case is a command and whether the guard must hand it to the user to
-# confirm: every push and every commit naming an AI agent as co-author asks,
-# whatever language the request was in; a plain commit, a human co-author and
-# a git call that only reads do not.
+# confirm: every push, every recursive delete and every commit naming an AI
+# agent as co-author asks, whatever language the request was in; a plain
+# commit, a human co-author, a single-file delete and a git call that only
+# reads do not.
 GUARD_ASK_CASES = [
     ("git push --force origin main", True),
     ("git push -f", True),
@@ -506,6 +507,15 @@ GUARD_ASK_CASES = [
     ("git log --oneline -3", False),
     ("git status && git diff", False),
     ("git show HEAD --stat", False),
+    ("rm -rf node_modules dist", True),
+    ("cd app && rm -r build", True),
+    ("Remove-Item D:\\repos\\github\\old -Recurse -Force -Confirm:$false", True),
+    ("Remove-Item -Recurse .\\dist", True),
+    ("rmdir /s /q build", True),
+    ("rm -f out.log", False),
+    ("Remove-Item -Force .\\out.log", False),
+    ("git rm -r --cached dist", False),
+    ("ls -R", False),
 ]
 
 

@@ -95,7 +95,11 @@ $askRules = @(
      Message = 'this commit names an AI agent as co-author. Commits carry no assistant trace: approve only if you asked for it.' },
   @{ Pattern = 'git\s[^;&|]*push(\s|$)'
      Also = ''
-     Message = 'this pushes to a remote. Approve only if you asked for it.' }
+     Message = 'this pushes to a remote. Approve only if you asked for it.' },
+  # Any other recursive delete: what it removes is not in git or any remote.
+  @{ Pattern = $start + '(sudo\s+)?(rm|rmdir|rd|del|erase|ri|Remove-Item)\s([^;&|]*\s)?(-[dfirv]*r[dfirv]*|--recursive|-rec[A-Za-z]*|/s)(\s|$|[;&|)])'
+     Also = ''
+     Message = 'this deletes a directory and everything in it. Approve only if you asked for it.' }
 )
 foreach ($rule in $askRules) {
   if ((Test-Command $rule.Pattern) -and (-not $rule.Also -or (Test-Command $rule.Also))) {

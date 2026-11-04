@@ -2,8 +2,9 @@
 # PreToolUse guard for shell tools, in the shape of Anthropic's
 # bash_command_validator example: a table of (pattern, message) rules run over
 # the command; every matching block rule is reported and exit 2 blocks the
-# call, with stderr handed to the agent as the reason. Two more rules ask the
-# user instead: a push, and a commit naming an AI agent as co-author.
+# call, with stderr handed to the agent as the reason. Three more rules ask the
+# user instead: a push, a commit naming an AI agent as co-author, and a
+# recursive delete.
 # Known ceiling: the patterns see the command text, not its syntax, so a
 # forbidden word inside a quoted argument matches too.
 set -euo pipefail
@@ -101,6 +102,10 @@ ask_rules=(
   'git[[:space:]][^;&|]*push([[:space:]]|$)'
   ''
   'this pushes to a remote. Approve only if you asked for it.'
+  # Any other recursive delete: what it removes is not in git or any remote.
+  "${start}"'(sudo[[:space:]]+)?(rm|rmdir|rd|del|erase|ri|Remove-Item)[[:space:]]([^;&|]*[[:space:]])?(-[dfirv]*r[dfirv]*|--recursive|-rec[[:alpha:]]*|/s)([[:space:]]|$|[;&|)])'
+  ''
+  'this deletes a directory and everything in it. Approve only if you asked for it.'
 )
 for ((i = 0; i < ${#ask_rules[@]}; i += 3)); do
   if matches "${ask_rules[i]}" && { [ -z "${ask_rules[i + 1]}" ] || matches "${ask_rules[i + 1]}"; }; then
