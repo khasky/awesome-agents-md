@@ -627,36 +627,51 @@ def plugin_loads_whole_core() -> list[str]:
 SUBAGENT_SECTIONS = ("## Boundaries", "## Security", "## Verification")
 
 
+def guard_reply(push: str, delete: str, news: str = "") -> str:
+    # The /awesome-agents-md:guard answer: what changed, if anything, then each
+    # switch with the command that flips it.
+    flip = {"on": "off", "off": "on"}
+    return "\n".join([
+        "awesome-agents-md guard:" + (f" {news}" if news else ""),
+        f"push prompt: {push} (/awesome-agents-md:guard push {flip[push]})",
+        f"recursive-delete prompt: {delete} (/awesome-agents-md:guard delete {flip[delete]})",
+    ])
+
+
 # One session in order, every step against the switch file the steps before it
-# left. A prompt step names the text the /awesome-agents-md:guard hook must
-# answer with (None: the prompt is not the command and passes untouched, a bare
+# left. A prompt step names the whole answer the /awesome-agents-md:guard hook
+# must give (None: the prompt is not the command and passes untouched, a bare
 # /guard of another plugin included); a command step says whether the guard
 # must ask (None: it must block). A switch turns off its own prompt and no
 # other, and no switch reaches a block rule or the co-author ask.
 GUARD_SWITCH_STEPS = [
-    ("prompt", "/awesome-agents-md:guard", "git push: on; ask before a recursive delete: on"),
+    ("prompt", "/awesome-agents-md:guard", guard_reply("on", "on")),
     ("command", "git push", True),
     ("prompt", "/guard push off", None),
     ("command", "git push", True),
-    ("prompt", "/awesome-agents-md:guard push off", "git push: off; ask before a recursive delete: on"),
+    ("prompt", "/awesome-agents-md:guard push off", guard_reply("off", "on", "push prompt turned off.")),
     ("command", "git push --force origin main", False),
     ("command", "rm -rf build", True),
     ("command", "git push --no-verify", None),
-    ("prompt", "/awesome-agents-md:guard delete off", "git push: off; ask before a recursive delete: off"),
+    ("prompt", "/awesome-agents-md:guard delete off",
+     guard_reply("off", "off", "recursive-delete prompt turned off.")),
     ("command", "rm -rf node_modules dist", False),
     ("command", "rmdir /s /q build", False),
     ("command", "rm -rf .git", None),
     ("command", "git commit -m \"fix\n\nCo-authored-by: Codex <codex@openai.com>\"", True),
+    ("prompt", "/awesome-agents-md:guard delete off",
+     guard_reply("off", "off", "recursive-delete prompt is already off.")),
     ("prompt", "<command-message>awesome-agents-md:guard</command-message>\n"
                "<command-name>/awesome-agents-md:guard</command-name>\n"
-               "<command-args>push on</command-args>", "git push: on; ask before a recursive delete: off"),
+               "<command-args>push on</command-args>", guard_reply("on", "off", "push prompt turned on.")),
     ("command", "git push", True),
     ("prompt", "<command-name>/guard</command-name><command-args>delete on</command-args>", None),
     ("command", "rm -r build", False),
-    ("prompt", "/awesome-agents-md:guard Delete ON", "git push: on; ask before a recursive delete: on"),
+    ("prompt", "/awesome-agents-md:guard", guard_reply("on", "off")),
+    ("prompt", "/awesome-agents-md:guard Delete ON", guard_reply("on", "on", "recursive-delete prompt turned on.")),
     ("command", "rm -r build", True),
     ("prompt", "/awesome-agents-md:guard push maybe",
-     "Usage: /awesome-agents-md:guard [push|delete] [on|off]. ask before git push: on"),
+     guard_reply("on", "on", "usage: /awesome-agents-md:guard [push|delete] [on|off].")),
     ("command", "git push", True),
     ("prompt", "/awesome-agents-md:guardian", None),
     ("prompt", "please run /awesome-agents-md:guard push off", None),
@@ -684,7 +699,7 @@ def plugin_guard_switch_turns_prompts_off_and_on() -> list[str]:
                             found.append(f"{runtime[0]} guard-switch answered {text!r}, which is not the command")
                         continue
                     answer = json.loads(run.stdout) if run.stdout.strip() else {}
-                    if answer.get("decision") != "block" or expect not in answer.get("reason", ""):
+                    if answer.get("decision") != "block" or answer.get("reason") != expect:
                         found.append(f"{runtime[0]} guard-switch answered {text!r} with {run.stdout.strip()!r}")
                     continue
                 payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": text}})

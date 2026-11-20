@@ -28,18 +28,33 @@ function Get-Switch([string]$name) {
   if ((Test-Path -LiteralPath $switchFile) -and @(Get-Content -LiteralPath $switchFile) -contains "$name=off") { 'off' } else { 'on' }
 }
 
-$words = @($argText.ToLowerInvariant() -split '\s+' | Where-Object { $_ })
-$note = ''
-if ($words.Count -eq 2 -and $words[0] -match '^(push|delete)$' -and $words[1] -match '^(on|off)$') {
-  $null = New-Item -ItemType Directory -Force -Path (Split-Path $switchFile)
-  $lines = @()
-  if (Test-Path -LiteralPath $switchFile) { $lines = @(Get-Content -LiteralPath $switchFile | Where-Object { $_ -ne "$($words[0])=off" }) }
-  if ($words[1] -eq 'off') { $lines += "$($words[0])=off" }
-  [IO.File]::WriteAllText("$switchFile.tmp", (($lines | ForEach-Object { "$_`n" }) -join ''))
-  Move-Item -Force -LiteralPath "$switchFile.tmp" -Destination $switchFile
-} elseif ($words.Count -ne 0) {
-  $note = 'Usage: /awesome-agents-md:guard [push|delete] [on|off]. '
+function Get-Label([string]$name) {
+  if ($name -eq 'push') { 'push' } else { 'recursive-delete' }
+}
+# One line per switch: its state and the command that flips it.
+function Get-Line([string]$name) {
+  $now = Get-Switch $name
+  $flip = if ($now -eq 'on') { 'off' } else { 'on' }
+  "$(Get-Label $name) prompt: $now (/awesome-agents-md:guard $name $flip)"
 }
 
-[Console]::Out.WriteLine('{"decision":"block","reason":"awesome-agents-md guard: ' + $note + 'ask before git push: ' + (Get-Switch 'push') + '; ask before a recursive delete: ' + (Get-Switch 'delete') + '. Switch with /awesome-agents-md:guard push off, /awesome-agents-md:guard delete off, and on to restore."}')
+$words = @($argText.ToLowerInvariant() -split '\s+' | Where-Object { $_ })
+$title = 'awesome-agents-md guard:'
+if ($words.Count -eq 2 -and $words[0] -match '^(push|delete)$' -and $words[1] -match '^(on|off)$') {
+  if ((Get-Switch $words[0]) -eq $words[1]) {
+    $title += " $(Get-Label $words[0]) prompt is already $($words[1])."
+  } else {
+    $null = New-Item -ItemType Directory -Force -Path (Split-Path $switchFile)
+    $lines = @()
+    if (Test-Path -LiteralPath $switchFile) { $lines = @(Get-Content -LiteralPath $switchFile | Where-Object { $_ -ne "$($words[0])=off" }) }
+    if ($words[1] -eq 'off') { $lines += "$($words[0])=off" }
+    [IO.File]::WriteAllText("$switchFile.tmp", (($lines | ForEach-Object { "$_`n" }) -join ''))
+    Move-Item -Force -LiteralPath "$switchFile.tmp" -Destination $switchFile
+    $title += " $(Get-Label $words[0]) prompt turned $($words[1])."
+  }
+} elseif ($words.Count -ne 0) {
+  $title += ' usage: /awesome-agents-md:guard [push|delete] [on|off].'
+}
+
+[Console]::Out.WriteLine('{"decision":"block","reason":"' + $title + '\n' + (Get-Line 'push') + '\n' + (Get-Line 'delete') + '"}')
 exit 0

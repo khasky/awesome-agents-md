@@ -33,21 +33,36 @@ state() {
   if grep -qxF "$1=off" "$switch_file" 2>/dev/null; then echo off; else echo on; fi
 }
 
+label() {
+  if [ "$1" = push ]; then echo push; else echo recursive-delete; fi
+}
+# One line per switch: its state and the command that flips it.
+line() {
+  local now flip
+  now=$(state "$1")
+  if [ "$now" = on ]; then flip=off; else flip=on; fi
+  printf '%s prompt: %s (/awesome-agents-md:guard %s %s)' "$(label "$1")" "$now" "$1" "$flip"
+}
+
 read -r -a words <<< "$(printf '%s' "$args" | tr '[:upper:]' '[:lower:]')"
 set -- ${words[@]+"${words[@]}"}
-note=''
+title='awesome-agents-md guard:'
 if [ $# -eq 2 ] && [[ $1 =~ ^(push|delete)$ ]] && [[ $2 =~ ^(on|off)$ ]]; then
-  mkdir -p "${switch_file%/*}"
-  others=$(grep -vxF "$1=off" "$switch_file" 2>/dev/null) || true
-  {
-    if [ -n "$others" ]; then printf '%s\n' "$others"; fi
-    if [ "$2" = off ]; then printf '%s=off\n' "$1"; fi
-  } > "$switch_file.tmp"
-  mv -f "$switch_file.tmp" "$switch_file"
+  if [ "$(state "$1")" = "$2" ]; then
+    title="$title $(label "$1") prompt is already $2."
+  else
+    mkdir -p "${switch_file%/*}"
+    others=$(grep -vxF "$1=off" "$switch_file" 2>/dev/null) || true
+    {
+      if [ -n "$others" ]; then printf '%s\n' "$others"; fi
+      if [ "$2" = off ]; then printf '%s=off\n' "$1"; fi
+    } > "$switch_file.tmp"
+    mv -f "$switch_file.tmp" "$switch_file"
+    title="$title $(label "$1") prompt turned $2."
+  fi
 elif [ $# -ne 0 ]; then
-  note='Usage: /awesome-agents-md:guard [push|delete] [on|off]. '
+  title="$title usage: /awesome-agents-md:guard [push|delete] [on|off]."
 fi
 
-printf '{"decision":"block","reason":"awesome-agents-md guard: %sask before git push: %s; ask before a recursive delete: %s. Switch with /awesome-agents-md:guard push off, /awesome-agents-md:guard delete off, and on to restore."}\n' \
-  "$note" "$(state push)" "$(state delete)"
+printf '{"decision":"block","reason":"%s\\n%s\\n%s"}\n' "$title" "$(line push)" "$(line delete)"
 exit 0
