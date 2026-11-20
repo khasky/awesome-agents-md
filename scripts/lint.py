@@ -412,6 +412,13 @@ FIXTURE_ENV = {key: value for key, value in os.environ.items()
                                             capture_output=True, text=True).stdout.split()}
 
 
+def scratch_home(path: pathlib.Path) -> dict[str, str]:
+    # The guard reads its switch file under the user's home, so a run against
+    # the real one would test whatever the user last switched off.
+    path.mkdir(parents=True, exist_ok=True)
+    return {"HOME": str(path), "USERPROFILE": str(path)}
+
+
 def run_hook(runtime: tuple[str, list[str], str], root: pathlib.Path, name: str,
              args: list[str], payload: str = "", env: dict[str, str] | None = None,
              cwd: pathlib.Path | None = None) -> subprocess.CompletedProcess:
@@ -477,6 +484,11 @@ GUARD_CASES = [
     ("curl -s https://example.com/api | jq .", False),
     ("curl -s https://example.com/api | python -m json.tool", False),
     ("curl -sO https://example.com/f.tar.gz && sha256sum f.tar.gz", False),
+    ("echo push=off > ~/.awesome-agents-md/guard", True),
+    ("Remove-Item -Recurse $env:USERPROFILE\\.awesome-agents-md", True),
+    ("cat \"$HOME/.awesome-agents-md/guard\"", True),
+    ("cd /d/repos/github/khasky/awesome-agents-md", False),
+    ("git clone https://github.com/khasky/awesome-agents-md.git", False),
 ]
 
 
@@ -540,9 +552,10 @@ def plugin_guard_blocks_what_it_names() -> list[str]:
         cases += [(json.dumps({"tool_name": "Bash", "tool_input": {"command": command}}),
                    repr(command), False, expect_ask) for command, expect_ask in GUARD_ASK_CASES]
         cases += [(raw, f"raw payload {raw[:40]!r}", False, expect_ask) for raw, expect_ask in GUARD_RAW_CASES]
+        env = scratch_home(pathlib.Path(scratch) / "home")
         for runtime in runtimes:
             for payload, label, expect_block, expect_ask in cases:
-                run = run_hook(runtime, root, "guard", [], payload)
+                run = run_hook(runtime, root, "guard", [], payload, env)
                 if run.returncode not in (0, 2):
                     found.append(f"{runtime[0]} guard crashed on {label}: exit "
                                  f"{run.returncode} {run.stderr.strip()}")
@@ -614,6 +627,86 @@ def plugin_loads_whole_core() -> list[str]:
 SUBAGENT_SECTIONS = ("## Boundaries", "## Security", "## Verification")
 
 
+# One session in order, every step against the switch file the steps before it
+# left. A prompt step names the text the /awesome-agents-md:guard hook must
+# answer with (None: the prompt is not the command and passes untouched, a bare
+# /guard of another plugin included); a command step says whether the guard
+# must ask (None: it must block). A switch turns off its own prompt and no
+# other, and no switch reaches a block rule or the co-author ask.
+GUARD_SWITCH_STEPS = [
+    ("prompt", "/awesome-agents-md:guard", "git push: on; ask before a recursive delete: on"),
+    ("command", "git push", True),
+    ("prompt", "/guard push off", None),
+    ("command", "git push", True),
+    ("prompt", "/awesome-agents-md:guard push off", "git push: off; ask before a recursive delete: on"),
+    ("command", "git push --force origin main", False),
+    ("command", "rm -rf build", True),
+    ("command", "git push --no-verify", None),
+    ("prompt", "/awesome-agents-md:guard delete off", "git push: off; ask before a recursive delete: off"),
+    ("command", "rm -rf node_modules dist", False),
+    ("command", "rmdir /s /q build", False),
+    ("command", "rm -rf .git", None),
+    ("command", "git commit -m \"fix\n\nCo-authored-by: Codex <codex@openai.com>\"", True),
+    ("prompt", "<command-message>awesome-agents-md:guard</command-message>\n"
+               "<command-name>/awesome-agents-md:guard</command-name>\n"
+               "<command-args>push on</command-args>", "git push: on; ask before a recursive delete: off"),
+    ("command", "git push", True),
+    ("prompt", "<command-name>/guard</command-name><command-args>delete on</command-args>", None),
+    ("command", "rm -r build", False),
+    ("prompt", "/awesome-agents-md:guard Delete ON", "git push: on; ask before a recursive delete: on"),
+    ("command", "rm -r build", True),
+    ("prompt", "/awesome-agents-md:guard push maybe",
+     "Usage: /awesome-agents-md:guard [push|delete] [on|off]. ask before git push: on"),
+    ("command", "git push", True),
+    ("prompt", "/awesome-agents-md:guardian", None),
+    ("prompt", "please run /awesome-agents-md:guard push off", None),
+    ("prompt", "<command-name>/review</command-name>"
+               "<command-args>/awesome-agents-md:guard push off</command-args>", None),
+    ("command", "git push", True),
+]
+
+
+def plugin_guard_switch_turns_prompts_off_and_on() -> list[str]:
+    runtimes, found = hook_runtimes()
+    with tempfile.TemporaryDirectory() as scratch:
+        root = plugin_copy(scratch)
+        for runtime in runtimes:
+            env = scratch_home(pathlib.Path(scratch) / f"home-{runtime[0]}")
+            for kind, text, expect in GUARD_SWITCH_STEPS:
+                if kind == "prompt":
+                    run = run_hook(runtime, root, "guard-switch", [], json.dumps({"prompt": text}), env)
+                    if run.returncode != 0:
+                        found.append(f"{runtime[0]} guard-switch exited {run.returncode} on {text!r}: "
+                                     f"{run.stderr.strip()[:120]}")
+                        break
+                    if expect is None:
+                        if run.stdout.strip():
+                            found.append(f"{runtime[0]} guard-switch answered {text!r}, which is not the command")
+                        continue
+                    answer = json.loads(run.stdout) if run.stdout.strip() else {}
+                    if answer.get("decision") != "block" or expect not in answer.get("reason", ""):
+                        found.append(f"{runtime[0]} guard-switch answered {text!r} with {run.stdout.strip()!r}")
+                    continue
+                payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": text}})
+                run = run_hook(runtime, root, "guard", [], payload, env)
+                if expect is None:
+                    if run.returncode != 2:
+                        found.append(f"{runtime[0]} guard let {text!r} through with a switch off")
+                    continue
+                asked = run.returncode == 0 and bool(run.stdout.strip()) and json.loads(run.stdout)[
+                    "hookSpecificOutput"]["permissionDecision"] == "ask"
+                if run.returncode != 0 or asked != expect:
+                    verdict = "did not ask about" if expect else "asked about"
+                    found.append(f"{runtime[0]} guard {verdict} {text!r} at that step (exit {run.returncode})")
+        for raw in ("", "not json", '{"prompt": 7}'):
+            for runtime in runtimes:
+                run = run_hook(runtime, root, "guard-switch", [], raw,
+                               scratch_home(pathlib.Path(scratch) / "home-raw"))
+                if run.returncode != 0 or run.stdout.strip():
+                    found.append(f"{runtime[0]} guard-switch did not pass {raw!r} untouched")
+    return found
+
+
 def plugin_subagent_hook_carries_the_hard_rules() -> list[str]:
     # A subagent gets the sections it cannot learn from the parent's prompt,
     # exactly as the core states them, and nothing else, the same from every
@@ -665,6 +758,7 @@ GATES = [
     ("the plugin SessionStart hooks deliver the whole core under the output limit",
      plugin_loads_whole_core),
     ("the plugin guard blocks what it names and nothing next to it", plugin_guard_blocks_what_it_names),
+    ("/awesome-agents-md:guard turns the push and recursive-delete prompts off and on", plugin_guard_switch_turns_prompts_off_and_on),
     ("the plugin SubagentStart hook carries Boundaries, Security and Verification",
      plugin_subagent_hook_carries_the_hard_rules),
 ]

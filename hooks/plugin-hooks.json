@@ -20,6 +20,18 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-switch.sh\"",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${PLUGIN_ROOT}/hooks/guard-switch.ps1\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SubagentStart": [
       {
         "hooks": [

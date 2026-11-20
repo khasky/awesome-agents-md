@@ -64,7 +64,11 @@ $blockRules = @(
      Message = 'deleting every row of a table (DELETE without WHERE).' },
   @{ Pattern = '(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\s[^;&|]*[|]\s*(sudo\s+)?((ba|z|da)?sh|iex|Invoke-Expression|pwsh|powershell)(\s|$|[;&|)])|(iex|Invoke-Expression)\s*[(]\s*(irm|iwr|Invoke-RestMethod|Invoke-WebRequest)|(^|[^A-Za-z0-9_-])(ba|z)?sh\s+(-c\s+)?\S{0,3}(<|[$])[(]\s*(curl|wget)'
      Unless = ''
-     Message = 'running a script downloaded from the network without reading it.' }
+     Message = 'running a script downloaded from the network without reading it.' },
+  # The switch file turns ask rules off. Only the user changes it, with /awesome-agents-md:guard.
+  @{ Pattern = '[/\\]\.awesome-agents-md([/\\\s"'']|$)'
+     Unless = ''
+     Message = 'touching the guard switch file. Only the user changes it, with /awesome-agents-md:guard.' }
 )
 
 $issues = @()
@@ -86,22 +90,31 @@ if ($issues.Count -gt 0) {
 $agent = '\[bot\]|@(anthropic\.com|openai\.com|cursor\.com|aider\.chat|all-hands\.dev|ampcode\.com|charm\.land|factory\.ai|opencode\.ai|windsurf\.(ai|com)|continue\.dev|kiro\.dev|cline\.bot|roocode\.com|kilocode\.ai|kilo\.ai|block\.xyz|aaif\.ai|augmentcode\.com|warp\.dev|zed\.dev|air\.dev|mistral\.ai|charlielabs\.ai|x\.ai|muse\.dev)|(copilot@github|gemini-code-assist@google|junie@jetbrains|qwen-coder@alibabacloud|it\+v0agent@vercel|noreply@meta)\.com|[0-9]+\+copilot@|(^|[^A-Za-z0-9])(claude|anthropic|copilot|codex|chatgpt|openai|cursor|gemini|jules|devin|aider|openhands|amp|crush|opencode|droid|windsurf|cascade|kiro|amazon-q|cline|roo code|roomote|kilo code|goose|augment|junie|mistral vibe|qwen-coder|v0agent|lovable|gpt-engineer|codegen|grok|muse code|coderabbit|mentat|sweep|greptile|cody|codium|replit)([^A-Za-z0-9]|$)'
 
 # Ask rules: pattern, second pattern that must match too (a trailer sits in
-# the message body, past the segment the commit call is in), message. Whether
-# a prompt asked for the push or the trailer cannot be read from its words in
-# every language, so the user confirms the call itself.
+# the message body, past the segment the commit call is in), message, and the
+# switch the user turns the rule off with (/awesome-agents-md:guard <switch>
+# off, written to the switch file by guard-switch). Whether a prompt asked for the push or the
+# trailer cannot be read from its words in every language, so the user
+# confirms the call itself.
 $askRules = @(
   @{ Pattern = 'git\s[^;&|]*commit'
      Also = "co-authored-by\s*:[^;]*($agent)"
      Message = 'this commit names an AI agent as co-author. Commits carry no assistant trace: approve only if you asked for it.' },
   @{ Pattern = 'git\s[^;&|]*push(\s|$)'
      Also = ''
-     Message = 'this pushes to a remote. Approve only if you asked for it.' },
+     Message = 'this pushes to a remote. Approve only if you asked for it.'
+     Switch = 'push' },
   # Any other recursive delete: what it removes is not in git or any remote.
   @{ Pattern = $start + '(sudo\s+)?(rm|rmdir|rd|del|erase|ri|Remove-Item)\s([^;&|]*\s)?(-[dfirv]*r[dfirv]*|--recursive|-rec[A-Za-z]*|/s)(\s|$|[;&|)])'
      Also = ''
-     Message = 'this deletes a directory and everything in it. Approve only if you asked for it.' }
+     Message = 'this deletes a directory and everything in it. Approve only if you asked for it.'
+     Switch = 'delete' }
 )
+$userHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { $env:HOME }
+$switchFile = Join-Path $userHome '.awesome-agents-md/guard'
+$switchesOff = @()
+if (Test-Path -LiteralPath $switchFile) { $switchesOff = @(Get-Content -LiteralPath $switchFile) }
 foreach ($rule in $askRules) {
+  if ($rule.Switch -and $switchesOff -contains "$($rule.Switch)=off") { continue }
   if ((Test-Command $rule.Pattern) -and (-not $rule.Also -or (Test-Command $rule.Also))) {
     [Console]::Out.WriteLine('{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: ' + $rule.Message + '"}}')
     exit 0

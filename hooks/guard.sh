@@ -71,6 +71,10 @@ block_rules=(
   '(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)[[:space:]][^;&|]*[|][[:space:]]*(sudo[[:space:]]+)?((ba|z|da)?sh|iex|Invoke-Expression|pwsh|powershell)([[:space:]]|$|[;&|)])|(iex|Invoke-Expression)[[:space:]]*[(][[:space:]]*(irm|iwr|Invoke-RestMethod|Invoke-WebRequest)|(^|[^[:alnum:]_-])(ba|z)?sh[[:space:]]+(-c[[:space:]]+)?[^[:space:]]{0,3}(<|[$])[(][[:space:]]*(curl|wget)'
   ''
   'running a script downloaded from the network without reading it.'
+  # The switch file turns ask rules off. Only the user changes it, with /awesome-agents-md:guard.
+  '[/\\]\.awesome-agents-md([/\\[:space:]"'"'"']|$)'
+  ''
+  'touching the guard switch file. Only the user changes it, with /awesome-agents-md:guard.'
 )
 
 issues=()
@@ -91,23 +95,34 @@ fi
 # a person could write from.
 agent='\[bot\]|@(anthropic\.com|openai\.com|cursor\.com|aider\.chat|all-hands\.dev|ampcode\.com|charm\.land|factory\.ai|opencode\.ai|windsurf\.(ai|com)|continue\.dev|kiro\.dev|cline\.bot|roocode\.com|kilocode\.ai|kilo\.ai|block\.xyz|aaif\.ai|augmentcode\.com|warp\.dev|zed\.dev|air\.dev|mistral\.ai|charlielabs\.ai|x\.ai|muse\.dev)|(copilot@github|gemini-code-assist@google|junie@jetbrains|qwen-coder@alibabacloud|it\+v0agent@vercel|noreply@meta)\.com|[0-9]+\+copilot@|(^|[^A-Za-z0-9])(claude|anthropic|copilot|codex|chatgpt|openai|cursor|gemini|jules|devin|aider|openhands|amp|crush|opencode|droid|windsurf|cascade|kiro|amazon-q|cline|roo code|roomote|kilo code|goose|augment|junie|mistral vibe|qwen-coder|v0agent|lovable|gpt-engineer|codegen|grok|muse code|coderabbit|mentat|sweep|greptile|cody|codium|replit)([^A-Za-z0-9]|$)'
 
-# Ask rules, three fields each: pattern, second pattern that must match too
+# Ask rules, four fields each: pattern, second pattern that must match too
 # (a trailer sits in the message body, past the segment the commit call is
-# in), message. Whether a prompt asked for the push or the trailer cannot be
-# read from its words in every language, so the user confirms the call itself.
+# in), message, and the switch the user turns the rule off with
+# (/awesome-agents-md:guard <switch> off, written to the switch file by
+# guard-switch). Whether a prompt
+# asked for the push or the trailer cannot be read from its words in every
+# language, so the user confirms the call itself.
 ask_rules=(
   'git[[:space:]][^;&|]*commit'
   "co-authored-by[[:space:]]*:[^;]*(${agent})"
   'this commit names an AI agent as co-author. Commits carry no assistant trace: approve only if you asked for it.'
+  ''
   'git[[:space:]][^;&|]*push([[:space:]]|$)'
   ''
   'this pushes to a remote. Approve only if you asked for it.'
+  'push'
   # Any other recursive delete: what it removes is not in git or any remote.
   "${start}"'(sudo[[:space:]]+)?(rm|rmdir|rd|del|erase|ri|Remove-Item)[[:space:]]([^;&|]*[[:space:]])?(-[dfirv]*r[dfirv]*|--recursive|-rec[[:alpha:]]*|/s)([[:space:]]|$|[;&|)])'
   ''
   'this deletes a directory and everything in it. Approve only if you asked for it.'
+  'delete'
 )
-for ((i = 0; i < ${#ask_rules[@]}; i += 3)); do
+switch_file="$HOME/.awesome-agents-md/guard"
+for ((i = 0; i < ${#ask_rules[@]}; i += 4)); do
+  switch="${ask_rules[i + 3]}"
+  if [ -n "$switch" ] && grep -qxF "$switch=off" "$switch_file" 2>/dev/null; then
+    continue
+  fi
   if matches "${ask_rules[i]}" && { [ -z "${ask_rules[i + 1]}" ] || matches "${ask_rules[i + 1]}"; }; then
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"awesome-agents-md: %s"}}\n' "${ask_rules[i + 2]}"
     exit 0
