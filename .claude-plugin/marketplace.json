@@ -5,15 +5,30 @@
     "name": "Khasky",
     "url": "https://github.com/khasky"
   },
-  "description": "The Awesome AGENTS.md ruleset, installable as a Claude Code plugin.",
+  "description": "Moved to khasky/silverback. This marketplace now installs the silverback plugin from there.",
   "plugins": [
     {
-      "name": "awesome-agents-md",
-      "source": "./",
+      "name": "silverback",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/khasky/silverback.git"
+      },
       "description": "One tool-agnostic ruleset for AI coding agents, loaded at session start instead of by hand: boundaries, security, a verification gate, the lazy-senior-dev coding ladder, commit conventions, plus on-demand modules across the stack.",
       "license": "MIT",
       "category": "productivity",
-      "keywords": ["agents-md", "rules", "coding-standards", "verification", "security", "commits", "code-review", "debugging"]
+      "keywords": [
+        "agents-md",
+        "rules",
+        "coding-standards",
+        "verification",
+        "security",
+        "commits",
+        "code-review",
+        "debugging"
+      ]
     }
-  ]
+  ],
+  "renames": {
+    "awesome-agents-md": "silverback"
+  }
 }

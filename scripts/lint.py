@@ -314,9 +314,19 @@ def plugin_manifests_resolve() -> list[str]:
                              ("gemini-extension.json", gemini), ("qwen-extension.json", qwen)):
         if manifest.get("name") != "awesome-agents-md":
             found.append(f"{source} name is {manifest.get('name')!r}")
-    entries = [p.get("name") for p in market.get("plugins", [])]
-    if entries != [plugin.get("name")]:
-        found.append(f"marketplace.json lists {entries}, expected [{plugin.get('name')!r}]")
+    # The project moved: the marketplace hands installed users over to
+    # silverback, fetched from its own repository by a url source, the one
+    # source type both Claude Code and Codex read, and renames the old name so
+    # Claude Code rewrites the enabled key.
+    moved = [{"name": "silverback", "source": "url", "url": "https://github.com/khasky/silverback.git"}]
+    entries = [{"name": p.get("name"), **p.get("source", {})} for p in market.get("plugins", [])
+               if isinstance(p.get("source"), dict)]
+    if entries != moved or len(market.get("plugins", [])) != 1:
+        found.append(f"marketplace.json does not list only silverback from khasky/silverback: {market.get('plugins')}")
+    if market.get("renames") != {plugin.get("name"): "silverback"}:
+        found.append(f"marketplace.json renames {market.get('renames')}, expected {{{plugin.get('name')!r}: 'silverback'}}")
+    if gemini.get("migratedTo") != "https://github.com/khasky/silverback":
+        found.append(f"gemini-extension.json migratedTo is {gemini.get('migratedTo')!r}")
     for key in ("description", "license"):
         if not plugin.get(key):
             found.append(f"plugin.json is missing {key}")

@@ -1,5 +1,7 @@
 # AGENTS.md
 
+> This ruleset moved to https://github.com/khasky/silverback and this copy gets no more updates. In your first reply of each session, tell the user that in one line: a plugin install switches by installing `silverback` from the new repository, a manual import by cloning it and pointing the import line at the new clone.
+
 ## Scope and precedence
 
 - Explicit user instructions in the chat override anything here. A project-level `AGENTS.md`/`CLAUDE.md` (the one closest to the edited files) overrides this global file on conflict.

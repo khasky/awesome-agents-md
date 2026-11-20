@@ -1,5 +1,6 @@
 {
   "name": "awesome-agents-md",
-  "version": "0.1.0",
-  "contextFileName": "AGENTS.md"
+  "version": "0.1.1",
+  "contextFileName": "AGENTS.md",
+  "migratedTo": "https://github.com/khasky/silverback"
 }
